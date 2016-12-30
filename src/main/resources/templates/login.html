@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+    <head>
+        <title>Spring Security Example </title>
+        <link rel="stylesheet" th:href="@{/css/login.css}" href="css/login.css" />
+    </head>
+    <body>
+        <div class="popup">
+            <form th:action="@{/login}" method="post">
+                <table>
+                    <tr>
+                        <th class="title" colspan="2">Platform Provider Login</th>
+                    </tr>
+                    <tr><td class="separator"></td></tr>
+                    <tr>
+                        <td class="label">Username:</td>
+                        <td class="input"><input type="text" name="username" value=""></input></td>
+                    </tr>
+                    <tr><td class="error" colspan="2">Error here</td></tr>
+                    <tr><td class="separator"></td></tr>
+                    <tr>
+                        <td class="label">Password:</td>
+                        <td class="input"><input type="password" name="password" value=""></input></td>
+                    </tr>
+                    <tr><td class="error" colspan="2">Error here</td></tr>
+                    <tr><td class="separator"></td></tr>
+                    <tr><td class="submit" colspan="2"><input type="submit" name="submit" value="Sign In"></input></td></tr>
+                </table>
+                <div th:if="${param.error}">
+                    Invalid username and password.
+                </div>
+                <div th:if="${param.logout}">
+                    You have been logged out.
+                </div>
+            </form>
+        </div>
+    </body>
+</html>

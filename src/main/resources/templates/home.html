@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>SymbIoTe Core</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
+</head>
+<body>
+	<div class="header">
+		<img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
+		<span class="title">Management</span>
+		<a href="#adminlogin" class="administrator">Administrator Access</a>
+	</div>
+	<div class="content">
+		<div class="platform wrapper">
+			<div class="label">Platform Provider</div>
+			<div class="icon">
+				<img th:src="@{/images/suitcase.png}" src="images/suitcase.png"></img>
+			</div>
+			<a href="#platformlogin" class="login button">Sign In</a>
+			<a href="#platformregister" class="register button">Register</a>
+		</div>
+		<div class="user wrapper">
+			<div class="label">User/App Developer</div>
+			<div class="icon">
+				<img th:src="@{/images/mobile.png}" src="images/mobile.png"></img>
+			</div>
+			<a href="#userlogin" class="login button">Sign In</a>
+			<a href="#userregister" class="register button">Register</a>
+		</div>
+	</div>
+	<div class="footer">
+		<a class="external symbiote" href="http://www.symbiote-h2020.eu/">
+			<img th:src="@{/images/symbiote-homepage.png}" src="images/symbiote-homepage.png"></img>
+		</a>
+		<a class="external epi" href="http://iot-epi.eu/">
+			<img th:src="@{/images/IoT-EPI-logo1.png}" src="images/IoT-EPI-logo1.png"></img>
+		</a>
+		<a class="external commision">
+			<img th:src="@{/images/ECH2020.png}" src="images/ECH2020.png"></img>
+		</a>
+	</div>
+	<div class="overlay wrapper">
+		<div class="popup">
+			<form th:action="@{/login}" method="post">
+				<table>
+					<tr>
+						<th class="title" colspan="2">Platform Provider Login</th>
+					</tr>
+					<tr><td class="separator"></td></tr>
+					<tr>
+						<td class="label">Username:</td>
+						<td class="input"><input type="text" name="username" value=""></input></td>
+					</tr>
+					<tr><td class="error" colspan="2">Error here</td></tr>
+					<tr><td class="separator"></td></tr>
+					<tr>
+						<td class="label">Password:</td>
+						<td class="input"><input type="password" name="username" value=""></input></td>
+					</tr>
+					<tr><td class="error" colspan="2">Error here</td></tr>
+					<tr><td class="separator"></td></tr>
+					<tr><td class="submit" colspan="2"><input type="submit" name="submit" value="Sign In"></input></td></tr>
+				</table>
+			</form>
+		</div>
+	</div>
+	<script type="text/javascript" src="webjars/jquery/3.1.1-1/jquery.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
+</body>
+</html>
