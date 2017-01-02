@@ -25,8 +25,8 @@
 			<div class="icon">
 				<img th:src="@{/images/mobile.png}" src="images/mobile.png"></img>
 			</div>
-			<a href="#userlogin" class="login button">Sign In</a>
-			<a href="#userregister" class="register button">Register</a>
+			<a href="#applogin" class="login button">Sign In</a>
+			<a href="#appregister" class="register button">Register</a>
 		</div>
 	</div>
 	<div class="footer">
@@ -42,27 +42,6 @@
 	</div>
 	<div class="overlay wrapper">
 		<div class="popup">
-			<form th:action="@{/login}" method="post">
-				<table>
-					<tr>
-						<th class="title" colspan="2">Platform Provider Login</th>
-					</tr>
-					<tr><td class="separator"></td></tr>
-					<tr>
-						<td class="label">Username:</td>
-						<td class="input"><input type="text" name="username" value=""></input></td>
-					</tr>
-					<tr><td class="error" colspan="2">Error here</td></tr>
-					<tr><td class="separator"></td></tr>
-					<tr>
-						<td class="label">Password:</td>
-						<td class="input"><input type="password" name="username" value=""></input></td>
-					</tr>
-					<tr><td class="error" colspan="2">Error here</td></tr>
-					<tr><td class="separator"></td></tr>
-					<tr><td class="submit" colspan="2"><input type="submit" name="submit" value="Sign In"></input></td></tr>
-				</table>
-			</form>
 		</div>
 	</div>
 	<script type="text/javascript" src="webjars/jquery/3.1.1-1/jquery.min.js"></script>

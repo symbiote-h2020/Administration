@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+    <head>
+        <title>Hello World!</title>
+    </head>
+    <body>
+        <div class="title" th:inline="text">Hello [[${#httpServletRequest.remoteUser}]]!</div>
+        <form th:action="@{/app/logout}" method="post" th:if="${#httpServletRequest.requestURI == '/app/cpanel'}">
+            <input type="submit" value="Sign Out"/>
+        </form>
+        <form th:action="@{/platform/logout}" method="post" th:if="${#httpServletRequest.requestURI == '/platform/cpanel'}">
+            <input type="submit" value="Sign Out"/>
+        </form>
+        <form th:action="@{/admin/logout}" method="post" th:if="${#httpServletRequest.requestURI == '/admin/cpanel'}">
+            <input type="submit" value="Sign Out"/>
+        </form>
+    </body>
+</html>

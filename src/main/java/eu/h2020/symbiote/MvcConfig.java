@@ -11,8 +11,14 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/home").setViewName("home");
         registry.addViewController("/").setViewName("home");
-        registry.addViewController("/hello").setViewName("hello");
-        registry.addViewController("/login").setViewName("login");
+        registry.addViewController("/user/cpanel").setViewName("cpanel");
+        registry.addViewController("/app/cpanel").setViewName("cpanel");
+        registry.addViewController("/app/login").setViewName("login");
+        registry.addViewController("/platform/cpanel").setViewName("cpanel");
+        registry.addViewController("/platform/login").setViewName("login");
+        registry.addViewController("/admin/cpanel").setViewName("cpanel");
+        registry.addViewController("/admin/login").setViewName("login");
+        registry.addViewController("/denied").setViewName("denied");
     }
 
 }

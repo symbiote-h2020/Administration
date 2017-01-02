@@ -187,7 +187,7 @@ a {
 	background-color: rgba(0,0,0, 0.5);
 }
 
-.overlay .popup {
+.popup {
 
 	width: 400px;
 	margin: 213px auto;
@@ -198,12 +198,12 @@ a {
 	box-shadow: 2px 2px 5px 5px rgba(0,0,0, 0.2);
 }
 
-.overlay table {
+.popup table {
 
 	width: 100%;
 }
 
-.overlay .title {
+.popup .title {
 
 	padding: 15px;
 
@@ -215,24 +215,24 @@ a {
 	font-weight: bold;
 }
 
-.overlay .separator {
+.popup .separator {
 
 	height: 10px;
 }
 
-.overlay td {
+.popup td {
 
 	padding: 0 10px;
 }
 
-.overlay .input {
+.popup .input {
 
 	text-align: right;
 }
 
-.overlay .error {
+.popup .error {
 
-	display: none;
+	/*display: none;*/
 
 	padding: 10px 5px 20px;
 
@@ -240,13 +240,13 @@ a {
 	color: rgb(48, 48, 48);
 }
 
-.overlay .submit {
+.popup .submit {
 	
 	padding-top: 10px;
 	text-align: center;
 }
 
-.overlay .submit input {
+.popup .submit input, .popup .submit a {
 
 	padding: 5px 10px;
 	border: none;
