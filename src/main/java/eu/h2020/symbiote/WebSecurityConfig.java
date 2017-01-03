@@ -94,22 +94,3 @@ public class WebSecurityConfig {
         }
     }
 }
-
-        // http
-        //     .authorizeRequests()
-        //         .antMatchers("/", "/home").permitAll()
-        //         .antMatchers("/user/**").access("hasRole('USER')")
-        //         .antMatchers("/platform/**").access("hasRole('PLATFORM')")
-        //         .antMatchers("/admin/**").access("hasRole('ADMIN')")
-        //         .anyRequest().authenticated()
-        //         .and()
-        //     .formLogin()
-        //         .loginPage("/login")
-        //         .permitAll()
-        //         .and()
-        //     .logout()
-        //         .logoutSuccessUrl("/")
-        //         .permitAll()
-        //         .and()
-        //     .exceptionHandling()
-        //         .accessDeniedPage("/denied");

@@ -60,6 +60,7 @@ a {
 }
 .header .administrator:hover {
 
+	cursor: pointer;
 	background-color: #4593BC;
 	color: white;
 }
@@ -254,4 +255,5 @@ a {
 	font-size: 18px;
 	background-color: rgb(59, 137, 178);
 	color: white;
+	cursor: pointer;
 }
