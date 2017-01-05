@@ -17,6 +17,7 @@ a {
 
 .header {
 
+	height: 50px;
 	text-align: right;
 
 	background-color: rgb(69, 147, 188);
@@ -29,8 +30,8 @@ a {
 	position: absolute;
 	left: 0;
 
-	padding: 3px 16px;
-	height: 33px;
+	padding: 0;
+	width: 100px;
 }
 
 .header .title {
@@ -38,14 +39,15 @@ a {
 	position: absolute;
 	left: 100px;
 
-	padding: 10px;
+	padding: 15px;
 
 	font-size: 16px;
 }
 
 .header .user {
 
-	padding: 10px;
+	display: inline-block;
+	padding: 15px;
 }
 
 .header form.logout {
@@ -55,7 +57,7 @@ a {
 
 .header .logout .button {
 
-	padding: 10px;
+	padding: 14px;
 
 	background-color: rgb(59, 137, 178);
 	color: white;
@@ -63,6 +65,7 @@ a {
 	border-left: 2px solid rgb(252,252,252);
 	border-radius: 0;
 	font-weight: bold;
+	font-size: 18px;
 }
 
 .header .button:hover {
@@ -76,7 +79,7 @@ a {
 
 	position: absolute;
 	width: 100px;
-	top: 39px;
+	top: 50px;
 	left: 0;
 	bottom: 0;
 	margin: 0;
@@ -103,6 +106,10 @@ a {
 	background-color: rgb(129, 177, 208);
 	color: white;
 	cursor: default;
+}
+.content .action:hover {
+
+	background-color: rgba(129, 177, 208, 0.5);
 }
 
 .content .tabs {

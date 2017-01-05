@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
     <head>
-        <title>Login</title>
+        <title>Sign In</title>
         <link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
     </head>
     <body>
@@ -16,22 +16,20 @@
                     </tr>
                     <tr><td class="separator"></td></tr>
                     <tr>
-                        <td class="label">Username:</td>
-                        <td class="input"><input type="text" name="username" value=""></input></td>
+                        <td class="label"><label for="username">Username:</label></td>
+                        <td class="input"><input type="text" id="username" name="username" value=""></input></td>
                     </tr>
                     <tr><td class="separator"></td></tr>
                     <tr>
-                        <td class="label">Password:</td>
-                        <td class="input"><input type="password" name="password" value=""></input></td>
+                        <td class="label"><label for="password">Password:</label></td>
+                        <td class="input"><input type="password" id="password" name="password" value=""></input></td>
                     </tr>
+                    <tr><td class="separator"></td></tr>
                     <tr><td class="error" colspan="2"  th:if="${param.error}">Invalid username and password.</td></tr>
+                    <tr><td class="message" colspan="2"  th:if="${message}" th:inline="text">[[${message}]]</td></tr>
                     <tr><td class="separator"></td></tr>
                     <tr><td class="submit" colspan="2"><input type="submit" name="submit" value="Sign In"></input></td></tr>
                 </table>
-                <div th:if="${param.logout}">
-                    You have been logged out.
-                </div>
-                <!-- <div th:inline="text">|[[${#httpServletRequest.isUserInRole('ROLE_PLATFORM')}]]|[[${#httpServletRequest.isUserInRole('ROLE_PLATFORM')}]]|</div> -->
             </form>
         </div>
     </body>

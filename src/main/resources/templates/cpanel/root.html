@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:include="${ #strings.concat('cpanel/', role) } :: title">Control Panel</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
+</head>
+<body>
+    <div class="header">
+        <img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
+        <span th:replace="${ #strings.concat('cpanel/', role) } :: title" ></span>
+        <span class="user" th:inline="text">User: [[${#httpServletRequest.remoteUser}]]</span>
+        <form th:replace="${ #strings.concat('cpanel/', role) } :: form.logout" ></form>
+    </div>
+    <div class="content">
+        <ul class="sidebar">
+            <th:block th:include="${ #strings.concat('cpanel/', role) } :: .sidebar" ></th:block>
+            <th:block th:include="cpanel/common :: .sidebar" ></th:block>
+        </ul>        
+        <div class="tabs">
+            <th:block th:include="${ #strings.concat('cpanel/', role) } :: .tabs" ></th:block>
+            <th:block th:include="cpanel/common :: .tabs" ></th:block>
+        </div>
+    </div>
+    <div class="footer">
+    </div>
+    <div class="overlay wrapper">
+    </div>
+    <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/cpanel.js}" src="js/cpanel.js"></script>
+</body>
+</html>

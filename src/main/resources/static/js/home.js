@@ -8,60 +8,44 @@ $( document ).ready( function() {
 
 		switch ( window.location.hash.substring( 1 ) ) {
 			case "applogin":
-				showLogin( "app" );
+				getPopup( "app/cpanel", "app" );
 				break;
 			case "platformlogin":
-				showLogin( "platform" );
+				getPopup( "platform/cpanel", "platform" );
 				break;
 			case "adminlogin":
-				showLogin( "admin" );
+				getPopup( "admin/cpanel", "admin" );
+				break;
+			case "appregister":
+				getPopup( "register/app", "app" );
+				break;
+			case "platformregister":
+				getPopup( "register/platform", "platform" );
 				break;
 			default:
-				hideLogin();
+				hidePopup();
 				break;
 		}
 	}
 
-	function showLogin( url ) {
+	function getPopup( url, role ) {
 
 		$.ajax( {
-			url: url + "/cpanel",
+			url: url,
 			success: function( data ) {
 
-				console.log( data );
+				var popup = $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" );
 
-				var dataDOM = $( $.trim( data ) );
-				var login = dataDOM.find( "form.login" );
+				if ( popup.length > 0 ) {
 
-				if ( login.length > 0 ) {
-
-					$( ".overlay .popup" ).html( login );
-					$( ".overlay" ).css( { 'display': 'block' } );
-
-					$( "form.login" ).submit( function( e ) {
-
-						$.ajax( {
-							type: "POST",
-							url: url + "/login",
-							data: $( "form.login" ).serialize(),
-							success: function( data ) {
-
-								window.location.href = url + "/cpanel";
-							}
-						} );
-
-						e.preventDefault();
-					} );
+					showPopup( popup, url, role );
 
 				} else {
 
-					window.location.href = url + "/cpanel";
+					window.location.href = url;
 				}
-
 			},
 			error: function( data ) {
-
-				console.log( data.responseText );
 
 				$( ".overlay" ).html( $( $.trim( data.responseText ) ) );
 				$( ".overlay" ).css( { 'display': 'block' } );
@@ -70,14 +54,86 @@ $( document ).ready( function() {
 
 	}
 
-	function hideLogin() {
+	function showPopup( popup, url, role ) {
+
+		var login = popup.find( "form.login" );
+		var register = popup.find( "form.register" );
+
+		$( ".overlay .popup" ).html( popup.children( ":first" ) );
+		$( ".overlay" ).css( { 'display': 'block' } );
+
+
+		if ( login.length > 0 ) {
+
+			handleLogin( url, role );
+
+		} else {
+
+			handleRegister( url, role );
+		}
+	}
+
+	function hidePopup() {
 
 		$( ".overlay" ).css( { 'display': 'none' } );
 	}
 
+	function handleLogin( url, role ) {
+
+		$( "form.login" ).submit( function( e ) {
+
+			$.ajax( {
+				type: "POST",
+				url: role + "/login",
+				data: $( "form.login" ).serialize(),
+				success: function( data ) {
+
+					if ( $( data ).find( ".error" ).length == 0 ) {
+
+						window.location.href = url;
+
+					} else {
+
+						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), url, role );
+					}
+				}
+			} );
+			e.preventDefault();
+		} );
+	}
+
+	function handleRegister( url, role ) {
+
+		$( "form.register" ).submit( function( e ) {
+
+			$.ajax( {
+				type: "POST",
+				url: url,
+				data: $( "form.register" ).serialize(),
+				success: function( data ) {
+
+					if ( $( data ).find( ".error" ).length == 0 ) {
+
+						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), role + "/cpanel", role );
+
+					} else {
+
+						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), url, role );
+					}
+				},
+				error: function( data ) {
+
+					$( ".overlay" ).html( $( $.trim( data.responseText ) ) );
+					$( ".overlay" ).css( { 'display': 'block' } );
+				}
+			} );
+			e.preventDefault();
+		} );
+	}
+
 
 	$( document ).keyup( function( e ) {
-		if ( $( ".overlay" ).css( 'display' ) != 'none' && e.keyCode == 27 ) { // escape pressed while login form open
+		if ( $( ".overlay" ).css( 'display' ) != 'none' && e.keyCode == 27 ) { // escape pressed while popup open
 
 			window.location.hash = "";
 		}
@@ -85,7 +141,7 @@ $( document ).ready( function() {
 
 	$( ".overlay.wrapper" ).click( function( e ) {
 
-		if ( $( ".overlay" ).css( 'display' ) != 'none' && e.target == this ) { // background clicked while login form open
+		if ( $( ".overlay" ).css( 'display' ) != 'none' && e.target == this ) { // background clicked while popup open
 
 			window.location.hash = "";
 		}

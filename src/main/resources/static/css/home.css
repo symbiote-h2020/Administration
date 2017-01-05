@@ -142,7 +142,7 @@ a {
 
 	width: 100%;
 
-	background-color: #F5F5F5;
+	background-color: rgb( 240, 240, 240);
 	border-top: 1px solid rgba(0,0,0, 0.08);
 
 	text-align: center;
@@ -190,7 +190,7 @@ a {
 
 .popup {
 
-	width: 400px;
+	display: table;
 	margin: 213px auto;
 	padding-bottom: 10px;
 
@@ -199,19 +199,66 @@ a {
 	box-shadow: 2px 2px 5px 5px rgba(0,0,0, 0.2);
 }
 
-.popup table {
+.popup form.login {
+
+	width: 400px;
+}
+
+.popup form.register {
+
+	width: 800px;
+}
+
+.popup .denied {
+
+	width: 400px;
+}
+
+.popup .columns {
+
+	text-align: center;
+}
+
+.popup .login table {
 
 	width: 100%;
 }
 
+.popup .register table {
+
+	display: inline-block;
+	width: 49%;
+	vertical-align: top;
+}
+
 .popup .title {
 
-	padding: 15px;
+	padding: 15px 0;
 
-	background-color: #F5F5F5;
+	background-color: rgb( 240, 240, 240);
 	border-bottom: 1px solid rgba(0,0,0, 0.08);
 
 	font-size: 24px;
+	color: rgb(59, 137, 178);
+	font-weight: bold;
+}
+
+.popup .register .title {
+
+	display: block;
+	width: 100%;
+}
+
+.popup .register .submit {
+
+	display: block;
+}
+
+.popup .subtitle {
+
+	padding: 15px 0;
+
+	font-size: 20px;
 	color: rgb(59, 137, 178);
 	font-weight: bold;
 }
@@ -233,11 +280,17 @@ a {
 
 .popup .error {
 
-	/*display: none;*/
-
-	padding: 10px 5px 20px;
+	padding: 10px 5px 10px;
 
 	background-color: rgba(255, 109, 92, 0.3);
+	color: rgb(48, 48, 48);
+}
+
+.popup .message {
+
+	padding: 10px 5px 10px;
+
+	background-color: rgba(242, 214, 104, 0.5);
 	color: rgb(48, 48, 48);
 }
 
