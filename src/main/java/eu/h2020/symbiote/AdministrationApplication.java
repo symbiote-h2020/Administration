@@ -1,5 +1,6 @@
 package eu.h2020.symbiote;
 
+import eu.h2020.symbiote.communication.RabbitManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -18,6 +19,9 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 public class AdministrationApplication {
 
 	private static Log log = LogFactory.getLog(AdministrationApplication.class);
+
+    @Autowired
+    RabbitManager rabbitManager;
 
 	public static void main(String[] args) {
 		SpringApplication.run(AdministrationApplication.class, args);
