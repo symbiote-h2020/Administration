@@ -27,8 +27,8 @@
                         </tr>
                         <tr><td class="separator"></td></tr>
                         <tr>
-                            <td class="label"><label for="platformname">Name:</label></td>
-                            <td class="input"><input type="text" id="platformname" name="platformname" value=""></input></td>
+                            <td class="label"><label for="name">Name:</label></td>
+                            <td class="input"><input type="text" id="name" name="name" value=""></input></td>
                         </tr>
                         <tr><td class="separator"></td></tr>
                         <tr>
@@ -41,7 +41,22 @@
                 </form>
             </div>
             <div class="tab" id="platform_unregister_tab">
-                Platform Unregister Form
+                <!-- <form th:action="@{platform/cpanel/unregister}" th:object="${platformAccount}" method="post">
+                    <table>
+                        <tr>
+                            <th class="title" colspan="2">Unregister platform/account</th>
+                        </tr>
+                        <tr><td class="separator"></td></tr>
+                        <tr><td class="subtitle"></td>Warning: This will unregister the platform and the connected account!</tr>
+                        <tr><td class="subtitle"></td>To confirm, write the name of the platform and press "Delete".</tr>
+                        <tr>
+                            <td class="label"><label for="name">Name:</label></td>
+                            <td class="input"><input type="text" id="name" name="name" value="" th:field="*{name}"></input></td>
+                        </tr>
+                        <tr><td class="separator"></td></tr>
+                        <tr><td class="submit" colspan="2"><input class="button" type="submit" name="submit" value="Unregister"></input></td></tr>
+                    </table>
+                </form> -->
             </div>
         </div>
     </div>

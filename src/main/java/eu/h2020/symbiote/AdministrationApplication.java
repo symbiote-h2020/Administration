@@ -22,16 +22,16 @@ public class AdministrationApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(AdministrationApplication.class, args);
 
-        try {
-            // Subscribe to RabbitMQ messages
-        } catch (Exception e) {
-            log.error("Error occured during subscribing from Administration", e);
-        }
-    }
+		try {
+			// Subscribe to RabbitMQ messages
+		} catch (Exception e) {
+			log.error("Error occured during subscribing from Administration", e);
+		}
+	}
 
-    @Bean
-    public AlwaysSampler defaultSampler() {
-        return new AlwaysSampler();
-    }
+	@Bean
+	public AlwaysSampler defaultSampler() {
+		return new AlwaysSampler();
+	}
 
 }

@@ -22,9 +22,13 @@ public class Register {
 	public String appRegister(@Valid AppAccount appAccount, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
 		if (bindingResult.hasErrors()) {
-            return "register/app";
-        }
-        
+			return "register/app";
+			
+		}
+
+		// Application registration form correct, communication with Registry component etc. should be done here
+
+		
 		redirectAttributes.addFlashAttribute("message","Registration successful, please log in with your new account to continue.");
 		return "redirect:/app/login";
 	}
@@ -39,9 +43,12 @@ public class Register {
 	public String platformRegister(@Valid PlatformAccount platformAccount, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
 		if (bindingResult.hasErrors()) {
-            return "register/platform";
-        }
-        
+			return "register/platform";
+		}
+
+		// Platform registration form correct, communication with Registry component etc. should be done here
+
+		
 		redirectAttributes.addFlashAttribute("message","Registration successful, please log in with your new account to continue.");
 		return "redirect:/platform/login";
 	}
