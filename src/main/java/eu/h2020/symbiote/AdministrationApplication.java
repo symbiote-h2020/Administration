@@ -1,14 +1,17 @@
 package eu.h2020.symbiote;
 
 import eu.h2020.symbiote.communication.RabbitManager;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.context.annotation.Bean;
+import eu.h2020.symbiote.model.Platform;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 
 /**
@@ -18,18 +21,34 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 @SpringBootApplication
 public class AdministrationApplication {
 
-	private static Log log = LogFactory.getLog(AdministrationApplication.class);
+    private static Log log = LogFactory.getLog(AdministrationApplication.class);
 
-    @Autowired
-    RabbitManager rabbitManager;
+    public static void main(String[] args) {
+        SpringApplication.run(AdministrationApplication.class, args);
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(AdministrationApplication.class, args);
+    @Component
+    public static class CLR implements CommandLineRunner {
 
-        try {
-            // Subscribe to RabbitMQ messages
-        } catch (Exception e) {
-            log.error("Error occured during subscribing from Administration", e);
+        private final RabbitManager manager;
+
+        @Autowired
+        public CLR( RabbitManager manager ) {
+            this.manager = manager;
+        }
+
+        @Override
+        public void run(String... args) throws Exception {
+
+            //todo move (now for testing purposes)
+
+            Platform platform = new Platform();
+            platform.setName("p1");
+            platform.setDescription("d1");
+            platform.setInformationModelId("123");
+            platform.setUrl("http://123.com/");
+
+            this.manager.sendPlatformCreationRequest(platform);
         }
     }
 
@@ -37,5 +56,4 @@ public class AdministrationApplication {
     public AlwaysSampler defaultSampler() {
         return new AlwaysSampler();
     }
-
 }
