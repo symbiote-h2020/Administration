@@ -25,4 +25,12 @@ public class PlatformCreationResponse {
     public void setPlatform(Platform platform) {
         this.platform = platform;
     }
+
+    @Override
+    public String toString() {
+        return "PlatformCreationResponse{" +
+                "status=" + status +
+                ", platform=" + platform +
+                '}';
+    }
 }

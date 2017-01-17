@@ -51,27 +51,23 @@ public class RabbitManager {
     private String platformCreationRequestedRoutingKey;
 
     private Connection connection;
+    private Channel channel;
 
     /**
      * Initialization method.
      */
-    @PostConstruct
-    private void init() {
-        //FIXME check if there is better exception handling in @postconstruct method
-        Channel channel = null;
+    public void initCommunication() {
         try {
             ConnectionFactory factory = new ConnectionFactory();
 
-            factory.setHost("localhost"); //todo value from properties
-
-//            factory.setHost(this.rabbitHost);
-//            factory.setUsername(this.rabbitUsername);
-//            factory.setPassword(this.rabbitPassword);
+            factory.setHost(this.rabbitHost);
+            factory.setUsername(this.rabbitUsername);
+            factory.setPassword(this.rabbitPassword);
 
             this.connection = factory.newConnection();
 
-            channel = this.connection.createChannel();
-            channel.exchangeDeclare(this.platformExchangeName,
+            this.channel = this.connection.createChannel();
+            this.channel.exchangeDeclare(this.platformExchangeName,
                     this.platformExchangeType,
                     this.plaftormExchangeDurable,
                     this.platformExchangeAutodelete,
@@ -82,8 +78,6 @@ public class RabbitManager {
             e.printStackTrace();
         } catch (TimeoutException e) {
             e.printStackTrace();
-        } finally {
-            closeChannel(channel);
         }
     }
 
@@ -92,36 +86,31 @@ public class RabbitManager {
      */
     @PreDestroy
     private void cleanup() {
-        //FIXME check if there is better exception handling in @predestroy method
         try {
+            if (this.channel != null && this.channel.isOpen())
+                this.channel.close();
             if (this.connection != null && this.connection.isOpen())
                 this.connection.close();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
             e.printStackTrace();
         }
     }
 
     private void sendMessage(String exchange, String routingKey, String message) {
-        Channel channel = null;
-
         try {
-            channel = this.connection.createChannel();
-
-            channel.basicPublish(exchange, routingKey, null, message.getBytes());
-
+            this.channel.basicPublish(exchange, routingKey, null, message.getBytes());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void sendRpcMessage(String message) {
-        Channel channel = null;
+    private void sendRpcMessage(String message, IPlatformCreationResponseListener listener) {
         try {
             System.out.println("Sending message...");
 
-            channel = this.connection.createChannel();
-
-            String replyQueueName = channel.queueDeclare().getQueue();
+            String replyQueueName = this.channel.queueDeclare().getQueue();
 
             String correlationId = UUID.randomUUID().toString();
             AMQP.BasicProperties props = new AMQP.BasicProperties()
@@ -130,23 +119,12 @@ public class RabbitManager {
                     .replyTo(replyQueueName)
                     .build();
 
-            ReplyConsumer consumer = new ReplyConsumer(channel, correlationId);
-            channel.basicConsume(replyQueueName, true, consumer);
+            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, listener);
+            this.channel.basicConsume(replyQueueName, true, consumer);
 
-            channel.basicPublish(this.platformExchangeName, this.platformCreationRequestedRoutingKey, props, message.getBytes());
+            this.channel.basicPublish(this.platformExchangeName, this.platformCreationRequestedRoutingKey, props, message.getBytes());
 
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void closeChannel(Channel channel) {
-        try {
-            if (channel != null && channel.isOpen())
-                channel.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
             e.printStackTrace();
         }
     }
@@ -155,21 +133,16 @@ public class RabbitManager {
      * Method used to send RPC request to create platform.
      *
      * @param platform platform to be created
+     * @param listener listener for rpc response
      * @return object containing status of requested operation and, if successful, a platform object containing assigned ID
      */
-    public void sendPlatformCreationRequest(Platform platform) {
+    public void sendPlatformCreationRequest(Platform platform, IPlatformCreationResponseListener listener) {
         try {
             String message = null;
             ObjectMapper mapper = new ObjectMapper();
             message = mapper.writeValueAsString(platform);
 
-            sendRpcMessage(message);
-//
-//            if (response == null)
-//                return null;
-//
-//            PlatformCreationResponse responseObject = mapper.readValue(response, PlatformCreationResponse.class);
-//            return responseObject;
+            sendRpcMessage(message, listener);
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();

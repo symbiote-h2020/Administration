@@ -1,7 +1,9 @@
 package eu.h2020.symbiote;
 
+import eu.h2020.symbiote.communication.IPlatformCreationResponseListener;
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.model.Platform;
+import eu.h2020.symbiote.model.PlatformCreationResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,27 +30,33 @@ public class AdministrationApplication {
     }
 
     @Component
-    public static class CLR implements CommandLineRunner {
+    public static class CLR implements CommandLineRunner, IPlatformCreationResponseListener {
 
-        private final RabbitManager manager;
+        private final RabbitManager rabbitManager;
 
         @Autowired
-        public CLR( RabbitManager manager ) {
-            this.manager = manager;
+        public CLR( RabbitManager rabbitManager) {
+            this.rabbitManager = rabbitManager;
         }
 
         @Override
         public void run(String... args) throws Exception {
+            this.rabbitManager.initCommunication();
 
-            //todo move (now for testing purposes)
+//            //todo move (now for testing purposes)
+//
+//            Platform platform = new Platform();
+//            platform.setName("p1");
+//            platform.setDescription("d1");
+//            platform.setInformationModelId("123");
+//            platform.setUrl("http://123.com/");
+//
+//            this.rabbitManager.sendPlatformCreationRequest(platform, this);
+        }
 
-            Platform platform = new Platform();
-            platform.setName("p1");
-            platform.setDescription("d1");
-            platform.setInformationModelId("123");
-            platform.setUrl("http://123.com/");
-
-            this.manager.sendPlatformCreationRequest(platform);
+        @Override
+        public void onPlatformCreationResponseReceive(PlatformCreationResponse platformCreationResponse) {
+            System.out.println("Received response in interface: " + platformCreationResponse);
         }
     }
 

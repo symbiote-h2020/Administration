@@ -54,4 +54,15 @@ public class Platform {
     public void setInformationModelId(String informationModelId) {
         this.informationModelId = informationModelId;
     }
+
+    @Override
+    public String toString() {
+        return "Platform{" +
+                "platformId='" + platformId + '\'' +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", url='" + url + '\'' +
+                ", informationModelId='" + informationModelId + '\'' +
+                '}';
+    }
 }
