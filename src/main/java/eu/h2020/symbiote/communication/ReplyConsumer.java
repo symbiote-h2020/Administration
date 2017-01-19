@@ -12,19 +12,22 @@ import java.io.IOException;
 public class ReplyConsumer extends QueueingConsumer {
 
     private String correlationId;
-    private IPlatformCreationResponseListener listener;
+    private IPlatformCreationResponseListener responseListener;
+    private EmptyConsumerReturnListener emptyConsumerReturnListener;
 
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *
      * @param channel the channel to which this consumer is attached
      * @param correlationId correlationId used to send RPC request
-     * @param listener listener to be notified when the response is received
+     * @param responseListener listener to be notified when the response is received
+     * @param emptyConsumerReturnListener listener that handles empty exchange bindings
      */
-    public ReplyConsumer(Channel channel, String correlationId, IPlatformCreationResponseListener listener) {
+    public ReplyConsumer(Channel channel, String correlationId, IPlatformCreationResponseListener responseListener, EmptyConsumerReturnListener emptyConsumerReturnListener) {
         super(channel);
         this.correlationId = correlationId;
-        this.listener = listener;
+        this.responseListener = responseListener;
+        this.emptyConsumerReturnListener = emptyConsumerReturnListener;
     }
 
     @Override
@@ -32,14 +35,17 @@ public class ReplyConsumer extends QueueingConsumer {
                                AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
+        String queueName = envelope.getRoutingKey();
+
         if (properties.getCorrelationId().equals(this.correlationId)){
             String message = new String(body, "UTF-8");
             System.out.println(" [x] Received '" + message + "'");
 
             ObjectMapper mapper = new ObjectMapper();
             PlatformCreationResponse response = mapper.readValue(message, PlatformCreationResponse.class);
-            if (listener != null)
-                listener.onPlatformCreationResponseReceive(response);
+            if (responseListener != null)
+                responseListener.onPlatformCreationResponseReceive(response);
+            this.emptyConsumerReturnListener.removeListener(queueName, correlationId);
         }
     }
 }

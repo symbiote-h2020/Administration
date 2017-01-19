@@ -39,7 +39,7 @@ public class RabbitManager {
     private String platformExchangeType;
 
     @Value("${rabbit.exchange.platform.durable}")
-    private boolean plaftormExchangeDurable;
+    private boolean platformExchangeDurable;
 
     @Value("${rabbit.exchange.platform.autodelete}")
     private boolean platformExchangeAutodelete;
@@ -52,6 +52,8 @@ public class RabbitManager {
 
     private Connection connection;
     private Channel channel;
+
+    private EmptyConsumerReturnListener emptyConsumerReturnListener;
 
     /**
      * Initialization method.
@@ -69,10 +71,13 @@ public class RabbitManager {
             this.channel = this.connection.createChannel();
             this.channel.exchangeDeclare(this.platformExchangeName,
                     this.platformExchangeType,
-                    this.plaftormExchangeDurable,
+                    this.platformExchangeDurable,
                     this.platformExchangeAutodelete,
                     this.platformExchangeInternal,
                     null);
+
+            this.emptyConsumerReturnListener = new EmptyConsumerReturnListener();
+            this.channel.addReturnListener(this.emptyConsumerReturnListener);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -106,7 +111,7 @@ public class RabbitManager {
         }
     }
 
-    private void sendRpcMessage(String message, IPlatformCreationResponseListener listener) {
+    private void sendRpcMessage(String message, IPlatformCreationResponseListener responseListener) {
         try {
             System.out.println("Sending message...");
 
@@ -119,10 +124,13 @@ public class RabbitManager {
                     .replyTo(replyQueueName)
                     .build();
 
-            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, listener);
+            if (responseListener != null)
+                this.emptyConsumerReturnListener.addListener(replyQueueName, correlationId, responseListener);
+
+            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener, this.emptyConsumerReturnListener);
             this.channel.basicConsume(replyQueueName, true, consumer);
 
-            this.channel.basicPublish(this.platformExchangeName, this.platformCreationRequestedRoutingKey, props, message.getBytes());
+            this.channel.basicPublish(this.platformExchangeName, this.platformCreationRequestedRoutingKey, true, props, message.getBytes());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -134,7 +142,6 @@ public class RabbitManager {
      *
      * @param platform platform to be created
      * @param listener listener for rpc response
-     * @return object containing status of requested operation and, if successful, a platform object containing assigned ID
      */
     public void sendPlatformCreationRequest(Platform platform, IPlatformCreationResponseListener listener) {
         try {
