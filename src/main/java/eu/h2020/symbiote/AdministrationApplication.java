@@ -45,13 +45,13 @@ public class AdministrationApplication {
 
 //            //todo move (now for testing purposes)
 //
-//            Platform platform = new Platform();
-//            platform.setName("p1");
-//            platform.setDescription("d1");
-//            platform.setInformationModelId("123");
-//            platform.setUrl("http://123.com/");
-//
-//            this.rabbitManager.sendPlatformCreationRequest(platform, this);
+            Platform platform = new Platform();
+            platform.setName("p1");
+            platform.setDescription("d1");
+            platform.setInformationModelId("123");
+            platform.setUrl("http://123.com/");
+
+            this.rabbitManager.sendPlatformCreationRequest(platform, this);
         }
 
         @Override
