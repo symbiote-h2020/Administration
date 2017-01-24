@@ -1,6 +1,5 @@
 package eu.h2020.symbiote.communication;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -10,7 +9,6 @@ import eu.h2020.symbiote.model.Platform;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.UUID;
@@ -49,6 +47,12 @@ public class RabbitManager {
 
     @Value("${rabbit.routingKey.platform.creationRequested}")
     private String platformCreationRequestedRoutingKey;
+
+    @Value("${rabbit.routingKey.platform.removalRequested}")
+    private String platformRemovalRequestedRoutingKey;
+
+    @Value("${rabbit.routingKey.platform.modificationRequested}")
+    private String platformModificationRequestedRoutingKey;
 
     private Connection connection;
     private Channel channel;
@@ -111,9 +115,13 @@ public class RabbitManager {
         }
     }
 
-    private void sendRpcMessage(String message, IPlatformCreationResponseListener responseListener) {
+    private void sendPlatformRpcMessage(String exchangeName, String routingKey, Platform platform, IRpcResponseListener responseListener) {
         try {
             System.out.println("Sending message...");
+
+            String message;
+            ObjectMapper mapper = new ObjectMapper();
+            message = mapper.writeValueAsString(platform);
 
             String replyQueueName = this.channel.queueDeclare().getQueue();
 
@@ -130,7 +138,7 @@ public class RabbitManager {
             ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener, this.emptyConsumerReturnListener);
             this.channel.basicConsume(replyQueueName, true, consumer);
 
-            this.channel.basicPublish(this.platformExchangeName, this.platformCreationRequestedRoutingKey, true, props, message.getBytes());
+            this.channel.basicPublish(exchangeName, routingKey, true, props, message.getBytes());
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -143,18 +151,27 @@ public class RabbitManager {
      * @param platform platform to be created
      * @param listener listener for rpc response
      */
-    public void sendPlatformCreationRequest(Platform platform, IPlatformCreationResponseListener listener) {
-        try {
-            String message = null;
-            ObjectMapper mapper = new ObjectMapper();
-            message = mapper.writeValueAsString(platform);
+    public void sendPlatformCreationRequest(Platform platform, IRpcResponseListener listener) {
+        sendPlatformRpcMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform, listener);
+    }
 
-            sendRpcMessage(message, listener);
+    /**
+     * Method used to send RPC request to remove platform.
+     *
+     * @param platform platform to be removed
+     * @param listener listener for rpc response
+     */
+    public void sendPlatformRemovalRequest(Platform platform, IRpcResponseListener listener) {
+        sendPlatformRpcMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform, listener);
+    }
 
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    /**
+     * Method used to send RPC request to modify platform.
+     *
+     * @param platform platform to be modified
+     * @param listener listener for rpc response
+     */
+    public void sendPlatformModificationRequest(Platform platform, IRpcResponseListener listener) {
+        sendPlatformRpcMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform, listener);
     }
 }

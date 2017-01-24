@@ -1,9 +1,7 @@
 package eu.h2020.symbiote;
 
-import eu.h2020.symbiote.communication.IPlatformCreationResponseListener;
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.model.Platform;
-import eu.h2020.symbiote.model.PlatformCreationResponse;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +28,12 @@ public class AdministrationApplication {
     }
 
     @Component
-    public static class CLR implements CommandLineRunner, IPlatformCreationResponseListener {
+    public static class CLR implements CommandLineRunner {
 
         private final RabbitManager rabbitManager;
 
         @Autowired
-        public CLR( RabbitManager rabbitManager) {
+        public CLR(RabbitManager rabbitManager) {
             this.rabbitManager = rabbitManager;
         }
 
@@ -43,21 +41,23 @@ public class AdministrationApplication {
         public void run(String... args) throws Exception {
             this.rabbitManager.initCommunication();
 
-//            //todo move (now for testing purposes)
+//            Platform platform = new Platform();
+//            platform.setPlatformId("5886154b3999e53d70b46589");
+//            platform.setName("New Platform changed");
+////            platform.setDescription("Test platform to delete");
+////            platform.setInformationModelId("CIM");
+////            platform.setUrl("http://example.com");
 //
-            Platform platform = new Platform();
-            platform.setName("p1");
-            platform.setDescription("d1");
-            platform.setInformationModelId("123");
-            platform.setUrl("http://123.com/");
-
-            this.rabbitManager.sendPlatformCreationRequest(platform, this);
+//            this.rabbitManager.sendPlatformCreationRequest(platform, rpcPlatformResponse ->
+//                    System.out.println("Received response in interface: " + rpcPlatformResponse));
+//
+////            this.rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->
+////                    System.out.println("Platform deleted response: " + rpcPlatformResponse));
+//
+////            this.rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->
+////                    System.out.println("Platform modification response: " + rpcPlatformResponse));
         }
 
-        @Override
-        public void onPlatformCreationResponseReceive(PlatformCreationResponse platformCreationResponse) {
-            System.out.println("Received response in interface: " + platformCreationResponse);
-        }
     }
 
     @Bean

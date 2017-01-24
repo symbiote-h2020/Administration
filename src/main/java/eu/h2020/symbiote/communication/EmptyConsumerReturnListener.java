@@ -2,7 +2,7 @@ package eu.h2020.symbiote.communication;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.ReturnListener;
-import eu.h2020.symbiote.model.PlatformCreationResponse;
+import eu.h2020.symbiote.model.RpcPlatformResponse;
 import javafx.util.Pair;
 import org.apache.http.HttpStatus;
 
@@ -14,7 +14,7 @@ import java.util.Map;
  * Class responsible for handling RPC messages send to an exchange without bound consumers.
  */
 public class EmptyConsumerReturnListener implements ReturnListener {
-    private Map<Pair, IPlatformCreationResponseListener> listenerMap;
+    private Map<Pair, IRpcResponseListener> listenerMap;
 
     public EmptyConsumerReturnListener(){
         this.listenerMap = new HashMap<>();
@@ -37,20 +37,20 @@ public class EmptyConsumerReturnListener implements ReturnListener {
         System.out.println("Has queue name and correlationID");
 
         Pair<String, String> listenerKey = new Pair<>(queueName, correlationId);
-        IPlatformCreationResponseListener listener = this.listenerMap.get(listenerKey);
+        IRpcResponseListener listener = this.listenerMap.get(listenerKey);
         if (listener == null)
             return;
 
         System.out.println("Has listener to fire");
 
-        PlatformCreationResponse response = new PlatformCreationResponse();
+        RpcPlatformResponse response = new RpcPlatformResponse();
         response.setStatus(HttpStatus.SC_INTERNAL_SERVER_ERROR);
 
-        listener.onPlatformCreationResponseReceive(response);
+        listener.onRpcResponseReceive(response);
         this.removeListener(queueName, correlationId);
     }
 
-    public void addListener(String queueName, String correlationId, IPlatformCreationResponseListener listener){
+    public void addListener(String queueName, String correlationId, IRpcResponseListener listener){
         System.out.println("Adding return listener");
         Pair<String, String> listenerKey = new Pair<>(queueName, correlationId);
         this.listenerMap.put(listenerKey, listener);

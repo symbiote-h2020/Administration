@@ -1,13 +1,13 @@
 package eu.h2020.symbiote.model;
 
 /**
- * Class used as a response to RPC call requesting platform creation
+ * Class used as a response to RPC call requesting platform operation
  */
-public class PlatformCreationResponse {
+public class RpcPlatformResponse {
     private int status;
     private Platform platform;
 
-    public PlatformCreationResponse() {
+    public RpcPlatformResponse() {
     }
 
     public int getStatus() {
@@ -28,7 +28,7 @@ public class PlatformCreationResponse {
 
     @Override
     public String toString() {
-        return "PlatformCreationResponse{" +
+        return "RpcPlatformResponse{" +
                 "status=" + status +
                 ", platform=" + platform +
                 '}';

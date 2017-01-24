@@ -2,7 +2,7 @@ package eu.h2020.symbiote.communication;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
-import eu.h2020.symbiote.model.PlatformCreationResponse;
+import eu.h2020.symbiote.model.RpcPlatformResponse;
 
 import java.io.IOException;
 
@@ -12,7 +12,7 @@ import java.io.IOException;
 public class ReplyConsumer extends QueueingConsumer {
 
     private String correlationId;
-    private IPlatformCreationResponseListener responseListener;
+    private IRpcResponseListener responseListener;
     private EmptyConsumerReturnListener emptyConsumerReturnListener;
 
     /**
@@ -23,7 +23,7 @@ public class ReplyConsumer extends QueueingConsumer {
      * @param responseListener listener to be notified when the response is received
      * @param emptyConsumerReturnListener listener that handles empty exchange bindings
      */
-    public ReplyConsumer(Channel channel, String correlationId, IPlatformCreationResponseListener responseListener, EmptyConsumerReturnListener emptyConsumerReturnListener) {
+    public ReplyConsumer(Channel channel, String correlationId, IRpcResponseListener responseListener, EmptyConsumerReturnListener emptyConsumerReturnListener) {
         super(channel);
         this.correlationId = correlationId;
         this.responseListener = responseListener;
@@ -42,10 +42,11 @@ public class ReplyConsumer extends QueueingConsumer {
             System.out.println(" [x] Received '" + message + "'");
 
             ObjectMapper mapper = new ObjectMapper();
-            PlatformCreationResponse response = mapper.readValue(message, PlatformCreationResponse.class);
+            RpcPlatformResponse response = mapper.readValue(message, RpcPlatformResponse.class);
             if (responseListener != null)
-                responseListener.onPlatformCreationResponseReceive(response);
-            this.emptyConsumerReturnListener.removeListener(queueName, correlationId);
+                responseListener.onRpcResponseReceive(response);
+            if (this.emptyConsumerReturnListener != null)
+                this.emptyConsumerReturnListener.removeListener(queueName, correlationId);
         }
     }
 }
