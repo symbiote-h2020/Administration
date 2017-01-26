@@ -42,7 +42,6 @@ dependencies {
     compile('org.springframework.cloud:spring-cloud-starter-eureka')
     compile('org.springframework.cloud:spring-cloud-starter-zipkin') // Causes the java.net.ConnectException
     compile('org.springframework.cloud:spring-cloud-starter-stream-rabbit')
-    compile('org.springframework.boot:spring-boot-starter-data-mongodb')
     compile('com.google.code.gson:gson:2.7')
 
     testCompile('org.springframework.boot:spring-boot-starter-test')
