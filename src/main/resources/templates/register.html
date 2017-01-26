@@ -2,17 +2,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
     <head>
-        <title>Platform Registration</title>
+        <title>User Registration</title>
         <link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
     </head>
     <body>
         <div class="popup">
-            <form class="register" th:action="@{${#httpServletRequest.requestURI}}" th:object="${appAccount}"  method="post">
+            <form class="register" th:action="@{${#httpServletRequest.requestURI}}" th:object="${userAccount}" method="post">
                 <div class="columns">
-                    <span class="title">Application Registration</span>
+                    <span class="title">User Registration</span>
                     <table>
                         <tr>
-                            <th class="subtitle" colspan="2">Account Details</th>
+                            <th class="subtitle" colspan="2">Login Details</th>
                         </tr>
                         <tr><td class="separator"></td></tr>
                         <tr>
@@ -30,21 +30,21 @@
                     </table>
                     <table>
                         <tr>
-                            <th class="subtitle" colspan="2">Application Details</th>
+                            <th class="subtitle" colspan="2">User Details</th>
                         </tr>
                         <tr><td class="separator"></td></tr>
                         <tr>
                             <td class="label"><label for="name">Name:</label></td>
                             <td class="input"><input type="text" id="name" name="name" value="" th:field="*{name}"></input></td>
                         </tr>
+                        <tr><td class="error" colspan="2" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name Error</td></tr>
                         <tr><td class="separator"></td></tr>
                         <tr>
-                            <td class="label"><label for="location">Location:</label></td>
-                            <td class="input"><input type="text" id="location" name="location" value="" th:field="*{location}"></input></td>
+                            <td class="label"><label for="email">Location:</label></td>
+                            <td class="input"><input type="text" id="email" name="email" value="" th:field="*{email}"></input></td>
                         </tr>
                         <tr><td class="separator"></td></tr>
-                        <tr><td class="error" colspan="2" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name Error</td></tr>
-                        <tr><td class="error" colspan="2" th:if="${#fields.hasErrors('location')}" th:errors="*{location}">Location Error</td></tr>
+                        <tr><td class="error" colspan="2" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Location Error</td></tr>
                     </table>
                     <span class="submit"><input type="submit" name="submit" value="Register"></input></span>
                 </div>

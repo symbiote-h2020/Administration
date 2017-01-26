@@ -10,9 +10,8 @@
             <form class="login" th:action="@{${#httpServletRequest.requestURI}}" method="post">
                 <table>
                     <tr>
-                        <th class="title" colspan="2" th:if="${#httpServletRequest.requestURI == '/app/login'}">App Developer Login</th>
-                        <th class="title" colspan="2" th:if="${#httpServletRequest.requestURI == '/platform/login'}">Platform Provider Login</th>
-                        <th class="title" colspan="2" th:if="${#httpServletRequest.requestURI} == '/admin/login'">Administrator Login</th>
+                        <th class="title" colspan="2" th:if="${#httpServletRequest.requestURI == '/user/login'}">User Login</th>
+                        <th class="title" colspan="2" th:if="${#httpServletRequest.requestURI == '/admin/login'}">Administrator Login</th>
                     </tr>
                     <tr><td class="separator"></td></tr>
                     <tr>

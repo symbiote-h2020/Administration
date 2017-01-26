@@ -1,9 +1,10 @@
 package eu.h2020.symbiote.controller;
 
 import javax.validation.Valid;
-import eu.h2020.symbiote.entities.AppAccount;
-import eu.h2020.symbiote.entities.PlatformAccount;
+import eu.h2020.symbiote.model.UserAccount;
+import eu.h2020.symbiote.service.UserService;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -13,43 +14,28 @@ import org.springframework.web.bind.annotation.PostMapping;
 @Controller
 public class Register {
 
-	@GetMapping("/register/app")
-	public String appRegisterForm(AppAccount appAccount) {
-		return "register/app";
+
+    @Autowired
+	private UserService userService;
+
+	@GetMapping("/register")
+	public String userRegisterForm(UserAccount userAccount) {
+		return "register";
 	}
 
-	@PostMapping("/register/app")
-	public String appRegister(@Valid AppAccount appAccount, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+	@PostMapping("/register")
+	public String appRegister(@Valid UserAccount userAccount, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
 		if (bindingResult.hasErrors()) {
-			return "register/app";
+			return "register";
 			
 		}
 
-		// Application registration form correct, communication with Registry component etc. should be done here
+		// User registration form correct
+		userService.registerNewUser(userAccount);
 
 		
 		redirectAttributes.addFlashAttribute("message","Registration successful, please log in with your new account to continue.");
-		return "redirect:/app/login";
-	}
-
-
-	@GetMapping("/register/platform")
-	public String platformRegisterForm(PlatformAccount platformAccount) {
-		return "register/platform";
-	}
-
-	@PostMapping("/register/platform")
-	public String platformRegister(@Valid PlatformAccount platformAccount, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
-
-		if (bindingResult.hasErrors()) {
-			return "register/platform";
-		}
-
-		// Platform registration form correct, communication with Registry component etc. should be done here
-
-		
-		redirectAttributes.addFlashAttribute("message","Registration successful, please log in with your new account to continue.");
-		return "redirect:/platform/login";
+		return "redirect:/user/login";
 	}
 }

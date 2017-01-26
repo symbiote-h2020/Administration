@@ -11,8 +11,7 @@
                 <div class="title">Access Denied</div>
                 <div class="error" th:inline="text">User: [[${#httpServletRequest.remoteUser}]], you are not authorized to access this page.</div>
                 <div class="submit">
-                    <a href="/app/cpanel" th:if="${#httpServletRequest.isUserInRole('ROLE_APP')}">App Control Panel</a>
-                    <a href="/platform/cpanel" th:if="${#httpServletRequest.isUserInRole('ROLE_PLATFORM')}">Platform Control Panel</a>
+                    <a href="/user/cpanel" th:if="${#httpServletRequest.isUserInRole('ROLE_USER')}">User Control Panel</a>
                     <a href="/admin/cpanel" th:if="${#httpServletRequest.isUserInRole('ROLE_ADMIN')}">Admin Control Panel</a>
                 </div>
             </div>

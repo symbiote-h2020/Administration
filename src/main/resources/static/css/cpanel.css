@@ -115,7 +115,7 @@ a {
 .content .tabs {
 
 	position: absolute;
-	top: 38px;
+	top: 50px;
 	left: 100px;
 	right: 0;
 
@@ -161,4 +161,9 @@ a {
 
 	cursor: pointer;
 	background-color: #4593BC;
+}
+
+.content textarea {
+	width: 240px;
+	height: 60px;
 }

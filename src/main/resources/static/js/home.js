@@ -1,32 +1,23 @@
 $( document ).ready( function() {
 
+	// Show a login or register popup
 
-	$( window ).on( 'hashchange', checkHash );
-	checkHash();
+	$( ".admin.button" ).click(function(e){
 
-	function checkHash() {
+		getPopup( "admin/cpanel", "admin" );
+	});
 
-		switch ( window.location.hash.substring( 1 ) ) {
-			case "applogin":
-				getPopup( "app/cpanel", "app" );
-				break;
-			case "platformlogin":
-				getPopup( "platform/cpanel", "platform" );
-				break;
-			case "adminlogin":
-				getPopup( "admin/cpanel", "admin" );
-				break;
-			case "appregister":
-				getPopup( "register/app", "app" );
-				break;
-			case "platformregister":
-				getPopup( "register/platform", "platform" );
-				break;
-			default:
-				hidePopup();
-				break;
-		}
-	}
+	$( ".login.button" ).click(function(e){
+
+		getPopup( "user/cpanel", "user" );
+	});
+	$( ".register.button" ).click(function(e){
+
+		getPopup( "register", "user" );
+	});
+
+
+	// Retrieve the popup html and show it
 
 	function getPopup( url, role ) {
 
@@ -69,7 +60,7 @@ $( document ).ready( function() {
 
 		} else {
 
-			handleRegister( url, role );
+			handleRegister( url );
 		}
 	}
 
@@ -77,6 +68,9 @@ $( document ).ready( function() {
 
 		$( ".overlay" ).css( { 'display': 'none' } );
 	}
+
+
+	// handle login/register form submission
 
 	function handleLogin( url, role ) {
 
@@ -102,7 +96,7 @@ $( document ).ready( function() {
 		} );
 	}
 
-	function handleRegister( url, role ) {
+	function handleRegister( url ) {
 
 		$( "form.register" ).submit( function( e ) {
 
@@ -114,11 +108,11 @@ $( document ).ready( function() {
 
 					if ( $( data ).find( ".error" ).length == 0 ) {
 
-						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), role + "/cpanel", role );
+						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), "user/cpanel", "user" );
 
 					} else {
 
-						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), url, role );
+						showPopup( $( "<div id='wrapper'>" + $.trim( data ) + "</div>" ).find( ".popup" ), url,  "user" );
 					}
 				},
 				error: function( data ) {
@@ -131,11 +125,12 @@ $( document ).ready( function() {
 		} );
 	}
 
+	// Hide the popup
 
 	$( document ).keyup( function( e ) {
 		if ( $( ".overlay" ).css( 'display' ) != 'none' && e.keyCode == 27 ) { // escape pressed while popup open
 
-			window.location.hash = "";
+			hidePopup();
 		}
 	} );
 
@@ -143,9 +138,8 @@ $( document ).ready( function() {
 
 		if ( $( ".overlay" ).css( 'display' ) != 'none' && e.target == this ) { // background clicked while popup open
 
-			window.location.hash = "";
+			hidePopup();
 		}
 	} );
-
 
 } );
