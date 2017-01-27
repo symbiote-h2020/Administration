@@ -19,7 +19,7 @@ $( document ).ready( function() {
 		window.location = window.location + '#loaded';
 		setTimeout( function() {
 			window.location.reload( 1 );
-		}, 3000 );
+		}, 1000 );
 	}
 
 
