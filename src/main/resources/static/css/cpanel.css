@@ -1,0 +1,169 @@
+body {
+	
+	margin: 0;
+	padding: 0;
+
+	background-color: rgb(252,252,252);
+
+	color: rgb(102,102,102);
+	font-family: "PT Sans Narrow",sans-serif;
+}
+
+a {
+
+	text-decoration: none;
+	color: rgb(102,102,102);
+}
+
+.header {
+
+	height: 50px;
+	text-align: right;
+
+	background-color: rgb(69, 147, 188);
+	color: white;
+	font-weight: bold;
+}
+
+.header .logo {
+
+	position: absolute;
+	left: 0;
+
+	padding: 0;
+	width: 100px;
+}
+
+.header .title {
+
+	position: absolute;
+	left: 100px;
+
+	padding: 15px;
+
+	font-size: 16px;
+}
+
+.header .user {
+
+	display: inline-block;
+	padding: 15px;
+}
+
+.header form.logout {
+
+	display: inline-block;
+}
+
+.header .logout .button {
+
+	padding: 14px;
+
+	background-color: rgb(59, 137, 178);
+	color: white;
+	border: none;
+	border-left: 2px solid rgb(252,252,252);
+	border-radius: 0;
+	font-weight: bold;
+	font-size: 18px;
+}
+
+.header .button:hover {
+
+	cursor: pointer;
+	background-color: #4593BC;
+}
+
+
+.content .sidebar {
+
+	position: absolute;
+	width: 100px;
+	top: 50px;
+	left: 0;
+	bottom: 0;
+	margin: 0;
+	padding: 0;
+
+	text-align: center;
+
+	border-top: 1px solid rgba(0,0,0, 0.3);
+	border-right: 1px solid rgba(0,0,0, 0.3);
+	background-color: rgba(0,0,0, 0.08);
+	list-style: none;
+}
+
+.content .sidebar .action {
+
+	padding: 8px;
+
+	border-bottom: 1px solid rgba(0,0,0, 0.3);
+	cursor: pointer;
+}
+
+.content .action.active {
+
+	background-color: rgb(129, 177, 208);
+	color: white;
+	cursor: default;
+}
+.content .action:hover {
+
+	background-color: rgba(129, 177, 208, 0.5);
+}
+
+.content .tabs {
+
+	position: absolute;
+	top: 50px;
+	left: 100px;
+	right: 0;
+
+}
+
+.content .tabs .tab {
+
+	display: none;
+
+	padding: 40px;
+
+	text-align: center;
+}
+
+.content .tab form {
+
+	width: 400px;
+	margin: auto;
+}
+
+.content .tab.active {
+
+	display: block;
+}
+
+.content .separator {
+
+	height: 10px;
+}
+
+.content .button {
+
+	display: block;
+	max-width: 60%;
+	margin: 15px auto;
+	padding: 5px;
+
+	color: white;
+	background-color: rgb(69, 147, 188);
+}
+
+.content .button:hover {
+
+	cursor: pointer;
+	background-color: #4593BC;
+}
+
+.content textarea {
+	width: 240px;
+	height: 60px;
+}
