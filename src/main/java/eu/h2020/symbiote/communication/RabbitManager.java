@@ -66,10 +66,10 @@ public class RabbitManager {
         try {
             ConnectionFactory factory = new ConnectionFactory();
 
-            factory.setHost("localhost");
-            // factory.setHost(this.rabbitHost);
-            // factory.setUsername(this.rabbitUsername);
-            // factory.setPassword(this.rabbitPassword);
+            // factory.setHost("localhost");
+            factory.setHost(this.rabbitHost);
+            factory.setUsername(this.rabbitUsername);
+            factory.setPassword(this.rabbitPassword);
 
             this.connection = factory.newConnection();
 

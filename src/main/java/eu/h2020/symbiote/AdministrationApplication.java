@@ -59,7 +59,6 @@ public class AdministrationApplication {
 // //            this.rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->
 // //                    System.out.println("Platform modification response: " + rpcPlatformResponse));
         }
-
     }
 
     @Bean
