@@ -1,7 +1,6 @@
 package eu.h2020.symbiote;
 
 import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.model.Platform;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +14,10 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * Created by mateuszl on 22.09.2016.
+ * Administration module's entry point.
+ * <p>
+ * Administration is responsible for registering platforms by platform owners.
+ * It provides a web-based GUI for performing platform operations.
  */
 @EnableDiscoveryClient
 @SpringBootApplication
@@ -42,7 +44,7 @@ public class AdministrationApplication {
             this.rabbitManager.initCommunication();
 
 //            For testing purpopses
-            
+
 //            Platform platform = new Platform();
 //            platform.setPlatformId("5886154b3999e53d70b46589");
 //            platform.setName("New Platform changed");
@@ -51,13 +53,13 @@ public class AdministrationApplication {
 // //            platform.setUrl("http://example.com");
 
 //            this.rabbitManager.sendPlatformCreationRequest(platform, rpcPlatformResponse ->
-//                    System.out.println("Received response in interface: " + rpcPlatformResponse));
+//                    log.debug("Received response in interface: " + rpcPlatformResponse));
 
-// //            this.rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->
-// //                    System.out.println("Platform deleted response: " + rpcPlatformResponse));
+            //            this.rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->
+            //                    log.debug("Platform deleted response: " + rpcPlatformResponse));
 
-// //            this.rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->
-// //                    System.out.println("Platform modification response: " + rpcPlatformResponse));
+//             this.rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->
+//                     log.debug("Platform modification response: " + rpcPlatformResponse));
         }
     }
 

@@ -1,8 +1,7 @@
 package eu.h2020.symbiote.model;
 
 /**
- * Class used to describe platform instance.
- * Used for Rabbit messaging.
+ * POJO describing a platform.
  */
 public class Platform {
     private String platformId;
@@ -11,6 +10,9 @@ public class Platform {
     private String url;
     private String informationModelId;
 
+    /**
+     * Default empty constructor.
+     */
     public Platform() {
 
     }

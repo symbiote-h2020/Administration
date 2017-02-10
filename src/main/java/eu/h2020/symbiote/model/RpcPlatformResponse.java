@@ -1,12 +1,16 @@
 package eu.h2020.symbiote.model;
 
 /**
- * Class used as a response to RPC call requesting platform operation
+ * POJO used as a response to RPC call requesting platform operation.
+ * It consists of Platform object and standard HTTP status code as an integer.
  */
 public class RpcPlatformResponse {
     private int status;
     private Platform platform;
 
+    /**
+     * Default empty constructor.
+     */
     public RpcPlatformResponse() {
     }
 
