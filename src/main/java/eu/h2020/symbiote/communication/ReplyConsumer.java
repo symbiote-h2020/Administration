@@ -56,8 +56,6 @@ public class ReplyConsumer extends QueueingConsumer {
                                AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
-        String queueName = envelope.getRoutingKey();
-
         if (properties.getCorrelationId().equals(this.correlationId)) {
             String message = new String(body, "UTF-8");
             log.debug(" [x] Received '" + message + "'");
@@ -66,8 +64,10 @@ public class ReplyConsumer extends QueueingConsumer {
             RpcPlatformResponse response = mapper.readValue(message, RpcPlatformResponse.class);
             if (responseListener != null)
                 responseListener.onRpcResponseReceive(response);
-            if (this.emptyConsumerReturnListener != null)
+            if (this.emptyConsumerReturnListener != null) {
+                String queueName = envelope.getRoutingKey();
                 this.emptyConsumerReturnListener.removeListener(queueName, correlationId);
+            }
         }
     }
 }

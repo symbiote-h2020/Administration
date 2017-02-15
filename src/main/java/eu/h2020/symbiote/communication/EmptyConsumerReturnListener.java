@@ -87,9 +87,9 @@ public class EmptyConsumerReturnListener implements ReturnListener {
     /**
      * Method used to register response listener for specified reply queue name and correlation ID.
      *
-     * @param queueName reply queue name to register listener for
+     * @param queueName     reply queue name to register listener for
      * @param correlationId correlation ID to register listener for
-     * @param listener response listener to register
+     * @param listener      response listener to register
      */
     public void addListener(String queueName, String correlationId, IRpcResponseListener listener) {
         log.debug("Adding return listener");
@@ -100,13 +100,21 @@ public class EmptyConsumerReturnListener implements ReturnListener {
     /**
      * Method used to unregister response listener for specified reply queue name and correlation ID.
      *
-     * @param queueName reply queue name to unregister listener for
+     * @param queueName     reply queue name to unregister listener for
      * @param correlationId correlation ID to unregister listener for
-
      */
     public void removeListener(String queueName, String correlationId) {
         log.debug("Removing return listener");
         Pair<String, String> listenerKey = new Pair<>(queueName, correlationId);
         this.listenerMap.remove(listenerKey);
+    }
+
+    /**
+     * For the purpose of Unit Tests.
+     *
+     * @return map of registered listeners
+     */
+    public Map<Pair, IRpcResponseListener> getListenerMap() {
+        return listenerMap;
     }
 }

@@ -201,4 +201,13 @@ public class RabbitManager {
     public void sendPlatformModificationRequest(Platform platform, IRpcResponseListener listener) {
         sendRpcPlatformMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform, listener);
     }
+
+    /**
+     * Just for the sake of Unit Tests.
+     *
+     * @param emptyConsumerReturnListener empty consumer return listener object
+     */
+    public void setEmptyConsumerReturnListener(EmptyConsumerReturnListener emptyConsumerReturnListener) {
+        this.emptyConsumerReturnListener = emptyConsumerReturnListener;
+    }
 }
