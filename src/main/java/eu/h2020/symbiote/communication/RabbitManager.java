@@ -65,6 +65,29 @@ public class RabbitManager {
 
     private EmptyConsumerReturnListener emptyConsumerReturnListener;
 
+    //For the sake of unit tests
+    private ReplyConsumer lastReplyConsumer;
+
+    /**
+     * Default, empty constructor.
+     */
+    public RabbitManager() {
+
+    }
+
+
+    /**
+     * Constructor used only when doing Unit Tests.
+     * Used to pass mocked instance of emptyConsumerReturnListener.
+     *
+     * @param emptyConsumerReturnListener instance of listener handling empty consumer messages
+     * @param channel rabbit channel
+     */
+    public RabbitManager(EmptyConsumerReturnListener emptyConsumerReturnListener, Channel channel) {
+        this.emptyConsumerReturnListener = emptyConsumerReturnListener;
+        this.channel = channel;
+    }
+
     /**
      * Method used to initialise RabbitMQ connection and declare all required exchanges.
      * This method should be called once, after bean initialization (so that properties from CoreConfigServer are obtained),
@@ -125,7 +148,7 @@ public class RabbitManager {
      * @param exchangeName     name of the exchange to send message to
      * @param routingKey       routing key to send message to
      * @param message          message to be sent
-     * @param responseListener listener to be informed when the reponse message is available
+     * @param responseListener listener to be informed when the response message is available
      */
     public void sendRpcMessage(String exchangeName, String routingKey, String message, IRpcResponseListener responseListener) {
         try {
@@ -144,6 +167,7 @@ public class RabbitManager {
                 this.emptyConsumerReturnListener.addListener(replyQueueName, correlationId, responseListener);
 
             ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener, this.emptyConsumerReturnListener);
+            this.lastReplyConsumer = consumer;
             this.channel.basicConsume(replyQueueName, true, consumer);
 
             this.channel.basicPublish(exchangeName, routingKey, true, props, message.getBytes());
@@ -203,11 +227,11 @@ public class RabbitManager {
     }
 
     /**
-     * Just for the sake of Unit Tests.
+     * Method used only when doing unit tests.
      *
-     * @param emptyConsumerReturnListener empty consumer return listener object
+     * @return Last created reply consumer
      */
-    public void setEmptyConsumerReturnListener(EmptyConsumerReturnListener emptyConsumerReturnListener) {
-        this.emptyConsumerReturnListener = emptyConsumerReturnListener;
+    public ReplyConsumer getLastReplyConsumer() {
+        return lastReplyConsumer;
     }
 }
