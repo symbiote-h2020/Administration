@@ -98,6 +98,52 @@ public class ReplyConsumerTests {
     }
 
     @Test
+    public void testReplyConsumer_nullBody() {
+        try {
+            IRpcResponseListener responseListener = mock(IRpcResponseListener.class);
+            EmptyConsumerReturnListener emptyConsumerReturnListener = null;
+
+            AMQP.BasicProperties props = new AMQP.BasicProperties()
+                    .builder()
+                    .correlationId("testCorrelationId")
+                    .build();
+            Envelope envelope = new Envelope(0, false, "", "testReplyQueueName");
+
+            ReplyConsumer replyConsumer = new ReplyConsumer(null, "testCorrelationId", responseListener, emptyConsumerReturnListener);
+            replyConsumer.handleDelivery(null, envelope, props, null);
+
+            verify(responseListener, times(1)).onRpcResponseReceive(any());
+        } catch (IOException e) {
+            fail();
+        }
+
+    }
+
+    @Test
+    public void testReplyConsumer_malformedBody() {
+        try {
+            IRpcResponseListener responseListener = mock(IRpcResponseListener.class);
+            EmptyConsumerReturnListener emptyConsumerReturnListener = null;
+
+            String jsonResponse = "{not a valid json}";
+
+            AMQP.BasicProperties props = new AMQP.BasicProperties()
+                    .builder()
+                    .correlationId("testCorrelationId")
+                    .build();
+            Envelope envelope = new Envelope(0, false, "", "testReplyQueueName");
+
+            ReplyConsumer replyConsumer = new ReplyConsumer(null, "testCorrelationId", responseListener, emptyConsumerReturnListener);
+            replyConsumer.handleDelivery(null, envelope, props, jsonResponse.getBytes());
+
+            verify(responseListener, times(1)).onRpcResponseReceive(any());
+        } catch (IOException e) {
+            fail();
+        }
+
+    }
+
+    @Test
     public void testReplyConsumer_full() {
         try {
             IRpcResponseListener responseListener = mock(IRpcResponseListener.class);

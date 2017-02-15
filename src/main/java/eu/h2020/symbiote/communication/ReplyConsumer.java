@@ -57,11 +57,18 @@ public class ReplyConsumer extends QueueingConsumer {
             throws IOException {
 
         if (properties.getCorrelationId().equals(this.correlationId)) {
-            String message = new String(body, "UTF-8");
-            log.debug(" [x] Received '" + message + "'");
+            RpcPlatformResponse response = null;
+            if (body!= null) {
+                String message = new String(body, "UTF-8");
+                log.debug(" [x] Received '" + message + "'");
 
-            ObjectMapper mapper = new ObjectMapper();
-            RpcPlatformResponse response = mapper.readValue(message, RpcPlatformResponse.class);
+                try {
+                    ObjectMapper mapper = new ObjectMapper();
+                    response = mapper.readValue(message, RpcPlatformResponse.class);
+                } catch (IOException e) {
+                    response = null;
+                }
+            }
             if (responseListener != null)
                 responseListener.onRpcResponseReceive(response);
             if (this.emptyConsumerReturnListener != null) {
