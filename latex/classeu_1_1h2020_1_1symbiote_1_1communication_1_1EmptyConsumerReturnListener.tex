@@ -1,0 +1,145 @@
+\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}{}\section{eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener Class Reference}
+\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}\index{eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener@{eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener}}
+
+
+Inheritance diagram for eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a9ec79d1d093e2380bf03fa1f76ce2261}{Empty\+Consumer\+Return\+Listener} ()
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a612cd000e7188e6f05091e3f3673fb1d}{handle\+Return} (int reply\+Code, String reply\+Text, String exchange, String routing\+Key, A\+M\+Q\+P.\+Basic\+Properties properties, byte\mbox{[}$\,$\mbox{]} body)  throws I\+O\+Exception 
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_aaa1b35e4c336a029f118a19b9162e812}{add\+Listener} (String queue\+Name, String correlation\+Id, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} listener)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a89ad674c17d6304781ed91117aac0153}{remove\+Listener} (String queue\+Name, String correlation\+Id)
+\item 
+Map$<$ Pair, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} $>$ \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_afc62e8333afe576bc3a211195f7ade06}{get\+Listener\+Map} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class responsible for handling R\+PC messages send to an exchange without bound consumers. 
+
+When request is sent to an exchange without any consumers subscribed, it will not be buffered, but will disappear without any trace. Therefore, not only the request will not be served, but also caller will not get back any notification, since communication is done asynchronously. That\textquotesingle{}s where \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}{Empty\+Consumer\+Return\+Listener} comes to work. If it gets called by failing to deliver a mandatory message, it will notify the registered response listener that the request could not be served. 
+
+\subsection{Constructor \& Destructor Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}!Empty\+Consumer\+Return\+Listener@{Empty\+Consumer\+Return\+Listener}}
+\index{Empty\+Consumer\+Return\+Listener@{Empty\+Consumer\+Return\+Listener}!eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}}
+\subsubsection[{\texorpdfstring{Empty\+Consumer\+Return\+Listener()}{EmptyConsumerReturnListener()}}]{\setlength{\rightskip}{0pt plus 5cm}eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener.\+Empty\+Consumer\+Return\+Listener (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a9ec79d1d093e2380bf03fa1f76ce2261}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a9ec79d1d093e2380bf03fa1f76ce2261}
+Default empty constructor. 
+
+\subsection{Member Function Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}!add\+Listener@{add\+Listener}}
+\index{add\+Listener@{add\+Listener}!eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}}
+\subsubsection[{\texorpdfstring{add\+Listener(\+String queue\+Name, String correlation\+Id, I\+Rpc\+Response\+Listener listener)}{addListener(String queueName, String correlationId, IRpcResponseListener listener)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener.\+add\+Listener (
+\begin{DoxyParamCaption}
+\item[{String}]{queue\+Name, }
+\item[{String}]{correlation\+Id, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_aaa1b35e4c336a029f118a19b9162e812}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_aaa1b35e4c336a029f118a19b9162e812}
+Method used to register response listener for specified reply queue name and correlation ID.
+
+
+\begin{DoxyParams}{Parameters}
+{\em queue\+Name} & reply queue name to register listener for \\
+\hline
+{\em correlation\+Id} & correlation ID to register listener for \\
+\hline
+{\em listener} & response listener to register \\
+\hline
+\end{DoxyParams}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}!get\+Listener\+Map@{get\+Listener\+Map}}
+\index{get\+Listener\+Map@{get\+Listener\+Map}!eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}}
+\subsubsection[{\texorpdfstring{get\+Listener\+Map()}{getListenerMap()}}]{\setlength{\rightskip}{0pt plus 5cm}Map$<$Pair, {\bf I\+Rpc\+Response\+Listener}$>$ eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener.\+get\+Listener\+Map (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_afc62e8333afe576bc3a211195f7ade06}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_afc62e8333afe576bc3a211195f7ade06}
+For the purpose of Unit Tests.
+
+\begin{DoxyReturn}{Returns}
+map of registered listeners 
+\end{DoxyReturn}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}!handle\+Return@{handle\+Return}}
+\index{handle\+Return@{handle\+Return}!eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}}
+\subsubsection[{\texorpdfstring{handle\+Return(int reply\+Code, String reply\+Text, String exchange, String routing\+Key, A\+M\+Q\+P.\+Basic\+Properties properties, byte[] body)}{handleReturn(int replyCode, String replyText, String exchange, String routingKey, AMQP.BasicProperties properties, byte[] body)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener.\+handle\+Return (
+\begin{DoxyParamCaption}
+\item[{int}]{reply\+Code, }
+\item[{String}]{reply\+Text, }
+\item[{String}]{exchange, }
+\item[{String}]{routing\+Key, }
+\item[{A\+M\+Q\+P.\+Basic\+Properties}]{properties, }
+\item[{byte\mbox{[}$\,$\mbox{]}}]{body}
+\end{DoxyParamCaption}
+) throws I\+O\+Exception}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a612cd000e7188e6f05091e3f3673fb1d}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a612cd000e7188e6f05091e3f3673fb1d}
+Implementation of handling return message from Rabbit\+MQ. 
+
+When a mandatory message is to be sent, its response listener is registered using \{\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_aaa1b35e4c336a029f118a19b9162e812}{add\+Listener(\+String, String, I\+Rpc\+Response\+Listener)}\} method, using reply queue name and correlation ID as key. When the handle\+Return method is called, it checks the message\textquotesingle{}s reply queue name and correlation ID to find out if the response listener has been registered for it. If so, it fires it with proper response message (that is status 500 -\/ Internal Server Error, and empty body). 
+
+When message was handled succesfully by consumer, its response listener is unregistered from \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}{Empty\+Consumer\+Return\+Listener}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em reply\+Code} & irrelevant for this implementation of Return\+Listener \\
+\hline
+{\em reply\+Text} & irrelevant for this implementation of Return\+Listener \\
+\hline
+{\em exchange} & irrelevant for this implementation of Return\+Listener \\
+\hline
+{\em routing\+Key} & irrelevant for this implementation of Return\+Listener \\
+\hline
+{\em properties} & properties object that was sent with the message; it should contain both reply\+To and correlation\+Id parameters \\
+\hline
+{\em body} & irrelevant for this implementation of Return\+Listener \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyExceptions}{Exceptions}
+{\em I\+O\+Exception} & \\
+\hline
+\end{DoxyExceptions}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}!remove\+Listener@{remove\+Listener}}
+\index{remove\+Listener@{remove\+Listener}!eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+Empty\+Consumer\+Return\+Listener}}
+\subsubsection[{\texorpdfstring{remove\+Listener(\+String queue\+Name, String correlation\+Id)}{removeListener(String queueName, String correlationId)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Empty\+Consumer\+Return\+Listener.\+remove\+Listener (
+\begin{DoxyParamCaption}
+\item[{String}]{queue\+Name, }
+\item[{String}]{correlation\+Id}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a89ad674c17d6304781ed91117aac0153}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener_a89ad674c17d6304781ed91117aac0153}
+Method used to unregister response listener for specified reply queue name and correlation ID.
+
+
+\begin{DoxyParams}{Parameters}
+{\em queue\+Name} & reply queue name to unregister listener for \\
+\hline
+{\em correlation\+Id} & correlation ID to unregister listener for \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/main/java/eu/h2020/symbiote/communication/Empty\+Consumer\+Return\+Listener.\+java\end{DoxyCompactItemize}

@@ -1,0 +1,187 @@
+\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager}{}\section{eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager Class Reference}
+\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager}\index{eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager@{eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager}}
+
+
+Collaboration diagram for eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_af32aa97329fd60a0c4d158d13a261b30}{Rabbit\+Manager} ()
+\item 
+\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_add62f0a65b573c741e8cf0e1bbc44a44}{Rabbit\+Manager} (\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}{Empty\+Consumer\+Return\+Listener} empty\+Consumer\+Return\+Listener, Channel channel)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a30abf6a670122eb22a8105a206858616}{init\+Communication} ()
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a200f6aba21764770f8526f0682b08f1c}{send\+Rpc\+Message} (String exchange\+Name, String routing\+Key, String message, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} response\+Listener)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a9dd2b250640a13346fabfba81ae22a07}{send\+Rpc\+Platform\+Message} (String exchange\+Name, String routing\+Key, \hyperlink{classeu_1_1h2020_1_1symbiote_1_1model_1_1Platform}{Platform} platform, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} response\+Listener)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_ac960f5c05843849848d650e49ef25ae9}{send\+Platform\+Creation\+Request} (\hyperlink{classeu_1_1h2020_1_1symbiote_1_1model_1_1Platform}{Platform} platform, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} listener)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a7e730a2a9c5d62e5d3ff99fe28e23384}{send\+Platform\+Removal\+Request} (\hyperlink{classeu_1_1h2020_1_1symbiote_1_1model_1_1Platform}{Platform} platform, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} listener)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a0ffb60c722cea85703dabfa6dbd6f18e}{send\+Platform\+Modification\+Request} (\hyperlink{classeu_1_1h2020_1_1symbiote_1_1model_1_1Platform}{Platform} platform, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} listener)
+\item 
+\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer}{Reply\+Consumer} \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a2b34a47ec1e4a0e359f81e81f8d8b693}{get\+Last\+Reply\+Consumer} ()
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Class used for all internal communication using Rabbit\+MQ A\+M\+QP implementation. It works as a Spring Bean, and should be used via autowiring. 
+
+\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager}{Rabbit\+Manager} uses properties taken from Core\+Config\+Server to set up communication (exchange parameters, routing keys etc.) 
+
+\subsection{Constructor \& Destructor Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!Rabbit\+Manager@{Rabbit\+Manager}}
+\index{Rabbit\+Manager@{Rabbit\+Manager}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{Rabbit\+Manager()}{RabbitManager()}}]{\setlength{\rightskip}{0pt plus 5cm}eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+Rabbit\+Manager (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_af32aa97329fd60a0c4d158d13a261b30}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_af32aa97329fd60a0c4d158d13a261b30}
+Default, empty constructor. \index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!Rabbit\+Manager@{Rabbit\+Manager}}
+\index{Rabbit\+Manager@{Rabbit\+Manager}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{Rabbit\+Manager(\+Empty\+Consumer\+Return\+Listener empty\+Consumer\+Return\+Listener, Channel channel)}{RabbitManager(EmptyConsumerReturnListener emptyConsumerReturnListener, Channel channel)}}]{\setlength{\rightskip}{0pt plus 5cm}eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+Rabbit\+Manager (
+\begin{DoxyParamCaption}
+\item[{{\bf Empty\+Consumer\+Return\+Listener}}]{empty\+Consumer\+Return\+Listener, }
+\item[{Channel}]{channel}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_add62f0a65b573c741e8cf0e1bbc44a44}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_add62f0a65b573c741e8cf0e1bbc44a44}
+Constructor used only when doing Unit Tests. Used to pass mocked instance of empty\+Consumer\+Return\+Listener.
+
+
+\begin{DoxyParams}{Parameters}
+{\em empty\+Consumer\+Return\+Listener} & instance of listener handling empty consumer messages \\
+\hline
+{\em channel} & rabbit channel \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!get\+Last\+Reply\+Consumer@{get\+Last\+Reply\+Consumer}}
+\index{get\+Last\+Reply\+Consumer@{get\+Last\+Reply\+Consumer}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{get\+Last\+Reply\+Consumer()}{getLastReplyConsumer()}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Reply\+Consumer} eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+get\+Last\+Reply\+Consumer (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a2b34a47ec1e4a0e359f81e81f8d8b693}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a2b34a47ec1e4a0e359f81e81f8d8b693}
+Method used only when doing unit tests.
+
+\begin{DoxyReturn}{Returns}
+Last created reply consumer 
+\end{DoxyReturn}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!init\+Communication@{init\+Communication}}
+\index{init\+Communication@{init\+Communication}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{init\+Communication()}{initCommunication()}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+init\+Communication (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a30abf6a670122eb22a8105a206858616}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a30abf6a670122eb22a8105a206858616}
+Method used to initialise Rabbit\+MQ connection and declare all required exchanges. This method should be called once, after bean initialization (so that properties from Core\+Config\+Server are obtained), but before using \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager}{Rabbit\+Manager} to send any message. \index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!send\+Platform\+Creation\+Request@{send\+Platform\+Creation\+Request}}
+\index{send\+Platform\+Creation\+Request@{send\+Platform\+Creation\+Request}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{send\+Platform\+Creation\+Request(\+Platform platform, I\+Rpc\+Response\+Listener listener)}{sendPlatformCreationRequest(Platform platform, IRpcResponseListener listener)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+send\+Platform\+Creation\+Request (
+\begin{DoxyParamCaption}
+\item[{{\bf Platform}}]{platform, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_ac960f5c05843849848d650e49ef25ae9}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_ac960f5c05843849848d650e49ef25ae9}
+Method used to send R\+PC request to create platform.
+
+
+\begin{DoxyParams}{Parameters}
+{\em platform} & platform to be created \\
+\hline
+{\em listener} & listener for rpc response \\
+\hline
+\end{DoxyParams}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!send\+Platform\+Modification\+Request@{send\+Platform\+Modification\+Request}}
+\index{send\+Platform\+Modification\+Request@{send\+Platform\+Modification\+Request}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{send\+Platform\+Modification\+Request(\+Platform platform, I\+Rpc\+Response\+Listener listener)}{sendPlatformModificationRequest(Platform platform, IRpcResponseListener listener)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+send\+Platform\+Modification\+Request (
+\begin{DoxyParamCaption}
+\item[{{\bf Platform}}]{platform, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a0ffb60c722cea85703dabfa6dbd6f18e}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a0ffb60c722cea85703dabfa6dbd6f18e}
+Method used to send R\+PC request to modify platform.
+
+
+\begin{DoxyParams}{Parameters}
+{\em platform} & platform to be modified \\
+\hline
+{\em listener} & listener for rpc response \\
+\hline
+\end{DoxyParams}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!send\+Platform\+Removal\+Request@{send\+Platform\+Removal\+Request}}
+\index{send\+Platform\+Removal\+Request@{send\+Platform\+Removal\+Request}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{send\+Platform\+Removal\+Request(\+Platform platform, I\+Rpc\+Response\+Listener listener)}{sendPlatformRemovalRequest(Platform platform, IRpcResponseListener listener)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+send\+Platform\+Removal\+Request (
+\begin{DoxyParamCaption}
+\item[{{\bf Platform}}]{platform, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a7e730a2a9c5d62e5d3ff99fe28e23384}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a7e730a2a9c5d62e5d3ff99fe28e23384}
+Method used to send R\+PC request to remove platform.
+
+
+\begin{DoxyParams}{Parameters}
+{\em platform} & platform to be removed \\
+\hline
+{\em listener} & listener for rpc response \\
+\hline
+\end{DoxyParams}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!send\+Rpc\+Message@{send\+Rpc\+Message}}
+\index{send\+Rpc\+Message@{send\+Rpc\+Message}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{send\+Rpc\+Message(\+String exchange\+Name, String routing\+Key, String message, I\+Rpc\+Response\+Listener response\+Listener)}{sendRpcMessage(String exchangeName, String routingKey, String message, IRpcResponseListener responseListener)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+send\+Rpc\+Message (
+\begin{DoxyParamCaption}
+\item[{String}]{exchange\+Name, }
+\item[{String}]{routing\+Key, }
+\item[{String}]{message, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{response\+Listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a200f6aba21764770f8526f0682b08f1c}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a200f6aba21764770f8526f0682b08f1c}
+Method used to send message via R\+PC (Remote Procedure Call) pattern. Before sending a message, a temporary response queue is declared and its name is passed along with the message. When a consumer handles the message, it returns the result via the response queue. When the response is available, the response\+Listener is notified of its arrival.
+
+
+\begin{DoxyParams}{Parameters}
+{\em exchange\+Name} & name of the exchange to send message to \\
+\hline
+{\em routing\+Key} & routing key to send message to \\
+\hline
+{\em message} & message to be sent \\
+\hline
+{\em response\+Listener} & listener to be informed when the response message is available \\
+\hline
+\end{DoxyParams}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}!send\+Rpc\+Platform\+Message@{send\+Rpc\+Platform\+Message}}
+\index{send\+Rpc\+Platform\+Message@{send\+Rpc\+Platform\+Message}!eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager@{eu\+::h2020\+::symbiote\+::communication\+::\+Rabbit\+Manager}}
+\subsubsection[{\texorpdfstring{send\+Rpc\+Platform\+Message(\+String exchange\+Name, String routing\+Key, Platform platform, I\+Rpc\+Response\+Listener response\+Listener)}{sendRpcPlatformMessage(String exchangeName, String routingKey, Platform platform, IRpcResponseListener responseListener)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Rabbit\+Manager.\+send\+Rpc\+Platform\+Message (
+\begin{DoxyParamCaption}
+\item[{String}]{exchange\+Name, }
+\item[{String}]{routing\+Key, }
+\item[{{\bf Platform}}]{platform, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{response\+Listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a9dd2b250640a13346fabfba81ae22a07}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1RabbitManager_a9dd2b250640a13346fabfba81ae22a07}
+Helper method that provides J\+S\+ON marshalling and unmarshalling for the sake of Rabbit communication.
+
+
+\begin{DoxyParams}{Parameters}
+{\em exchange\+Name} & name of the exchange to send message to \\
+\hline
+{\em routing\+Key} & routing key to send message to \\
+\hline
+{\em platform} & platform to be sent \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/main/java/eu/h2020/symbiote/communication/Rabbit\+Manager.\+java\end{DoxyCompactItemize}

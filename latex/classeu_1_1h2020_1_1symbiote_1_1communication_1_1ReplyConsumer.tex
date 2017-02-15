@@ -1,0 +1,98 @@
+\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer}{}\section{eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer Class Reference}
+\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer}\index{eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer@{eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer}}
+
+
+Inheritance diagram for eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer__inherit__graph}
+\end{center}
+\end{figure}
+
+
+Collaboration diagram for eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer_ac88955046a3768a0b8f83a1719ec8fa1}{Reply\+Consumer} (Channel channel, String correlation\+Id, \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{I\+Rpc\+Response\+Listener} response\+Listener, \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}{Empty\+Consumer\+Return\+Listener} empty\+Consumer\+Return\+Listener)
+\item 
+void \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer_a34dd66474d8fac50804af8a33642fa1d}{handle\+Delivery} (String consumer\+Tag, Envelope envelope, A\+M\+Q\+P.\+Basic\+Properties properties, byte\mbox{[}$\,$\mbox{]} body)  throws I\+O\+Exception 
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+R\+PC response handler. 
+
+This class is used to consume Rabbit\+MQ response message, which comes via temporary, R\+PC response queue. 
+
+\subsection{Constructor \& Destructor Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer@{eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer}!Reply\+Consumer@{Reply\+Consumer}}
+\index{Reply\+Consumer@{Reply\+Consumer}!eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer@{eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer}}
+\subsubsection[{\texorpdfstring{Reply\+Consumer(\+Channel channel, String correlation\+Id, I\+Rpc\+Response\+Listener response\+Listener, Empty\+Consumer\+Return\+Listener empty\+Consumer\+Return\+Listener)}{ReplyConsumer(Channel channel, String correlationId, IRpcResponseListener responseListener, EmptyConsumerReturnListener emptyConsumerReturnListener)}}]{\setlength{\rightskip}{0pt plus 5cm}eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer.\+Reply\+Consumer (
+\begin{DoxyParamCaption}
+\item[{Channel}]{channel, }
+\item[{String}]{correlation\+Id, }
+\item[{{\bf I\+Rpc\+Response\+Listener}}]{response\+Listener, }
+\item[{{\bf Empty\+Consumer\+Return\+Listener}}]{empty\+Consumer\+Return\+Listener}
+\end{DoxyParamCaption}
+)}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer_ac88955046a3768a0b8f83a1719ec8fa1}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer_ac88955046a3768a0b8f83a1719ec8fa1}
+Constructs a new instance and records its association to the passed-\/in channel.
+
+
+\begin{DoxyParams}{Parameters}
+{\em channel} & the channel to which this consumer is attached \\
+\hline
+{\em correlation\+Id} & correlation\+Id used to send R\+PC request \\
+\hline
+{\em response\+Listener} & listener to be notified when the response is received \\
+\hline
+{\em empty\+Consumer\+Return\+Listener} & listener that handles empty exchange bindings \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{Member Function Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer@{eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer}!handle\+Delivery@{handle\+Delivery}}
+\index{handle\+Delivery@{handle\+Delivery}!eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer@{eu\+::h2020\+::symbiote\+::communication\+::\+Reply\+Consumer}}
+\subsubsection[{\texorpdfstring{handle\+Delivery(\+String consumer\+Tag, Envelope envelope, A\+M\+Q\+P.\+Basic\+Properties properties, byte[] body)}{handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+Reply\+Consumer.\+handle\+Delivery (
+\begin{DoxyParamCaption}
+\item[{String}]{consumer\+Tag, }
+\item[{Envelope}]{envelope, }
+\item[{A\+M\+Q\+P.\+Basic\+Properties}]{properties, }
+\item[{byte\mbox{[}$\,$\mbox{]}}]{body}
+\end{DoxyParamCaption}
+) throws I\+O\+Exception}\hypertarget{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer_a34dd66474d8fac50804af8a33642fa1d}{}\label{classeu_1_1h2020_1_1symbiote_1_1communication_1_1ReplyConsumer_a34dd66474d8fac50804af8a33642fa1d}
+Method used to handle messages coming to temporary, R\+PC response queue. 
+
+When a new message comes to queue and the correlation ID is the same as sent in request, it is being served. It means, that if there was a response listener registered with it, it gets fired with the response delivered, and the (reply\+Queue\+Name, correlation\+ID) pair is unregistered from \hyperlink{classeu_1_1h2020_1_1symbiote_1_1communication_1_1EmptyConsumerReturnListener}{Empty\+Consumer\+Return\+Listener}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em consumer\+Tag} & irrelevant for this implementation \\
+\hline
+{\em envelope} & contains routing key, which in this case is the name of temporary, R\+PC response queue \\
+\hline
+{\em properties} & contains correlation ID of a message to verify it\textquotesingle{}s validity \\
+\hline
+{\em body} & contains response to be passed to listener \\
+\hline
+\end{DoxyParams}
+
+\begin{DoxyExceptions}{Exceptions}
+{\em I\+O\+Exception} & \\
+\hline
+\end{DoxyExceptions}
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/main/java/eu/h2020/symbiote/communication/Reply\+Consumer.\+java\end{DoxyCompactItemize}

@@ -1,0 +1,44 @@
+\hypertarget{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}{}\section{eu.\+h2020.\+symbiote.\+communication.\+I\+Rpc\+Response\+Listener Interface Reference}
+\label{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener}\index{eu.\+h2020.\+symbiote.\+communication.\+I\+Rpc\+Response\+Listener@{eu.\+h2020.\+symbiote.\+communication.\+I\+Rpc\+Response\+Listener}}
+
+
+Collaboration diagram for eu.\+h2020.\+symbiote.\+communication.\+I\+Rpc\+Response\+Listener\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=251pt]{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener_ad9d4acebc86817e20f4ce3e07aeee8ae}{on\+Rpc\+Response\+Receive} (\hyperlink{classeu_1_1h2020_1_1symbiote_1_1model_1_1RpcPlatformResponse}{Rpc\+Platform\+Response} rpc\+Platform\+Response)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+Interface used as a response listener for R\+PC Rabbit\+MQ communication. 
+
+When a message is sent using asynchronous R\+PC call, it needs to pass listener that waits for the response. 
+
+\subsection{Member Function Documentation}
+\index{eu\+::h2020\+::symbiote\+::communication\+::\+I\+Rpc\+Response\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+I\+Rpc\+Response\+Listener}!on\+Rpc\+Response\+Receive@{on\+Rpc\+Response\+Receive}}
+\index{on\+Rpc\+Response\+Receive@{on\+Rpc\+Response\+Receive}!eu\+::h2020\+::symbiote\+::communication\+::\+I\+Rpc\+Response\+Listener@{eu\+::h2020\+::symbiote\+::communication\+::\+I\+Rpc\+Response\+Listener}}
+\subsubsection[{\texorpdfstring{on\+Rpc\+Response\+Receive(\+Rpc\+Platform\+Response rpc\+Platform\+Response)}{onRpcResponseReceive(RpcPlatformResponse rpcPlatformResponse)}}]{\setlength{\rightskip}{0pt plus 5cm}void eu.\+h2020.\+symbiote.\+communication.\+I\+Rpc\+Response\+Listener.\+on\+Rpc\+Response\+Receive (
+\begin{DoxyParamCaption}
+\item[{{\bf Rpc\+Platform\+Response}}]{rpc\+Platform\+Response}
+\end{DoxyParamCaption}
+)}\hypertarget{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener_ad9d4acebc86817e20f4ce3e07aeee8ae}{}\label{interfaceeu_1_1h2020_1_1symbiote_1_1communication_1_1IRpcResponseListener_ad9d4acebc86817e20f4ce3e07aeee8ae}
+When the response to sent request is available, this method is called, passing response object as parameter.
+
+
+\begin{DoxyParams}{Parameters}
+{\em rpc\+Platform\+Response} & R\+PC response object \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this interface was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+src/main/java/eu/h2020/symbiote/communication/I\+Rpc\+Response\+Listener.\+java\end{DoxyCompactItemize}
