@@ -6,6 +6,7 @@ package eu.h2020.symbiote.model;
  */
 public class RpcPlatformResponse {
     private int status;
+    private String message;
     private Platform platform;
 
     /**
@@ -22,6 +23,14 @@ public class RpcPlatformResponse {
         this.status = status;
     }
 
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
     public Platform getPlatform() {
         return platform;
     }
@@ -35,6 +44,7 @@ public class RpcPlatformResponse {
         return "RpcPlatformResponse{" +
                 "status=" + status +
                 ", platform=" + platform +
+                ", message=" + message +
                 '}';
     }
 }
