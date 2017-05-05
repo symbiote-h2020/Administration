@@ -49,6 +49,7 @@ public class Register {
 		}
 
 		String platformAAMURL = "hardcoded temporarily";
+		String platformInstanceFriendlyName = "placeholder";
 		String federatedId = (platformOwner.getFederatedId() == null)? "placeholder" : platformOwner.getFederatedId();
 
 		UserDetails  platformOwnerUserDetails = new UserDetails(
@@ -62,7 +63,8 @@ public class Register {
 				new Credentials(AAMOwnerUsername, AAMOwnerPassword),
 				platformOwnerUserDetails,
 				platformAAMURL,
-				platformOwner.getPlatformId()
+				platformOwner.getPlatformId(),
+				platformInstanceFriendlyName
 			);
 
 
