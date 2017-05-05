@@ -5,11 +5,13 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.DefaultConsumer;
+
 import eu.h2020.symbiote.model.PlatformResponse;
 import eu.h2020.symbiote.security.payloads.PlatformRegistrationResponse;
+import eu.h2020.symbiote.security.payloads.Token
+;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import java.io.IOException;
 
 /**
@@ -22,7 +24,8 @@ public class ReplyConsumer extends DefaultConsumer {
     public enum ReplyType {
         REGISTRY,
         AAM_PLATFORM,
-        AAM_USER;
+        AAM_USER,
+        AAM_LOGIN;
     }
 
     private static Log log = LogFactory.getLog(ReplyConsumer.class);
@@ -30,6 +33,7 @@ public class ReplyConsumer extends DefaultConsumer {
     private String correlationId;
     private RegistryListener registryListener;
     private AAMPlatformListener aamRegistrationListener;
+    private AAMLoginListener aamLoginListener;
     private ReplyType replyType;
 
     /**
@@ -51,13 +55,27 @@ public class ReplyConsumer extends DefaultConsumer {
      *
      * @param channel                     the channel to which this consumer is attached
      * @param correlationId               correlationId used to send RPC request
-     * @param aamRegistrationListener            listener to be notified when the response is received
+     * @param aamRegistrationListener     listener to be notified when the response is received
      */
     public ReplyConsumer(Channel channel, String correlationId, AAMPlatformListener aamRegistrationListener) {
         super(channel);
         this.correlationId = correlationId;
         this.aamRegistrationListener = aamRegistrationListener;
         this.replyType = ReplyType.AAM_PLATFORM;
+    }
+
+    /**
+     * Constructs a new instance and records its association to the passed-in channel, for aam login listener
+     *
+     * @param channel                     the channel to which this consumer is attached
+     * @param correlationId               correlationId used to send RPC request
+     * @param aamLoginListener            listener to be notified when the response is received
+     */
+    public ReplyConsumer(Channel channel, String correlationId, AAMLoginListener aamLoginListener) {
+        super(channel);
+        this.correlationId = correlationId;
+        this.aamLoginListener = aamLoginListener;
+        this.replyType = ReplyType.AAM_LOGIN;
     }
 
     /**
@@ -83,6 +101,9 @@ public class ReplyConsumer extends DefaultConsumer {
                     break;
                 case AAM_PLATFORM:
                     handleAAMPlatform(body);
+                    break;
+                case AAM_LOGIN:
+                    handleAAMLogin(body);
                     break;
             }            
         }
@@ -122,5 +143,23 @@ public class ReplyConsumer extends DefaultConsumer {
         }
         if (aamRegistrationListener != null)
             aamRegistrationListener.onRpcResponseReceive(response);
+    }
+
+    private void handleAAMLogin(byte[] body) throws IOException{
+
+        Token response = null;
+        if (body!= null) {
+            String message = new String(body, "UTF-8");
+            log.debug(" [x] Received '" + message + "'");
+
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                response = mapper.readValue(message, Token.class);
+            } catch (IOException e) {
+                response = null;
+            }
+        }
+        if (aamLoginListener != null)
+            aamLoginListener.onRpcResponseReceive(response);
     }
 }

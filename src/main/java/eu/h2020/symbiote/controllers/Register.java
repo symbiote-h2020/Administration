@@ -37,7 +37,6 @@ public class Register {
 	}
 
 	@PostMapping("/platform/register")
-
 	public DeferredResult<String> platformOwnerRegister(@Valid PlatformOwner platformOwner, BindingResult bindingResult, Model model) {
 
 		final DeferredResult<String> deferredResult = new DeferredResult<>();
@@ -49,6 +48,7 @@ public class Register {
 		}
 
 		String platformAAMURL = "hardcoded temporarily";
+		String platformInstanceFriendlyName = "placeholder"
 		String federatedId = (platformOwner.getFederatedId() == null)? "placeholder" : platformOwner.getFederatedId();
 
 		UserDetails  platformOwnerUserDetails = new UserDetails(
@@ -62,7 +62,8 @@ public class Register {
 				new Credentials(AAMOwnerUsername, AAMOwnerPassword),
 				platformOwnerUserDetails,
 				platformAAMURL,
-				platformOwner.getPlatformId()
+				platformOwner.getPlatformId(),
+				platformInstanceFriendlyName
 			);
 
 

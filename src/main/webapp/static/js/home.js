@@ -4,29 +4,29 @@ $( document ).ready( function() {
 
 	$( ".admin.button" ).click(function(e){
 
-		getPopup( "admin/login" );
+		getPopup( "/admin/login" );
 		e.preventDefault();
 	});
 
 	$( ".app .login.button" ).click(function(e){
 
-		getPopup( "app/login" );
+		getPopup( "/app/login" );
 		e.preventDefault();
 	});
 	$( ".platform .login.button" ).click(function(e){
 
-		getPopup( "platform/login" );
+		getPopup( "/platform/login" );
 		e.preventDefault();
 	});
 
 	$( ".app .register.button" ).click(function(e){
 
-		getPopup( "app/register" );
+		getPopup( "/app/register" );
 		e.preventDefault();
 	});
 	$( ".platform .register.button" ).click(function(e){
 
-		getPopup( "platform/register" );
+		getPopup( "/platform/register" );
 		e.preventDefault();
 	});
 

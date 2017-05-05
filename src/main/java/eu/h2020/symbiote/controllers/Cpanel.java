@@ -29,7 +29,7 @@ public class Cpanel {
 
     // USER
 
-    @GetMapping("/user/cpanel")
+    @GetMapping("/platform/cpanel")
     public String userCPanel(Model model, Principal principal) {
 
         model.addAttribute("role", "user");
@@ -57,7 +57,7 @@ public class Cpanel {
     }
 
 
-    @PostMapping("/user/cpanel/register/platform")
+    @PostMapping("/platform/cpanel/register")
     public String registerPlatform(@Valid Platform platform, BindingResult bindingResult, Model model, Principal principal) {
 
         if (bindingResult.hasErrors()) {
@@ -79,10 +79,10 @@ public class Cpanel {
            	}
        	});
 
-        return "redirect:/user/cpanel";
+        return "redirect:/platform/cpanel";
     }
 
-    @PostMapping("/user/cpanel/update/platform")
+    @PostMapping("/platform/cpanel/update")
     public String updatePlatform(@Valid Platform platform, BindingResult bindingResult, Model model, Principal principal) {
 
         if (bindingResult.hasErrors()) {
@@ -104,10 +104,10 @@ public class Cpanel {
            	}
        	});
 
-        return "redirect:/user/cpanel";
+        return "redirect:/cpanel/platform";
     }
 
-    @PostMapping("/user/cpanel/unregister/platform")
+    @PostMapping("/platform/cpanel/unregister/platform")
     public String unregisterPlatform(Model model, Principal principal) {
 
         String username = principal.getName(); //get logged in username
@@ -128,7 +128,7 @@ public class Cpanel {
        	});
         
 
-        return "redirect:/user/cpanel";
+        return "redirect:/cpanel/platform";
     }
 
     // ADMIN

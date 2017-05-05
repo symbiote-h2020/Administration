@@ -9,7 +9,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import eu.h2020.symbiote.service.UserService;
+
+import eu.h2020.symbiote.CustomAuthenticationProvider;
 
 @Configuration
 @EnableWebSecurity
@@ -19,33 +20,30 @@ public class WebSecurityConfig {
 	@Order(1)
 	public static class UserWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
-		@Bean
-		public UserDetailsService mongoUserDetails() {
-			return new UserService();
-		}
+		@Autowired
+		private CustomAuthenticationProvider authProvider;
 
 		@Override
-		protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		protected void configure( AuthenticationManagerBuilder auth) throws Exception {
 
-			UserDetailsService userDetailsService = mongoUserDetails();
-			auth.userDetailsService(userDetailsService);
+			auth.authenticationProvider(authProvider);
 		}
 
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http
-				.antMatcher("/user/**")
+				.antMatcher("/platform/**")
 				.authorizeRequests()
 					.anyRequest().authenticated()
 					// .anyRequest().hasRole("USER")
 					.and()
 				.formLogin()
-					.loginPage("/user/login")
-					.defaultSuccessUrl("/user/cpanel")
+					.loginPage("/platform/login")
+					.defaultSuccessUrl("/platform/cpanel")
 					.permitAll()
 					.and()
 				.logout()
-					.logoutUrl("/user/logout")
+					.logoutUrl("/platform/logout")
 					.logoutSuccessUrl("/")
 					.permitAll()
 					.and()

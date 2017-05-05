@@ -19,6 +19,7 @@ import java.util.concurrent.TimeoutException;
 import eu.h2020.symbiote.model.Platform;
 import eu.h2020.symbiote.security.payloads.PlatformRegistrationRequest;
 import eu.h2020.symbiote.security.payloads.UserRegistrationRequest;
+import eu.h2020.symbiote.security.payloads.Credentials;
 
 /**
  * Class used for all internal communication using RabbitMQ AMQP implementation.
@@ -68,19 +69,19 @@ public class RabbitManager {
     // ------------ Core AAM communication ----------------
 
     @Value("${rabbit.exchange.aam.name}")
-    private String aamRegisterName;
+    private String aamExchangeName;
 
     @Value("${rabbit.exchange.aam.type}")
-    private String aamRegisterType;
+    private String aamExchangeType;
 
     @Value("${rabbit.exchange.aam.durable}")
-    private boolean aamRegisterDurable;
+    private boolean aamExchangeDurable;
 
     @Value("${rabbit.exchange.aam.autodelete}")
-    private boolean aamRegisterAutodelete;
+    private boolean aamExchangeAutodelete;
 
     @Value("${rabbit.exchange.aam.internal}")
-    private boolean aamRegisterInternal;
+    private boolean aamExchangeInternal;
 
     @Value("${rabbit.routingKey.register.platform.request}")
     private String platformRegisterRequestRoutingKey;
@@ -88,8 +89,8 @@ public class RabbitManager {
     @Value("${rabbit.routingKey.register.app.request}")
     private String appRegisterRequestRoutingKey;
 
-    // @Value("${rabbit.routingKey.login.request}")
-    // private String loginRequestedRoutingKey;
+    @Value("${rabbit.routingKey.login.request}")
+    private String loginRoutingKey;
 
     // ----------------------------------------------------
 
@@ -132,11 +133,11 @@ public class RabbitManager {
                     this.platformExchangeInternal,
                     null);
 
-            this.channel.exchangeDeclare(this.aamRegisterName,
-                    this.aamRegisterType,
-                    this.aamRegisterDurable,
-                    this.aamRegisterAutodelete,
-                    this.aamRegisterInternal,
+            this.channel.exchangeDeclare(this.aamExchangeName,
+                    this.aamExchangeType,
+                    this.aamExchangeDurable,
+                    this.aamExchangeAutodelete,
+                    this.aamExchangeInternal,
                     null);
 
             // this.emptyConsumerReturnListener = new EmptyConsumerReturnListener();
@@ -297,8 +298,54 @@ public class RabbitManager {
      * @param listener listener for rpc response
      */
     public void sendPlatformRegistrationRequest(PlatformRegistrationRequest platformRequest, AAMPlatformListener listener) {
-        prepareRpcMessage(this.aamRegisterName, this.platformRegisterRequestRoutingKey, platformRequest, listener);
+        prepareRpcMessage(this.aamExchangeName, this.platformRegisterRequestRoutingKey, platformRequest, listener);
     }
+
+
+
+    /**
+     * Method used to send an rpc message with a consumer configured for login (aam) messages
+     * Also provides JSON marshalling and unmarshalling for the sake of Rabbit communication.
+     * When the response is available, the responseListener is notified of its arrival.
+     *
+     * @param exchangeName     name of the exchange to send message to
+     * @param routingKey       routing key to send message to
+     * @param message          message to be sent
+     * @param responseListener listener to be informed when the response message is available
+     */
+    public void prepareRpcMessage(String exchangeName, String routingKey, Credentials credentials, AAMLoginListener responseListener) {
+        try {
+
+            log.debug("Sending AAM login message...");
+
+            ObjectMapper mapper = new ObjectMapper();
+            String message = mapper.writeValueAsString(credentials);
+
+
+            String correlationId = UUID.randomUUID().toString();
+            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener);
+
+            this.sendRpcMessage(exchangeName, routingKey, correlationId, message, consumer);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     * Method used to send RPC request to log user in.
+     *
+     * @param platformRequest platformRequest to be created
+     * @param listener listener for rpc response
+     */
+    public void sendLoginRequest(Credentials credentials, AAMLoginListener listener) {
+        prepareRpcMessage(this.aamExchangeName, this.loginRoutingKey, credentials, listener);
+    }
+
+
+    
 
 
 
