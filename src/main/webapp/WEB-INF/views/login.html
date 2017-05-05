@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+	<head>
+		<title>Sign In</title>
+
+		<link rel="stylesheet" th:href="@{/static/css/bootstrap.min.css}" href="/static/css/bootstrap.min.css" />
+		<link rel="stylesheet" th:href="@{/static/css/home.css}" href="/static/css/home.css" />
+	</head>
+	<body>
+		<div class="popup">
+			<form th:action="@{${#httpServletRequest.requestURI}}" class="login form-horizontal" role="form" method="post">
+
+				<div class="title" th:if="${#httpServletRequest.requestURI == '/admin/login'}">Administrator Login</div>
+				<div class="title" th:if="${#httpServletRequest.requestURI == '/platform/login'}">Platform Owner Login</div>
+				<div class="title" th:if="${#httpServletRequest.requestURI == '/app/login'}">Application Owner Login</div>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+					<input id="login-username" type="text" class="form-control" name="username" value=""
+						   placeholder="Username"/>
+				</div>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+					<input id="login-password" type="password" class="form-control" name="password" value=""
+						   placeholder="Password"/>
+				</div>
+
+				<div class="error" th:if="${param.error}">Invalid username/password.</div>
+
+				<div class="form-group">
+					<!-- Button -->
+
+					<div class="col-sm-12 controls">
+						<button id="singlebutton" type="submit" name="singlebutton" class="btn btn-success">Login</button>
+						<a href="#" class="reminder">Forgot your password?</a>
+					</div>
+				</div>
+
+				<div class="message" th:if="${message}" th:inline="text">[[${message}]]</div>
+			</form>
+		</div>
+	</body>
+</html>

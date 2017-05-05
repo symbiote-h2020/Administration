@@ -15,7 +15,6 @@ a {
 	color: rgb(102,102,102);
 }
 
-
 .header {
 
 	width: 100%;
@@ -75,17 +74,17 @@ a {
 .content .wrapper {
 
 	width: 50%;
-	max-width: 400px;
-	margin: 0 auto;
+	max-width: 300px;
+	margin: 0 20px;
 	padding-bottom: 20px; 
-	display: block;
+	display: inline-block;
 
 	background-color: rgba(69, 147, 188, 0.08);
 	border-radius: 2px;
 
 }
 
-.content .label {
+.content .title {
 
 	padding: 15px;
 
@@ -99,6 +98,7 @@ a {
 	width: 100px;
 	height: 100px;
 	margin: 0 16px 10px ;
+	box-sizing: content-box;
 
 	border: 4px solid rgb(69, 147, 188);
 	border-radius: 52px;
@@ -118,6 +118,7 @@ a {
 	margin: 15px auto;
 	padding: 6px;
 
+	font-size: 16px;
 	color: white;
 }
 
@@ -196,43 +197,28 @@ a {
 
 	display: table;
 	margin: 213px auto;
-	padding-bottom: 10px;
 
 	background-color: white;
 	border: 3px solid rgba(0,0,0, 0.6);
 	box-shadow: 2px 2px 5px 5px rgba(0,0,0, 0.2);
 }
 
-.popup form.login {
+.popup form, .popup .denied {
 
 	width: 400px;
 }
 
-.popup form.register {
+.popup .success {
 
-	width: 800px;
-}
-
-.popup .denied {
-
-	width: 400px;
-}
-
-.popup .columns {
-
+	width: 769px;
 	text-align: center;
 }
 
-.popup .login table {
 
-	width: 100%;
-}
+.popup>form>div {
 
-.popup .register table {
-
-	display: inline-block;
-	width: 49%;
-	vertical-align: top;
+	margin-bottom: 10px;
+	padding: 0 5px;
 }
 
 .popup .title {
@@ -245,72 +231,33 @@ a {
 	font-size: 24px;
 	color: rgb(59, 137, 178);
 	font-weight: bold;
-}
-
-.popup .register .title {
-
-	display: block;
-	width: 100%;
-}
-
-.popup .register .submit {
-
-	display: block;
-}
-
-.popup .subtitle {
-
-	padding: 15px 0;
-
-	font-size: 20px;
-	color: rgb(59, 137, 178);
-	font-weight: bold;
-}
-
-.popup .separator {
-
-	height: 10px;
-}
-
-.popup td {
-
-	padding: 0 10px;
-}
-
-.popup .input {
-
-	text-align: right;
-}
-
-.popup .error {
-
-	padding: 10px 5px 10px;
-
-	background-color: rgba(255, 109, 92, 0.3);
-	color: rgb(48, 48, 48);
-}
-
-.popup .message {
-
-	padding: 10px 5px 10px;
-
-	background-color: rgba(242, 214, 104, 0.5);
-	color: rgb(48, 48, 48);
-}
-
-.popup .submit {
-	
-	padding-top: 10px;
 	text-align: center;
 }
 
-.popup .submit input, .popup .submit a {
+.popup .alert {
 
-	padding: 5px 10px;
-	border: none;
-	
-	font-size: 18px;
-	background-color: rgb(59, 137, 178);
-	color: white;
-	cursor: pointer;
+	padding: 10px 5px 10px;
+	text-align: left;
+}
+
+.popup .controls a {
+
+	float: right;
+	padding-top: 6px;
+}
+
+.popup .controls .btn {
+
+	float: left;
+	margin-bottom: 5px
+}
+
+.popup .panel {
+
+	margin-top: 20px;
+	text-align: left;
+}
+
+.popup textarea {
+	resize: none;
 }

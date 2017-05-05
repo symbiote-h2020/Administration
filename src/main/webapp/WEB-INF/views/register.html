@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+	<head>
+		<title>Sign In</title>
+
+		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
+		<link rel="stylesheet" th:href="@{/static/css/home.css}" href="static/css/home.css" />
+	</head>
+	<body>
+		<div class="popup">
+			<form th:action="@{${#httpServletRequest.requestURI}}" th:object="${platformOwner}" class="login form-horizontal" role="form" method="post">
+
+				<div class="title" th:if="${#httpServletRequest.requestURI == '/platform/register'}">Platform Owner Registration</div>
+				<div class="title" th:if="${#httpServletRequest.requestURI == '/app/register'}">Application Owner Registration</div>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+					<input type="text" class="form-control" name="username" value="" placeholder="Username"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Invalid Username!</div>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
+					<input type="password" class="form-control" name="password" value="" placeholder="Password"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Invalid Password!</div>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
+					<input type="text" class="form-control" name="recoveryMail" value="" placeholder="Email"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('recoveryMail')}" th:errors="*{recoveryMail}">Invalid Email!</div>
+
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-magnet"></i></span>
+					<input disabled="true" type="text" class="form-control" name="federatedId" value="" placeholder="Federated id (optional, unused in R2)"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('federatedId')}" th:errors="*{federatedId}">Invalid Id!</div>
+
+				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/platform/register'}">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-briefcase"></i></span>
+					<input type="text" class="form-control" name="platformId" value="" placeholder="Preferred platform id (optional)"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/platform/register' and #fields.hasErrors('platformId')}" th:errors="*{platformId}">Invalid Platform Id!</div>
+
+				<div class="form-group">
+					<!-- Button -->
+
+					<div class="col-sm-12 controls">
+						<button id="singlebutton" type="submit" name="singlebutton" class="btn btn-primary">Register</button>
+						<a href="#" class="reminder">Forgot your password?</a>
+					</div>
+				</div>
+
+				<div class="alert alert-warning" th:if="${message}" th:inline="text">[[${message}]]</div>
+				<div class="alert alert-danger" th:if="${error}" th:inline="text">[[${error}]]</div>
+			</form>
+		</div>
+	</body>
+</html>

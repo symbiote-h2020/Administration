@@ -1,8 +1,11 @@
 package eu.h2020.symbiote;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
+import org.thymeleaf.templateresolver.TemplateResolver;
 
 @Configuration
 public class MvcConfig extends WebMvcConfigurerAdapter {
@@ -15,5 +18,14 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
 		registry.addViewController("/admin/login").setViewName("login");
 		registry.addViewController("/denied").setViewName("denied");
 	}
+	
+    @Bean
+    public TemplateResolver templateResolver() {
+        ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver();
+        templateResolver.setPrefix("/WEB-INF/views/");
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode("HTML5");
+        return templateResolver;
+    }
 
 }
