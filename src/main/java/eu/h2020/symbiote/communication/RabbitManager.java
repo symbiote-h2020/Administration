@@ -18,14 +18,16 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import eu.h2020.symbiote.model.Platform;
+import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.model.PlatformResponse;
 import eu.h2020.symbiote.security.payloads.PlatformRegistrationRequest;
 import eu.h2020.symbiote.security.payloads.PlatformRegistrationResponse;
 import eu.h2020.symbiote.security.payloads.UserRegistrationRequest;
 import eu.h2020.symbiote.security.payloads.UserRegistrationResponse;
 import eu.h2020.symbiote.security.payloads.Credentials;
+import eu.h2020.symbiote.security.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.security.token.Token;
+import eu.h2020.symbiote.communication.CommunicationException;
 
 /**
  * Class used for all internal communication using RabbitMQ AMQP implementation.
@@ -141,9 +143,6 @@ public class RabbitManager {
                     this.aamExchangeInternal,
                     null);
 
-            // this.emptyConsumerReturnListener = new EmptyConsumerReturnListener();
-            // this.channel.addReturnListener(this.emptyConsumerReturnListener);
-
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
@@ -212,6 +211,7 @@ public class RabbitManager {
                 }
             }
 
+            log.debug("Received response: " + responseMsg);
             return responseMsg;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -286,7 +286,7 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public PlatformRegistrationResponse sendAAMPlatformRegistrationMessage(String exchangeName, String routingKey,
-             PlatformRegistrationRequest request) {
+             PlatformRegistrationRequest request) throws CommunicationException{
         try {
             String message;
             ObjectMapper mapper = new ObjectMapper();
@@ -298,8 +298,15 @@ public class RabbitManager {
                 return null;
 
             mapper = new ObjectMapper();
-            PlatformRegistrationResponse response = mapper.readValue(responseMsg, PlatformRegistrationResponse.class);
-            return response;
+            try {
+                PlatformRegistrationResponse response = mapper.readValue(responseMsg, PlatformRegistrationResponse.class);
+                return response;
+
+            } catch (Exception e){
+
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
         }
@@ -312,7 +319,7 @@ public class RabbitManager {
      *
      * @param request  request for registration
      */
-    public PlatformRegistrationResponse sendPlatformRegistrationRequest(PlatformRegistrationRequest request) {
+    public PlatformRegistrationResponse sendPlatformRegistrationRequest(PlatformRegistrationRequest request) throws CommunicationException {
         return sendAAMPlatformRegistrationMessage(this.aamExchangeName, this.platformRegisterRequestRoutingKey, request);
     }
 
@@ -325,7 +332,7 @@ public class RabbitManager {
      * @param credentials  credentials to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public Token sendAAMLoginMessage(String exchangeName, String routingKey, Credentials credentials) {
+    public Token sendAAMLoginMessage(String exchangeName, String routingKey, Credentials credentials) throws CommunicationException {
         try {
             String message;
             ObjectMapper mapper = new ObjectMapper();
@@ -337,8 +344,15 @@ public class RabbitManager {
                 return null;
 
             mapper = new ObjectMapper();
-            Token response = mapper.readValue(responseMsg, Token.class);
-            return response;
+            try {
+                Token response = mapper.readValue(responseMsg, Token.class);
+                return response;
+
+            } catch (Exception e){
+
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
         }
@@ -351,7 +365,7 @@ public class RabbitManager {
      *
      * @param request  request for registration
      */
-    public Token sendLoginRequest(Credentials credentials) {
+    public Token sendLoginRequest(Credentials credentials) throws CommunicationException  {
         return sendAAMLoginMessage(this.aamExchangeName, this.loginRoutingKey, credentials);
     }
 

@@ -14,6 +14,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import eu.h2020.symbiote.communication.RabbitManager;
+import eu.h2020.symbiote.communication.CommunicationException;
 import eu.h2020.symbiote.security.payloads.*;
 import eu.h2020.symbiote.security.enums.UserRole;
 import eu.h2020.symbiote.model.PlatformOwner;
@@ -67,21 +68,27 @@ public class Register {
 
 
 		// Send platform owner registration to Core AAM
-		PlatformRegistrationResponse response = rabbitManager.sendPlatformRegistrationRequest(platformRegistrationRequest);
-		System.out.println("Received response in interface: " + response);
+		try{
+			PlatformRegistrationResponse response = rabbitManager.sendPlatformRegistrationRequest(platformRegistrationRequest);
+			System.out.println("Received response in interface: " + response);
 
-		if(response == null ){
+			if(response != null ){
 
-			model.addAttribute("error","This username or platform id is already used!");
-			return "register";
+				model.addAttribute("pcert",response.getPlatformOwnerCertificate());
+				model.addAttribute("pkey",response.getPlatformOwnerPrivateKey());
+				model.addAttribute("pid",response.getPlatformId());
 
-		} else {
+				return "success";
 
-			model.addAttribute("pcert",response.getPlatformOwnerCertificate());
-			model.addAttribute("pkey",response.getPlatformOwnerPrivateKey());
-			model.addAttribute("pid",response.getPlatformId());
+			} else {
+				model.addAttribute("error","Authorization Manager is unreachable!");
+				return "register";				
+			}
+		
+		} catch(CommunicationException e){
 
-			return "success";
+				model.addAttribute("error",e.getMessage());
+				return "register";	
 		}
 	}
 	

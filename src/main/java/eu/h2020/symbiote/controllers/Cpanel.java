@@ -1,9 +1,8 @@
 package eu.h2020.symbiote.controller;
 
 import javax.validation.Valid;
-import eu.h2020.symbiote.model.Platform;
+import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.model.UserAccount;
-import eu.h2020.symbiote.service.UserService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,8 +19,6 @@ import eu.h2020.symbiote.communication.RabbitManager;
 @Controller
 public class Cpanel {
 
-    @Autowired
-    private UserService userService;
 
     @Autowired
     private RabbitManager rabbitManager;
@@ -35,24 +32,24 @@ public class Cpanel {
         model.addAttribute("role", "user");
         String username = principal.getName(); //get logged in username
 
-        UserAccount user = userService.getUserDetails(username);
+        // UserAccount user = userService.getUserDetails(username);
 
-        if( user.getPlatformId() == null){
+        // if( user.getPlatformId() == null){
 
-            model.addAttribute("platform_pending", false);
-            model.addAttribute("platform_exists", false);
+        //     model.addAttribute("platform_pending", false);
+        //     model.addAttribute("platform_exists", false);
 
-        } else if (user.getPlatformId().equals("__PENDING__") ){
+        // } else if (user.getPlatformId().equals("__PENDING__") ){
 
-            model.addAttribute("platform_pending", true);
-            model.addAttribute("platform_exists", false);
+        //     model.addAttribute("platform_pending", true);
+        //     model.addAttribute("platform_exists", false);
         
-        } else {
+        // } else {
 
-            model.addAttribute("platform_pending", false);
-            model.addAttribute("platform_exists", true);
-            model.addAttribute("platform_id", user.getPlatformId());
-        }
+        //     model.addAttribute("platform_pending", false);
+        //     model.addAttribute("platform_exists", true);
+        //     model.addAttribute("platform_id", user.getPlatformId());
+        // }
         return "cpanel/root";
     }
 
@@ -66,8 +63,8 @@ public class Cpanel {
 
         // todo check for "__PENDING__"
 
-        String username = principal.getName(); //get logged in username
-        userService.setUserPlatform(username, "__PENDING__");
+        // String username = principal.getName(); //get logged in username
+        // userService.setUserPlatform(username, "__PENDING__");
 
         // Send registration to Registry
         // rabbitManager.sendPlatformCreationRequest(platform, rpcPlatformResponse ->{
@@ -88,10 +85,10 @@ public class Cpanel {
         if (bindingResult.hasErrors()) {
             return "cpanel/root";            
         }
-        String username = principal.getName(); //get logged in username
-        UserAccount user = userService.getUserDetails(username);
+        // String username = principal.getName(); //get logged in username
+        // UserAccount user = userService.getUserDetails(username);
 
-        platform.setPlatformId(user.getPlatformId());
+        // platform.setPlatformId(user.getPlatformId());
         
 
         // Send update to Registry
@@ -111,11 +108,11 @@ public class Cpanel {
     public String unregisterPlatform(Model model, Principal principal) {
 
         String username = principal.getName(); //get logged in username
-        UserAccount user = userService.getUserDetails(username);
+        // UserAccount user = userService.getUserDetails(username);
 
-        // Create an empty Platform, add the id and send unregistration to Registry
-        Platform platform = new Platform();
-        platform.setPlatformId(user.getPlatformId());
+        // // Create an empty Platform, add the id and send unregistration to Registry
+        // Platform platform = new Platform();
+        // platform.setPlatformId(user.getPlatformId());
 
         // Send update to Registry
 		// rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->{
