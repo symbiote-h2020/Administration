@@ -70,14 +70,14 @@ public class Cpanel {
         userService.setUserPlatform(username, "__PENDING__");
 
         // Send registration to Registry
-        rabbitManager.sendPlatformCreationRequest(platform, rpcPlatformResponse ->{
+        // rabbitManager.sendPlatformCreationRequest(platform, rpcPlatformResponse ->{
                    
-            System.out.println("Received response in interface: " + rpcPlatformResponse);
-        	if( rpcPlatformResponse.getStatus() == 200 ){
+        //     System.out.println("Received response in interface: " + rpcPlatformResponse);
+        // 	if( rpcPlatformResponse.getStatus() == 200 ){
 
-                userService.setUserPlatform(username, rpcPlatformResponse.getPlatform().getPlatformId());
-           	}
-       	});
+        //         userService.setUserPlatform(username, rpcPlatformResponse.getPlatform().getPlatformId());
+        //    	}
+       	// });
 
         return "redirect:/platform/cpanel";
     }
@@ -95,14 +95,14 @@ public class Cpanel {
         
 
         // Send update to Registry
-		rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->{
+		// rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->{
                    
-            System.out.println("Received response in interface: " + rpcPlatformResponse);
-        	if( rpcPlatformResponse.getStatus() == 200 ){
+  //           System.out.println("Received response in interface: " + rpcPlatformResponse);
+  //       	if( rpcPlatformResponse.getStatus() == 200 ){
 
-                userService.setUserPlatform(username, rpcPlatformResponse.getPlatform().getPlatformId());
-           	}
-       	});
+  //               userService.setUserPlatform(username, rpcPlatformResponse.getPlatform().getPlatformId());
+  //          	}
+  //      	});
 
         return "redirect:/cpanel/platform";
     }
@@ -118,14 +118,14 @@ public class Cpanel {
         platform.setPlatformId(user.getPlatformId());
 
         // Send update to Registry
-		rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->{
+		// rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->{
                    
-            System.out.println("Received response in interface: " + rpcPlatformResponse);
-        	if( rpcPlatformResponse.getStatus() == 200 ){
+  //           System.out.println("Received response in interface: " + rpcPlatformResponse);
+  //       	if( rpcPlatformResponse.getStatus() == 200 ){
 
-                userService.setUserPlatform(username,null);
-           	}
-       	});
+  //               userService.setUserPlatform(username,null);
+  //          	}
+  //      	});
         
 
         return "redirect:/cpanel/platform";

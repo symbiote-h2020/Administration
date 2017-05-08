@@ -6,6 +6,8 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.QueueingConsumer.Delivery;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +19,13 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import eu.h2020.symbiote.model.Platform;
+import eu.h2020.symbiote.model.PlatformResponse;
 import eu.h2020.symbiote.security.payloads.PlatformRegistrationRequest;
+import eu.h2020.symbiote.security.payloads.PlatformRegistrationResponse;
 import eu.h2020.symbiote.security.payloads.UserRegistrationRequest;
+import eu.h2020.symbiote.security.payloads.UserRegistrationResponse;
 import eu.h2020.symbiote.security.payloads.Credentials;
+import eu.h2020.symbiote.security.token.Token;
 
 /**
  * Class used for all internal communication using RabbitMQ AMQP implementation.
@@ -97,11 +103,6 @@ public class RabbitManager {
     private Connection connection;
     private Channel channel;
 
-    // private EmptyConsumerReturnListener emptyConsumerReturnListener;
-
-    //For the sake of unit tests
-    private ReplyConsumer lastReplyConsumer;
-
     /**
      * Default, empty constructor.
      */
@@ -170,193 +171,189 @@ public class RabbitManager {
 
     /**
      * Method used to send message via RPC (Remote Procedure Call) pattern.
+     * In this implementation it covers asynchronous Rabbit communication with synchronous one, as it is used by conventional REST facade.
      * Before sending a message, a temporary response queue is declared and its name is passed along with the message.
-     * A consumer, pre-configured with the correct listener, is passed and handles replies
+     * When a consumer handles the message, it returns the result via the response queue.
+     * Since this is a synchronous pattern, it uses timeout of 20 seconds. 
+     * If the response doesn't come in that time, the method returns with null result.
      *
-     * @param exchangeName     name of the exchange to send message to
-     * @param routingKey       routing key to send message to
-     * @param message          message to be sent
-     * @param consumer         consumer pre-configured with the appropriate listener
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param message      message to be sent
+     * @return response from the consumer or null if timeout occurs
      */
-    public void sendRpcMessage(String exchangeName, String routingKey, String correlationId, String message, ReplyConsumer consumer) {
+    public String sendRpcMessage(String exchangeName, String routingKey, String message) {
         try {
+            log.debug("Sending message...");
+
             String replyQueueName = this.channel.queueDeclare().getQueue();
 
-            
+            String correlationId = UUID.randomUUID().toString();
             AMQP.BasicProperties props = new AMQP.BasicProperties()
                     .builder()
                     .correlationId(correlationId)
                     .replyTo(replyQueueName)
                     .build();
 
-            this.lastReplyConsumer = consumer;
+            QueueingConsumer consumer = new QueueingConsumer(channel);
             this.channel.basicConsume(replyQueueName, true, consumer);
 
-            this.channel.basicPublish(exchangeName, routingKey, true, props, message.getBytes());
+            String responseMsg = null;
 
-        } catch (IOException e) {
+            this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
+            while (true) {
+                QueueingConsumer.Delivery delivery = consumer.nextDelivery(20000);
+                if (delivery == null)
+                    return null;
+
+                if (delivery.getProperties().getCorrelationId().equals(correlationId)) {
+                    responseMsg = new String(delivery.getBody());
+                    break;
+                }
+            }
+
+            return responseMsg;
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+        return null;
     }
 
 
     /**
-     * Method used to send an rpc message with a consumer configured for platform (registry) messages
-     * Also provides JSON marshalling and unmarshalling for the sake of Rabbit communication.
-     * When the response is available, the responseListener is notified of its arrival.
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
      *
-     * @param exchangeName     name of the exchange to send message to
-     * @param routingKey       routing key to send message to
-     * @param message          message to be sent
-     * @param responseListener listener to be informed when the response message is available
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param platform     platform to be sent
+     * @return response from the consumer or null if timeout occurs
      */
-    public void prepareRpcMessage(String exchangeName, String routingKey, Platform platform, RegistryListener responseListener) {
+    public PlatformResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) {
         try {
-
-            log.debug("Sending Registry platform message...");
-
+            String message;
             ObjectMapper mapper = new ObjectMapper();
-            String message = mapper.writeValueAsString(platform);
+            message = mapper.writeValueAsString(platform);
 
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
-            String correlationId = UUID.randomUUID().toString();
-            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener);
+            if (responseMsg == null)
+                return null;
 
-            this.sendRpcMessage(exchangeName, routingKey, correlationId, message, consumer);
-
+            mapper = new ObjectMapper();
+            PlatformResponse response = mapper.readValue(responseMsg, PlatformResponse.class);
+            return response;
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed (un)marshalling of rpc resource message", e);
         }
+        return null;
     }
+
 
     /**
      * Method used to send RPC request to create platform.
      *
      * @param platform platform to be created
-     * @param listener listener for rpc response
      */
-    public void sendPlatformCreationRequest(Platform platform, RegistryListener listener) {
-        prepareRpcMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform, listener);
+    public PlatformResponse sendPlatformCreationRequest(Platform platform) {
+        return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
     }
 
     /**
      * Method used to send RPC request to remove platform.
      *
      * @param platform platform to be removed
-     * @param listener listener for rpc response
      */
-    public void sendPlatformRemovalRequest(Platform platform, RegistryListener listener) {
-        prepareRpcMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform, listener);
+    public PlatformResponse sendPlatformRemovalRequest(Platform platform) {
+        return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
     }
 
     /**
      * Method used to send RPC request to modify platform.
      *
      * @param platform platform to be modified
-     * @param listener listener for rpc response
      */
-    public void sendPlatformModificationRequest(Platform platform, RegistryListener listener) {
-        prepareRpcMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform, listener);
+    public PlatformResponse sendPlatformModificationRequest(Platform platform) {
+        return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 
 
-
     /**
-     * Method used to send an rpc message with a consumer configured for platform registration (aam) messages
-     * Also provides JSON marshalling and unmarshalling for the sake of Rabbit communication.
-     * When the response is available, the responseListener is notified of its arrival.
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with AAM
      *
-     * @param exchangeName     name of the exchange to send message to
-     * @param routingKey       routing key to send message to
-     * @param message          message to be sent
-     * @param responseListener listener to be informed when the response message is available
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param request      request to be sent
+     * @return response from the consumer or null if timeout occurs
      */
-    public void prepareRpcMessage(String exchangeName, String routingKey,
-            PlatformRegistrationRequest platformRequest, AAMPlatformListener responseListener) {
+    public PlatformRegistrationResponse sendAAMPlatformRegistrationMessage(String exchangeName, String routingKey,
+             PlatformRegistrationRequest request) {
         try {
-
-            log.debug("Sending AAM platform registration message...");
-
+            String message;
             ObjectMapper mapper = new ObjectMapper();
-            String message = mapper.writeValueAsString(platformRequest);
+            message = mapper.writeValueAsString(request);
 
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
-            String correlationId = UUID.randomUUID().toString();
-            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener);
+            if (responseMsg == null)
+                return null;
 
-            this.sendRpcMessage(exchangeName, routingKey, correlationId, message, consumer);
-
+            mapper = new ObjectMapper();
+            PlatformRegistrationResponse response = mapper.readValue(responseMsg, PlatformRegistrationResponse.class);
+            return response;
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed (un)marshalling of rpc resource message", e);
         }
-    }
-
-    /**
-     * Method used to send RPC request to register platform owner.
-     *
-     * @param platformRequest platformRequest to be created
-     * @param listener listener for rpc response
-     */
-    public void sendPlatformRegistrationRequest(PlatformRegistrationRequest platformRequest, AAMPlatformListener listener) {
-        prepareRpcMessage(this.aamExchangeName, this.platformRegisterRequestRoutingKey, platformRequest, listener);
+        return null;
     }
 
 
+    /**
+     * Method used to send RPC request to login user.
+     *
+     * @param request  request for registration
+     */
+    public PlatformRegistrationResponse sendPlatformRegistrationRequest(PlatformRegistrationRequest request) {
+        return sendAAMPlatformRegistrationMessage(this.aamExchangeName, this.platformRegisterRequestRoutingKey, request);
+    }
+
 
     /**
-     * Method used to send an rpc message with a consumer configured for login (aam) messages
-     * Also provides JSON marshalling and unmarshalling for the sake of Rabbit communication.
-     * When the response is available, the responseListener is notified of its arrival.
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with AAM
      *
-     * @param exchangeName     name of the exchange to send message to
-     * @param routingKey       routing key to send message to
-     * @param message          message to be sent
-     * @param responseListener listener to be informed when the response message is available
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param credentials  credentials to be sent
+     * @return response from the consumer or null if timeout occurs
      */
-    public void prepareRpcMessage(String exchangeName, String routingKey, Credentials credentials, AAMLoginListener responseListener) {
+    public Token sendAAMLoginMessage(String exchangeName, String routingKey, Credentials credentials) {
         try {
-
-            log.debug("Sending AAM login message...");
-
+            String message;
             ObjectMapper mapper = new ObjectMapper();
-            String message = mapper.writeValueAsString(credentials);
+            message = mapper.writeValueAsString(credentials);
 
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
-            String correlationId = UUID.randomUUID().toString();
-            ReplyConsumer consumer = new ReplyConsumer(this.channel, correlationId, responseListener);
+            if (responseMsg == null)
+                return null;
 
-            this.sendRpcMessage(exchangeName, routingKey, correlationId, message, consumer);
-
+            mapper = new ObjectMapper();
+            Token response = mapper.readValue(responseMsg, Token.class);
+            return response;
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Failed (un)marshalling of rpc resource message", e);
         }
+        return null;
     }
-
 
 
     /**
-     * Method used to send RPC request to log user in.
+     * Method used to send RPC request to register platform.
      *
-     * @param platformRequest platformRequest to be created
-     * @param listener listener for rpc response
+     * @param request  request for registration
      */
-    public void sendLoginRequest(Credentials credentials, AAMLoginListener listener) {
-        prepareRpcMessage(this.aamExchangeName, this.loginRoutingKey, credentials, listener);
+    public Token sendLoginRequest(Credentials credentials) {
+        return sendAAMLoginMessage(this.aamExchangeName, this.loginRoutingKey, credentials);
     }
 
 
-    
-
-
-
-
-
-    /**
-     * Method used only when doing unit tests.
-     *
-     * @return Last created reply consumer
-     */
-    public ReplyConsumer getLastReplyConsumer() {
-        return lastReplyConsumer;
-    }
 }

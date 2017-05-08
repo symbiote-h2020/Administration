@@ -9,10 +9,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.context.request.async.DeferredResult;
-
-import eu.h2020.symbiote.security.payloads.Credentials;
 import eu.h2020.symbiote.communication.RabbitManager;
+import eu.h2020.symbiote.security.payloads.Credentials;
+import eu.h2020.symbiote.security.token.Token;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,24 +29,25 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
       throws AuthenticationException {
             System.out.println("=================== DEBUG 1 ===================");
   
-        final DeferredResult<String> deferredResult = new DeferredResult<>();
 
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
 
-        rabbitManager.sendLoginRequest(new Credentials( name, password ), token ->{
-                   
+        Token token = rabbitManager.sendLoginRequest(new Credentials( name, password ));
+
+        if(token != null){
+
             System.out.println("Received response in interface: " + token);
             System.out.println("=================== DEBUG 2 ===================");
 
-            deferredResult.setResult("test");
-        });
+            
+        }
 
-        deferredResult.on
-         
-        if (deferredResult == "test") {
 
-            System.out.println(deferredResult);
+        
+        // test(deferredResult);
+
+        if (true) {
   
             // use the credentials
             // and authenticate against the third-party system

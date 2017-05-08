@@ -32,7 +32,7 @@ public class WebSecurityConfig {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http
-				.antMatcher("/platform/**")
+				.regexMatcher("\\/platform\\/(?!register).+")
 				.authorizeRequests()
 					.anyRequest().authenticated()
 					// .anyRequest().hasRole("USER")

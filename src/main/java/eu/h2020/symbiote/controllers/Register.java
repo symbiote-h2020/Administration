@@ -37,19 +37,17 @@ public class Register {
 	}
 
 	@PostMapping("/platform/register")
-	public DeferredResult<String> platformOwnerRegister(@Valid PlatformOwner platformOwner, BindingResult bindingResult, Model model) {
+	public String platformOwnerRegister(@Valid PlatformOwner platformOwner, BindingResult bindingResult, Model model) {
 
 		final DeferredResult<String> deferredResult = new DeferredResult<>();
 
 		if (bindingResult.hasErrors()) {
 
-			deferredResult.setResult("register");
-			return deferredResult;			
+			return "register";
 		}
 
 		String platformAAMURL = "hardcoded temporarily";
-		String platformInstanceFriendlyName = "placeholder"
-
+		String platformInstanceFriendlyName = "placeholder";
 		String federatedId = (platformOwner.getFederatedId() == null)? "placeholder" : platformOwner.getFederatedId();
 
 		UserDetails  platformOwnerUserDetails = new UserDetails(
@@ -63,31 +61,28 @@ public class Register {
 				new Credentials(AAMOwnerUsername, AAMOwnerPassword),
 				platformOwnerUserDetails,
 				platformAAMURL,
-				platformOwner.getPlatformId(),
-				platformInstanceFriendlyName
+				platformInstanceFriendlyName,
+				platformOwner.getPlatformId()
 			);
 
 
 		// Send platform owner registration to Core AAM
-		rabbitManager.sendPlatformRegistrationRequest(platformRegistrationRequest, rpcPlatformResponse ->{
-				   
-			System.out.println("Received response in interface: " + rpcPlatformResponse);
+		PlatformRegistrationResponse response = rabbitManager.sendPlatformRegistrationRequest(platformRegistrationRequest);
+		System.out.println("Received response in interface: " + response);
 
-			if(rpcPlatformResponse == null) {
+		if(response == null ){
 
-				model.addAttribute("error","This username or platform id is already used!");
-				deferredResult.setResult("register");
+			model.addAttribute("error","This username or platform id is already used!");
+			return "register";
 
-			} else {
+		} else {
 
-				model.addAttribute("pcert",rpcPlatformResponse.getPlatformOwnerCertificate());
-				model.addAttribute("pkey",rpcPlatformResponse.getPlatformOwnerPrivateKey());
-				model.addAttribute("pid",rpcPlatformResponse.getPlatformId());
-				deferredResult.setResult("success");
-			}
-	   	});
+			model.addAttribute("pcert",response.getPlatformOwnerCertificate());
+			model.addAttribute("pkey",response.getPlatformOwnerPrivateKey());
+			model.addAttribute("pid",response.getPlatformId());
 
-		return deferredResult;
+			return "success";
+		}
 	}
 	
 
