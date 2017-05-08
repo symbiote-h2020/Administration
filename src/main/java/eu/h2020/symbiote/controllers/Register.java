@@ -63,8 +63,8 @@ public class Register {
 				new Credentials(AAMOwnerUsername, AAMOwnerPassword),
 				platformOwnerUserDetails,
 				platformAAMURL,
-				platformOwner.getPlatformId(),
-				platformInstanceFriendlyName
+				platformInstanceFriendlyName,
+				platformOwner.getPlatformId()
 			);
 
 
