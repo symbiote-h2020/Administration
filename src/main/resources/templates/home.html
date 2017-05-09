@@ -4,11 +4,11 @@
 		<title>SymbIoTe Core</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
-		<link rel="stylesheet" th:href="@{/static/css/home.css}" href="static/css/home.css" />
+		<link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
 	</head>
 	<body>
 		<div class="header">
-			<img class="logo" th:src="@{/static/images/logo-1.1.png}" src="static/images/logo-1.1.png"></img>
+			<img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
 			<span class="title">Administration</span>
 			<a class="admin button" href="/admin/login">Symbiote Admin</a>
 		</div>
@@ -16,7 +16,7 @@
 			<div class="wrapper platform">
 				<div class="title">Platform Management</div>
 				<div class="icon">
-					<img th:src="@{/static/images/suitcase.png}" src="static/images/suitcase.png"></img>
+					<img th:src="@{/images/suitcase.png}" src="images/suitcase.png"></img>
 				</div>
 				<a class="login button" href="/platform/login">Sign In</a>
 				<a class="register button" href="/platform/register">Register</a>
@@ -24,7 +24,7 @@
 			<div class="wrapper app">
 				<div class="title">Application Management</div>
 				<div class="icon">
-					<img th:src="@{/static/images/mobile.png}" src="static/images/mobile.png"></img>
+					<img th:src="@{/images/mobile.png}" src="images/mobile.png"></img>
 				</div>
 				<a class="login button" href="/app/login">Sign In</a>
 				<a class="register button" href="/app/register">Register</a>
@@ -32,13 +32,13 @@
 		</div>
 		<div class="footer">
 			<a class="external symbiote" href="http://www.symbiote-h2020.eu/">
-				<img th:src="@{/static/images/symbiote-homepage.png}" src="static/images/symbiote-homepage.png"></img>
+				<img th:src="@{/images/symbiote-homepage.png}" src="images/symbiote-homepage.png"></img>
 			</a>
 			<a class="external epi" href="http://iot-epi.eu/">
-				<img th:src="@{/static/images/IoT-EPI-logo1.png}" src="static/images/IoT-EPI-logo1.png"></img>
+				<img th:src="@{/images/IoT-EPI-logo1.png}" src="images/IoT-EPI-logo1.png"></img>
 			</a>
 			<a class="external commision">
-				<img th:src="@{/static/images/ECH2020.png}" src="static/images/ECH2020.png"></img>
+				<img th:src="@{/images/ECH2020.png}" src="images/ECH2020.png"></img>
 			</a>
 		</div>
 		<div class="overlay wrapper">
@@ -47,6 +47,6 @@
 		</div>
 		<script type="text/javascript" src="webjars/jquery/3.1.1-1/jquery.min.js"></script>
 		<script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
-		<script type="text/javascript" th:src="@{/static/js/home.js}" src="static/js/home.js"></script>
+		<script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
 	</body>
 </html>
