@@ -2,7 +2,6 @@ package eu.h2020.symbiote.controller;
 
 import javax.validation.Valid;
 import eu.h2020.symbiote.core.model.Platform;
-import eu.h2020.symbiote.model.UserAccount;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -42,13 +41,13 @@ public class Cpanel {
         // } else if (user.getPlatformId().equals("__PENDING__") ){
 
         //     model.addAttribute("platform_pending", true);
-        //     model.addAttribute("platform_exists", false);
+            model.addAttribute("platform_exists", false);
         
         // } else {
 
-        //     model.addAttribute("platform_pending", false);
+            model.addAttribute("platform_pending", false);
         //     model.addAttribute("platform_exists", true);
-        //     model.addAttribute("platform_id", user.getPlatformId());
+            model.addAttribute("platform_id", "test");
         // }
         return "cpanel/root";
     }
