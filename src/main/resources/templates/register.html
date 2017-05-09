@@ -9,22 +9,22 @@
 	</head>
 	<body>
 		<div class="popup">
-			<form th:action="@{${#httpServletRequest.requestURI}}" th:object="${platformOwner}" class="login form-horizontal" role="form" method="post">
+			<form th:action="@{${#httpServletRequest.requestURI}}" th:object="${coreUser}" class="login form-horizontal" role="form" method="post">
 
 				<div class="title" th:if="${#httpServletRequest.requestURI == '/platform/register'}">Platform Owner Registration</div>
 				<div class="title" th:if="${#httpServletRequest.requestURI == '/app/register'}">Application Owner Registration</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-					<input type="text" class="form-control" name="username" value="" placeholder="Username"/>
+					<input type="text" class="form-control" name="validUsername" value="" placeholder="Username"/>
 				</div>
-				<div class="alert alert-danger" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">Invalid Username!</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('validUsername')}" th:errors="*{validUsername}">Invalid Username!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-					<input type="password" class="form-control" name="password" value="" placeholder="Password"/>
+					<input type="password" class="form-control" name="validPassword" value="" placeholder="Password"/>
 				</div>
-				<div class="alert alert-danger" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">Invalid Password!</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('validPassword')}" th:errors="*{validPassword}">Invalid Password!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>

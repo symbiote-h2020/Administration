@@ -201,7 +201,7 @@ public class RabbitManager {
 
             this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
             while (true) {
-                QueueingConsumer.Delivery delivery = consumer.nextDelivery(20000);
+                QueueingConsumer.Delivery delivery = consumer.nextDelivery(3000);
                 if (delivery == null)
                     return null;
 
@@ -228,7 +228,7 @@ public class RabbitManager {
      * @param platform     platform to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) {
+    public PlatformResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
         try {
             String message;
             ObjectMapper mapper = new ObjectMapper();
@@ -240,8 +240,14 @@ public class RabbitManager {
                 return null;
 
             mapper = new ObjectMapper();
-            PlatformResponse response = mapper.readValue(responseMsg, PlatformResponse.class);
-            return response;
+            try {
+                PlatformResponse response = mapper.readValue(responseMsg, PlatformResponse.class);
+                return response;
+
+            } catch (Exception e){
+
+                throw new CommunicationException(e);
+            }
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
         }
@@ -254,7 +260,7 @@ public class RabbitManager {
      *
      * @param platform platform to be created
      */
-    public PlatformResponse sendPlatformCreationRequest(Platform platform) {
+    public PlatformResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
         return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
     }
 
@@ -263,7 +269,7 @@ public class RabbitManager {
      *
      * @param platform platform to be removed
      */
-    public PlatformResponse sendPlatformRemovalRequest(Platform platform) {
+    public PlatformResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
         return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
     }
 
@@ -272,7 +278,7 @@ public class RabbitManager {
      *
      * @param platform platform to be modified
      */
-    public PlatformResponse sendPlatformModificationRequest(Platform platform) {
+    public PlatformResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
         return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 

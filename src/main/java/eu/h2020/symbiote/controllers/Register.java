@@ -17,7 +17,7 @@ import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.communication.CommunicationException;
 import eu.h2020.symbiote.security.payloads.*;
 import eu.h2020.symbiote.security.enums.UserRole;
-import eu.h2020.symbiote.model.PlatformOwner;
+import eu.h2020.symbiote.model.CoreUser;
 
  
 @Controller
@@ -33,12 +33,12 @@ public class Register {
 	private RabbitManager rabbitManager;
 
 	@GetMapping("/platform/register")
-	public String platformOwnerRegisterForm(PlatformOwner platformOwner) {
+	public String coreUserRegisterForm(CoreUser coreUser) {
 		return "register";
 	}
 
 	@PostMapping("/platform/register")
-	public String platformOwnerRegister(@Valid PlatformOwner platformOwner, BindingResult bindingResult, Model model) {
+	public String coreUserRegister(@Valid CoreUser coreUser, BindingResult bindingResult, Model model) {
 
 		final DeferredResult<String> deferredResult = new DeferredResult<>();
 
@@ -49,21 +49,21 @@ public class Register {
 
 		String platformAAMURL = "hardcoded temporarily";
 		String platformInstanceFriendlyName = "placeholder";
-		String federatedId = (platformOwner.getFederatedId() == null)? "placeholder" : platformOwner.getFederatedId();
+		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
 
-		UserDetails  platformOwnerUserDetails = new UserDetails(
-				new Credentials( platformOwner.getUsername(), platformOwner.getPassword()),
+		UserDetails  coreUserUserDetails = new UserDetails(
+				new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
 				federatedId,
-				platformOwner.getRecoveryMail(),
+				coreUser.getRecoveryMail(),
 				UserRole.PLATFORM_OWNER
 			);
 
 		PlatformRegistrationRequest platformRegistrationRequest = new PlatformRegistrationRequest(
 				new Credentials(AAMOwnerUsername, AAMOwnerPassword),
-				platformOwnerUserDetails,
+				coreUserUserDetails,
 				platformAAMURL,
 				platformInstanceFriendlyName,
-				platformOwner.getPlatformId()
+				coreUser.getPlatformId()
 			);
 
 
@@ -94,7 +94,7 @@ public class Register {
 	
 
 	@GetMapping("/app/register")
-	public String appOwnerRegisterForm(PlatformOwner platformOwner) {
+	public String appOwnerRegisterForm(CoreUser coreUser) {
 		return "register";
 	}
 }

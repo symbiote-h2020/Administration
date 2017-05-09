@@ -1,24 +1,24 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title th:include="${ #strings.concat('cpanel/', role) } :: title">Control Panel</title>
+    <title th:include="cpanel/user :: title">Control Panel</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
 </head>
 <body>
     <div class="header">
         <img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
-        <span th:replace="${ #strings.concat('cpanel/', role) } :: title" ></span>
+        <span th:replace="cpanel/user :: title" ></span>
         <span class="user" th:inline="text">User: [[${#httpServletRequest.remoteUser}]]</span>
-        <form th:replace="${ #strings.concat('cpanel/', role) } :: form.logout" ></form>
+        <form th:replace="cpanel/user :: form.logout" ></form>
     </div>
     <div class="content">
         <ul class="sidebar">
-            <th:block th:include="${ #strings.concat('cpanel/', role) } :: .sidebar" ></th:block>
+            <th:block th:include="cpanel/user :: .sidebar" ></th:block>
             <th:block th:include="cpanel/common :: .sidebar" ></th:block>
         </ul>        
         <div class="tabs">
-            <th:block th:include="${ #strings.concat('cpanel/', role) } :: .tabs" ></th:block>
+            <th:block th:include="cpanel/user :: .tabs" ></th:block>
             <th:block th:include="cpanel/common :: .tabs" ></th:block>
         </div>
     </div>

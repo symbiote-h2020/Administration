@@ -14,24 +14,21 @@
     </div>
     <div class="content">
         <ul class="sidebar">
-            <th:block th:if="${!platform_exists}">
+            <th:block th:if="${!platform_exists}">            
                 <li class="action active" id="register_platform">Register Platform</li>
             </th:block>
             <th:block th:if="${platform_exists}">
                 <li class="action active" id="platform_status">Platform Status</li>
+            </th:block>
+            <th:block>
                 <li class="action" id="platform_edit">Update Platform</li>
                 <li class="action" id="platform_unregister">Unregister Platform</li>
             </th:block>
         </ul>
         <div class="tabs">
-            <th:block th:if="${!platform_exists and platform_pending}">
-                <div class="tab active" id="platform_pending_tab">
-                    <span>Platform submitted succesfully! Loading...</span>
-                </div>                
-            </th:block>
-            <th:block th:if="${!platform_exists and !platform_pending}">
+            <th:block th:if="${!platform_exists}">
                 <div class="tab active" id="register_platform_tab">
-                    <form th:action="@{/user/cpanel/register/platform}" th:object="${platform}" method="post">
+                    <form th:action="@{/platform/cpanel/register}" th:object="${platform}" method="post">
                         <table>
                             <tr>
                                 <th class="title" colspan="2">Register Platform</th>
@@ -60,14 +57,22 @@
                             <tr><td class="submit" colspan="2"><input class="button" type="submit" name="submit" value="Register"></input></td></tr>
                         </table>
                     </form>
-                </div>                
+                </div>
             </th:block>
             <th:block th:if="${platform_exists}">
                 <div class="tab active" id="platform_status_tab">
-                    <span th:inline="text">Platform Id: [[${platform_id}]]</span>
-                </div>
+                    <ul>
+                        <li th:inline="text">Platform Id: [[${platform_id}]]</li>
+                        <li th:inline="text">Platform Name: [[${platform_name}]]</li>
+                        <li th:inline="text">Platform Description: [[${platform_description}]]</li>
+                        <li th:inline="text">Platform Url: [[${platform_url}]]</li>
+                        <li th:inline="text">Platform Information Model: [[${platform_im}]]</li>
+                    </ul>
+                </div>                
+            </th:block>
+            <th:block>                
                 <div class="tab" id="platform_edit_tab">
-                    <form th:action="@{/user/cpanel/update/platform}" th:object="${platform}" method="post">
+                    <form th:action="@{/platform/cpanel/update}" th:object="${platform}" method="post">
                         <table>
                             <tr>
                                 <th class="title" colspan="2">Edit Platform Details</th>
@@ -98,10 +103,10 @@
                     </form>
                 </div>
                 <div class="tab" id="platform_unregister_tab">
-                    <form th:action="@{/user/cpanel/unregister/platform}" method="post">
+                    <form th:action="@{/platform/cpanel/unregister}" method="post">
                         <input class="button" type="submit" name="submit" value="Unregister"></input>
                     </form>
-                </div>
+                </div>            
             </th:block>
         </div>
     </div>
