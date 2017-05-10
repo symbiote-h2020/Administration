@@ -77,6 +77,7 @@ public class Cpanel {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
         String platformId = user.getPlatformId(); //get logged in platform id
+        platform.setPlatformId(platformId);
 
         // Send registration to Registry
         try{
@@ -111,6 +112,7 @@ public class Cpanel {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
         String platformId = user.getPlatformId(); //get logged in platform id
+        platform.setPlatformId(platformId);
 
         // Send registration to Registry
         try{

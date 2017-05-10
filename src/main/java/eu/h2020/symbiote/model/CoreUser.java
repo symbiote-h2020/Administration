@@ -2,6 +2,8 @@ package eu.h2020.symbiote.model;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Pattern;
 import java.util.Collection;
 import java.util.ArrayList;
 
@@ -28,7 +30,9 @@ public class CoreUser extends User {
     @Size(min=4, max=30)
     private String federatedId;
 
-    @Size(min=4, max=30)
+    // Match either a word (letters, digits and _) with min=4, max=30 characters or an empty string
+    @Pattern(regexp="(^\\Z|^\\w\\w\\w\\w*\\Z)")
+    @Max(30)
     private String platformId;
 
     private Platform platform;
