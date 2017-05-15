@@ -34,9 +34,28 @@ public class Cpanel {
 
 
     // USER
+    @GetMapping("/platform/cpanel/test")
+    public String userCPanel(Model model, Principal principal) {
+
+        String username = principal.getName(); //get logged in username
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
+        CoreUser user = (CoreUser)token.getPrincipal();
+
+        if(user.getState() != CoreUser.APP){
+
+        }
+
+        
+        // if(platformId == "") { // test for app or platform owner 
+
+        // if platform owner 
+        String platformId = user.getPlatformId(); //get logged in platform id
+
+        return "cpanel/root";
+    }
 
     @GetMapping("/platform/cpanel")
-    public String userCPanel(Model model, Principal principal) {
+    public String platformCPanel(Model model, Principal principal) {
 
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
@@ -114,6 +133,7 @@ public class Cpanel {
         String platformId = user.getPlatformId(); //get logged in platform id
         platform.setPlatformId(platformId);
 
+
         // Send registration to Registry
         try{
             PlatformResponse response = rabbitManager.sendPlatformModificationRequest(platform);
@@ -147,14 +167,18 @@ public class Cpanel {
         Platform platform = new Platform();
         platform.setPlatformId(platformId);
 
+        Platform testPlatform = new Platform();
+        testPlatform.setPlatformId(platformId); //null platform
+
         // Send update to Registry
 		try{
-            PlatformResponse response = rabbitManager.sendPlatformModificationRequest(platform);
+            PlatformResponse response = rabbitManager.sendPlatformModificationRequest(testPlatform);
+            // PlatformResponse response = rabbitManager.sendPlatformModificationRequest(platform);
             System.out.println("Received response in interface: " + response);
 
             if(response != null && response.getStatus() == 200 ){
 
-                user.setPlatform(null);
+                // user.setPlatform(null);
 
             } else {
                 model.addFlashAttribute("error","Authorization Manager is unreachable!");

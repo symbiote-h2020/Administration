@@ -47,8 +47,6 @@ public class Register {
 			return "register";
 		}
 
-		String platformAAMURL = "hardcoded temporarily";
-		String platformInstanceFriendlyName = "placeholder";
 		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
 
 		UserDetails  coreUserUserDetails = new UserDetails(
@@ -61,8 +59,8 @@ public class Register {
 		PlatformRegistrationRequest platformRegistrationRequest = new PlatformRegistrationRequest(
 				new Credentials(AAMOwnerUsername, AAMOwnerPassword),
 				coreUserUserDetails,
-				platformAAMURL,
-				platformInstanceFriendlyName,
+				coreUser.getPlatformUrl(),
+				coreUser.getPlatformName(),
 				coreUser.getPlatformId()
 			);
 

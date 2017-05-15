@@ -48,6 +48,10 @@ public class RabbitManager {
     @Value("${rabbit.password}")
     private String rabbitPassword;
 
+    @Value("${rabbit.timeoutMillis}")
+    private Long rabbitTimeout;
+    
+
     // ------------ Registry communication ----------------
 
     @Value("${rabbit.exchange.platform.name}")
@@ -203,8 +207,8 @@ public class RabbitManager {
 
             this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
             while (true) {
-                QueueingConsumer.Delivery delivery = consumer.nextDelivery(3000);
-                if (delivery == null) {
+                QueueingConsumer.Delivery delivery = consumer.nextDelivery(rabbitTimeout);
+                if (delivery == null){
                     log.info("Timeout in response retrieval");
                     return null;
                 }

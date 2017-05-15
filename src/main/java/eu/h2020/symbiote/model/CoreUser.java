@@ -14,6 +14,10 @@ import eu.h2020.symbiote.core.model.Platform;
 
 public class CoreUser extends User {
 
+    public static final int APP = 0;
+    public static final int PLATFORM_INACTIVE = 1;
+    public static final int PLATFORM_ACTIVE = 2;
+
     @NotNull
     @Size(min=4, max=30)
     private String validUsername;
@@ -30,10 +34,20 @@ public class CoreUser extends User {
     @Size(min=4, max=30)
     private String federatedId;
 
-    // Match either a word (letters, digits and _) with min=4, max=30 characters or an empty string
-    // @Pattern(regexp="(^\\Z|^\\w\\w\\w\\w*\\Z)")
-    // @Max(30)
+    // Match either a word (letters, digits, "-" and "_") with min=4, max=30 characters or an empty string
+    @Pattern(regexp="(^\\Z|^[\\w-][\\w-][\\w-][\\w-]+\\Z)")
+    @Size(max=30)
     private String platformId;
+
+    @NotNull
+    @Size(min=4, max=30)
+    private String platformName;
+
+    @NotNull
+    @Size(min=4, max=30)
+    private String platformUrl;
+
+    private int state;
 
     private Platform platform;
 
@@ -45,7 +59,15 @@ public class CoreUser extends User {
      super(username, password, enabled, accountNonExpired,
         credentialsNonExpired, accountNonLocked, authorities);
 
-        this.platformId = platformId;
+        if(platformId == null){
+
+            this.state = this.APP;
+        } else {
+
+            this.state = this.PLATFORM_INACTIVE;
+            this.platformId = platformId;
+        }
+
     }
 
     public CoreUser () {
@@ -72,9 +94,22 @@ public class CoreUser extends User {
         return this.platformId;
     }
 
+    public String getPlatformName() {
+        return this.platformName;
+    }
+
+    public String getPlatformUrl() {
+        return this.platformUrl;
+    }
+
+    public int getState() {
+        return this.state;
+    }
+
     public Platform getPlatform() {
         return this.platform;
     }
+
 
     public void setValidUsername(String validUsername) {
         this.validUsername = validUsername;
@@ -96,9 +131,22 @@ public class CoreUser extends User {
         this.platformId = platformId;
     }
 
+    public void setPlatformName(String platformName) {
+        this.platformName = platformName;
+    }
+
+    public void setPlatformUrl(String platformUrl) {
+        this.platformUrl = platformUrl;
+    }
+
+    public void setState(int state) {
+        this.state = state;
+    }
+
     public void setPlatform(Platform platform) {
         this.platform = platform;
     }
+
 
     public void clearPassword() {
         this.validPassword = null;

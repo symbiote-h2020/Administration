@@ -53,8 +53,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             if(token != null){
 
                 JWTClaims claims = JWTEngine.getClaimsFromToken(token.getToken());
-                String platformId = claims.getAtt().get(CoreAttributes.OWNED_PLATFORM.toString());
-                
+                String platformId = claims.getAtt().get(CoreAttributes.OWNED_PLATFORM.toString());                
 
                 List<GrantedAuthority> grantedAuths = new ArrayList<>();
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
