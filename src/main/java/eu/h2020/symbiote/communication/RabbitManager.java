@@ -182,6 +182,8 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public String sendRpcMessage(String exchangeName, String routingKey, String message) {
+        QueueingConsumer consumer = new QueueingConsumer(channel);
+
         try {
             log.debug("Sending message...");
 
@@ -194,7 +196,7 @@ public class RabbitManager {
                     .replyTo(replyQueueName)
                     .build();
 
-            QueueingConsumer consumer = new QueueingConsumer(channel);
+
             this.channel.basicConsume(replyQueueName, true, consumer);
 
             String responseMsg = null;
@@ -202,12 +204,16 @@ public class RabbitManager {
             this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
             while (true) {
                 QueueingConsumer.Delivery delivery = consumer.nextDelivery(3000);
-                if (delivery == null)
+                if (delivery == null) {
+                    log.info("Timeout in response retrieval");
                     return null;
+                }
 
                 if (delivery.getProperties().getCorrelationId().equals(correlationId)) {
                     responseMsg = new String(delivery.getBody());
                     break;
+                } else {
+                    log.info("Wrong correlationID in response message");
                 }
             }
 
@@ -215,6 +221,12 @@ public class RabbitManager {
             return responseMsg;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                this.channel.basicCancel(consumer.getConsumerTag());
+            } catch (IOException e) {
+                log.error(e.getMessage(), e);
+            }
         }
         return null;
     }
