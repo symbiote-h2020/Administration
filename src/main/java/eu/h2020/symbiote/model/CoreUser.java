@@ -31,8 +31,8 @@ public class CoreUser extends User {
     private String federatedId;
 
     // Match either a word (letters, digits and _) with min=4, max=30 characters or an empty string
-    @Pattern(regexp="(^\\Z|^\\w\\w\\w\\w*\\Z)")
-    @Max(30)
+    // @Pattern(regexp="(^\\Z|^\\w\\w\\w\\w*\\Z)")
+    // @Max(30)
     private String platformId;
 
     private Platform platform;
