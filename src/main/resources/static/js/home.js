@@ -10,12 +10,12 @@ $( document ).ready( function() {
 
 	$( ".app .login.button" ).click(function(e){
 
-		getPopup( "/app/login" );
+		getPopup( "/user/login" );
 		e.preventDefault();
 	});
 	$( ".platform .login.button" ).click(function(e){
 
-		getPopup( "/platform/login" );
+		getPopup( "/user/login" );
 		e.preventDefault();
 	});
 
@@ -77,6 +77,13 @@ $( document ).ready( function() {
 	// Handle login/register form submission
 
 	function handlePopupForm() {
+
+
+		$( ".popup .login.btn" ).click(function(e){
+
+			getPopup( "/user/login" );
+			e.preventDefault();
+		});
 
 		$(".popup form").submit( function( e ) {
 

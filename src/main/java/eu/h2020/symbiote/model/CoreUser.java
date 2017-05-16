@@ -2,21 +2,24 @@ package eu.h2020.symbiote.model;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.validation.constraints.Max;
 import javax.validation.constraints.Pattern;
 import java.util.Collection;
 import java.util.ArrayList;
 
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
-import eu.h2020.symbiote.core.model.Platform;
+import eu.h2020.symbiote.model.PlatformDetails;
+import eu.h2020.symbiote.security.token.Token;
 
 public class CoreUser extends User {
 
-    public static final int APP = 0;
-    public static final int PLATFORM_INACTIVE = 1;
-    public static final int PLATFORM_ACTIVE = 2;
+    public static final int ERROR = 0;
+    public static final int APP = 1;
+    public static final int PLATFORM_INACTIVE = 2;
+    public static final int PLATFORM_ACTIVE = 3;
 
     @NotNull
     @Size(min=4, max=30)
@@ -31,7 +34,7 @@ public class CoreUser extends User {
     private String recoveryMail;
 
     // @NotNull
-    @Size(min=4, max=30)
+    // @Size(min=4, max=30)
     private String federatedId;
 
     // Match either a word (letters, digits, "-" and "_") with min=4, max=30 characters or an empty string
@@ -44,20 +47,24 @@ public class CoreUser extends User {
     private String platformName;
 
     @NotNull
-    @Size(min=4, max=30)
+    // @Size(min=4, max=120)
     private String platformUrl;
 
     private int state;
 
-    private Platform platform;
+    private PlatformDetails platformDetails;
+
+    private Token token;
 
 
     public CoreUser(String username, String password, boolean enabled,
         boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities,
-        String platformId) {
+        Token token, String platformId) {
 
      super(username, password, enabled, accountNonExpired,
         credentialsNonExpired, accountNonLocked, authorities);
+
+        this.token = token;
 
         if(platformId == null){
 
@@ -106,8 +113,12 @@ public class CoreUser extends User {
         return this.state;
     }
 
-    public Platform getPlatform() {
-        return this.platform;
+    public PlatformDetails getPlatformDetails() {
+        return this.platformDetails;
+    }
+
+    public Token getToken() {
+        return this.token;
     }
 
 
@@ -143,13 +154,23 @@ public class CoreUser extends User {
         this.state = state;
     }
 
-    public void setPlatform(Platform platform) {
-        this.platform = platform;
+    public void setPlatformDetails(PlatformDetails platformDetails) {
+        this.platformDetails = platformDetails;
+    }
+
+    public void setToken(Token token) {
+        this.token = token;
     }
 
 
     public void clearPassword() {
         this.validPassword = null;
+    }
+
+
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this);
     }
 
 }

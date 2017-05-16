@@ -25,6 +25,7 @@ import eu.h2020.symbiote.security.payloads.PlatformRegistrationResponse;
 import eu.h2020.symbiote.security.payloads.UserRegistrationRequest;
 import eu.h2020.symbiote.security.payloads.UserRegistrationResponse;
 import eu.h2020.symbiote.security.payloads.Credentials;
+import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.security.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.security.token.Token;
 import eu.h2020.symbiote.communication.CommunicationException;
@@ -103,6 +104,9 @@ public class RabbitManager {
 
     @Value("${rabbit.routingKey.login.request}")
     private String loginRoutingKey;
+
+    @Value("${rabbit.routingKey.ownedplatformdetails.request}")
+    private String detailsRoutingKey;
 
     // ----------------------------------------------------
 
@@ -383,12 +387,58 @@ public class RabbitManager {
 
 
     /**
-     * Method used to send RPC request to register platform.
+     * Method used to send RPC request to login user.
      *
-     * @param request  request for registration
+     * @param credentials  credentials for login
      */
     public Token sendLoginRequest(Credentials credentials) throws CommunicationException  {
         return sendAAMLoginMessage(this.aamExchangeName, this.loginRoutingKey, credentials);
+    }
+
+
+    /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with AAM
+     *
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param token  token to be sent
+     * @return response from the consumer or null if timeout occurs
+     */
+    public OwnedPlatformDetails sendAAMDetailsMessage(String exchangeName, String routingKey, String token) throws CommunicationException {
+        try {
+            String message;
+            ObjectMapper mapper = new ObjectMapper();
+            message = mapper.writeValueAsString(token);
+
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+
+            if (responseMsg == null)
+                return null;
+
+            mapper = new ObjectMapper();
+            try {
+                OwnedPlatformDetails response = mapper.readValue(responseMsg, OwnedPlatformDetails.class);
+                return response;
+
+            } catch (Exception e){
+
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
+    }
+
+
+    /**
+     * Method used to send RPC request to get a platform owner's platform details.
+     *
+     * @param token  token of user
+     */
+    public OwnedPlatformDetails sendDetailsRequest(String token) throws CommunicationException  {
+        return sendAAMDetailsMessage(this.aamExchangeName, this.detailsRoutingKey, token);
     }
 
 

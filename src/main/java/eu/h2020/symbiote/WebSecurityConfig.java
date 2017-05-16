@@ -31,18 +31,18 @@ public class WebSecurityConfig {
 		@Override
 		protected void configure(HttpSecurity http) throws Exception {
 			http
-				.regexMatcher("\\/platform\\/(?!register).+")
+				.antMatcher("/user/**")
 				.authorizeRequests()
 					.anyRequest().authenticated()
 					// .anyRequest().hasRole("USER")
 					.and()
 				.formLogin()
-					.loginPage("/platform/login")
-					.defaultSuccessUrl("/platform/cpanel")
+					.loginPage("/user/login")
+					.defaultSuccessUrl("/user/cpanel")
 					.permitAll()
 					.and()
 				.logout()
-					.logoutUrl("/platform/logout")
+					.logoutUrl("/user/logout")
 					.logoutSuccessUrl("/")
 					.permitAll()
 					.and()

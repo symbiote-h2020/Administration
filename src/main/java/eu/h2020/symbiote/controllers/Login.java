@@ -14,29 +14,15 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 public class Login {
 
 
-	@GetMapping("/platform/login")
-	public String platformOwnerLogin() {
+	@GetMapping("/user/login")
+	public String userLogin() {
 
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
 
 			/* The user is logged in :) */
-			return "forward:/platform/cpanel";
-		} else {
-			return "login";
-		}
-	}
-
-	@GetMapping("/app/login")
-	public String appOwnerLogin() {
-
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-
-		if (!(auth instanceof AnonymousAuthenticationToken)) {
-
-			/* The user is logged in :) */
-			return "forward:/app/cpanel";
+			return "forward:/user/cpanel";
 		} else {
 			return "login";
 		}
@@ -54,5 +40,11 @@ public class Login {
 		} else {
 			return "login";
 		}
+	}
+
+	@GetMapping("/user/logout")
+	public String userLogout() {
+		
+		return "forward:/";
 	}
 }

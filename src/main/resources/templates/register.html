@@ -48,7 +48,7 @@
 
 				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/platform/register'}">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-					<input type="text" class="form-control" name="platformUrl" value="" placeholder="Platform Address"/>
+					<input type="url" class="form-control" name="platformUrl" value="" placeholder="Platform Address"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/platform/register' and #fields.hasErrors('platformUrl')}" th:errors="*{platformUrl}">Invalid Platform Address!</div>
 

@@ -48,6 +48,17 @@ public class Register {
 		}
 
 		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
+		String platformUrl = coreUser.getPlatformUrl();
+		if(!platformUrl.startsWith("http")){
+			platformUrl = "https://" + platformUrl;
+		}
+		if(!platformUrl.matches("[^:]+:[^:]+:[^:]+")){ // if port isn't included
+
+			String[] parts = platformUrl.split("/");
+			// parts[0] += "/";
+			parts[2] += ":8101";
+			platformUrl = String.join("/",parts);
+		}
 
 		UserDetails  coreUserUserDetails = new UserDetails(
 				new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),

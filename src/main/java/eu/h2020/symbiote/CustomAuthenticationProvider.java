@@ -58,7 +58,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 List<GrantedAuthority> grantedAuths = new ArrayList<>();
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-                CoreUser user = new CoreUser(name, password, true, true, true, true, grantedAuths, platformId);
+                CoreUser user = new CoreUser(name, password, true, true, true, true, grantedAuths, token, platformId);
                 user.clearPassword();
                 Authentication auth = new UsernamePasswordAuthenticationToken(user, null, grantedAuths);
 
