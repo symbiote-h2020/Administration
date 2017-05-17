@@ -93,12 +93,10 @@ dependencies {
     compile('org.webjars:jquery:3.1.1-1')
     compile('org.webjars:bootstrap:3.3.7-1')
 
-
-    compile('org.springframework.boot:spring-boot-devtools') // live reload tools etc
-
     // tests only
     testCompile('junit:junit:4.+')
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('org.springframework.security:spring-security-test')
 }
 
 // code quality below

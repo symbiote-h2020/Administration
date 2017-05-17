@@ -1,23 +1,25 @@
 // package eu.h2020.symbiote;
 
+// import java.io.IOException;
+// import javafx.util.Pair;
+
 // import com.rabbitmq.client.AMQP;
 // import com.rabbitmq.client.Channel;
 // import com.rabbitmq.client.Envelope;
 // import com.rabbitmq.client.impl.AMQImpl;
-// // import eu.h2020.symbiote.communication.EmptyConsumerReturnListener;
-// import eu.h2020.symbiote.communication.IRpcResponseListener;
-// import eu.h2020.symbiote.communication.PlatformRegistrationListener;
-// import eu.h2020.symbiote.communication.RabbitManager;
-// import eu.h2020.symbiote.model.Platform;
-// import javafx.util.Pair;
+
 // import org.junit.Test;
 // import org.junit.runner.RunWith;
-// import org.mockito.runners.MockitoJUnitRunner;
-
-// import java.io.IOException;
-
 // import static org.junit.Assert.*;
 // import static org.mockito.Mockito.*;
+// import org.mockito.runners.MockitoJUnitRunner;
+
+// import eu.h2020.symbiote.core.model.Platform;
+// import eu.h2020.symbiote.communication.RabbitManager;
+// import eu.h2020.symbiote.communication.CommunicationException;
+
+
+
 
 // @RunWith(MockitoJUnitRunner.class)
 // public class RabbitManagerTests {
@@ -54,14 +56,24 @@
 //     //     verify(rpcResponseListener, times(1)).onRpcResponseReceive(any());
 //     // }
 
-//     @Test
-//     public void testSendPlatformRpcMessage_success() {
-//         RabbitManager rabbitManager = spy(new RabbitManager());
-//         doNothing().when(rabbitManager).sendRpcMessage(any(), any(), any(), any() );
+//     // @Test
+//     // public void testSendPlatformRpcMessage_success() {
 
-//         Platform platform = new Platform();
+//     // 	RabbitManager rabbitManager = Mockito.mock(RabbitManager.class);
+//     //     when(rabbitManager.sendRpcMessage(any(), any(), any())).thenReturn(false);
 
-//         rabbitManager.sendRpcPlatformMessage("testExchangeName","testRoutingKey", platform, null);
-//     }
+
+//     //     RabbitManager rabbitManager = spy(new RabbitManager());
+//     //     doNothing().when(rabbitManager).sendRpcMessage(any(), any(), any());
+
+//     //     Platform platform = new Platform();
+
+//     //     try{
+//     //     	rabbitManager.sendRegistryMessage("testExchangeName","testRoutingKey", platform);
+//     //     } catch(CommunicationException e){
+
+//     //     }
+        
+//     // }
 
 // }

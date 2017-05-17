@@ -8,6 +8,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,8 @@ import org.springframework.stereotype.Component;
  * Administration is responsible for registering platforms by platform owners.
  * It provides a web-based GUI for performing platform operations.
  */
+@Configuration
+@EnableAutoConfiguration
 @EnableDiscoveryClient
 @SpringBootApplication
 public class AdministrationApplication {
@@ -42,24 +46,6 @@ public class AdministrationApplication {
         @Override
         public void run(String... args) throws Exception {
             this.rabbitManager.initCommunication();
-
-//            For testing purpopses
-
-//            Platform platform = new Platform();
-//            platform.setPlatformId("5886154b3999e53d70b46589");
-//            platform.setName("New Platform changed");
-// //            platform.setDescription("Test platform to delete");
-// //            platform.setInformationModelId("CIM");
-// //            platform.setUrl("http://example.com");
-
-//            this.rabbitManager.sendPlatformCreationRequest(platform, rpcPlatformResponse ->
-//                    log.debug("Received response in interface: " + rpcPlatformResponse));
-
-            //            this.rabbitManager.sendPlatformRemovalRequest(platform, rpcPlatformResponse ->
-            //                    log.debug("Platform deleted response: " + rpcPlatformResponse));
-
-//             this.rabbitManager.sendPlatformModificationRequest(platform, rpcPlatformResponse ->
-//                     log.debug("Platform modification response: " + rpcPlatformResponse));
         }
     }
 

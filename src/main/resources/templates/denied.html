@@ -9,6 +9,7 @@
         <div class="popup">
             <div class="popupContent denied">
                 <div class="title">Access Denied</div>
+                <div class="error">You are not authorized to access this page.</div>
                 <div class="error" th:inline="text">User: [[${#httpServletRequest.remoteUser}]], you are not authorized to access this page.</div>
                 <div class="submit">
                     <a href="/user/cpanel" th:if="${#httpServletRequest.isUserInRole('ROLE_USER')}">Application Owner Control Panel</a>
