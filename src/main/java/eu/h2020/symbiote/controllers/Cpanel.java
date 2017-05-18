@@ -82,6 +82,7 @@ public class Cpanel {
 
                     // get owner details from AAM
                     OwnedPlatformDetails ownerDetails = rabbitManager.sendDetailsRequest(user.getToken().getToken());
+                    System.out.println(ownerDetails);
                     if(ownerDetails != null && ownerDetails.getPlatformInstanceId().equals(user.getPlatformId() )){ // all is well
 
                         user.setPlatformDetails(null);
@@ -108,7 +109,8 @@ public class Cpanel {
 
 
     @PostMapping("/user/cpanel/activate")
-    public String activatePlatform(@Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+    public String activatePlatform(
+        @Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
         if (bindingResult.hasErrors()) {
 
@@ -156,7 +158,8 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/modify")
-    public String modifyPlatform(@Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+    public String modifyPlatform(
+        @Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
         if (bindingResult.hasErrors()) {
 

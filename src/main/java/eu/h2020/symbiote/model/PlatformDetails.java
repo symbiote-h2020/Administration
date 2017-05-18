@@ -7,7 +7,7 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
 public class PlatformDetails {
 
-    @Size(min=4, max=300)
+    @Size(min=3, max=300)
     private String description;
 
     // @NotNull

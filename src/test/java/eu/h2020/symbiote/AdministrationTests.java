@@ -2,35 +2,18 @@ package eu.h2020.symbiote;
 
 import java.util.List;
 import java.util.ArrayList;
-import javax.servlet.Filter;
 
-import org.junit.Test;
-import org.junit.Before;
 import org.junit.runner.RunWith;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-import org.mockito.runners.MockitoJUnitRunner;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
-import static org.hamcrest.Matchers.*;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import org.springframework.beans.factory.annotation.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.h2020.symbiote.security.token.Token;
@@ -56,23 +39,6 @@ public abstract class AdministrationTests {
     @Value("${aam.deployment.owner.password}")
     private String AAMOwnerPassword;
 
-    @Autowired
-    private WebApplicationContext wac;
-
-    @Autowired
-    private Filter springSecurityFilterChain;
-
-    protected MockMvc mockMvc;
-
-    @Before
-    public void setup(){
-
-        this.mockMvc = MockMvcBuilders
-            .webAppContextSetup(this.wac)
-            .addFilters(springSecurityFilterChain)
-            .build();
-    }
-
 
     // ===== Helper Values & Methods ====
 
@@ -83,7 +49,7 @@ public abstract class AdministrationTests {
 
     protected String platformId = "test1Plat";
     protected String name = "Test Platform 1";
-    protected String url = "https://platform.test:8101";
+    protected String url = "https://platform.test";
     protected String description = "This is a test platform.";
     protected String informationModelId = "test_IM_1";
 

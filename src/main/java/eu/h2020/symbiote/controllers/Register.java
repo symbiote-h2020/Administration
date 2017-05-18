@@ -23,17 +23,8 @@ import eu.h2020.symbiote.model.CoreUser;
 @Controller
 public class Register {
 
-    /**
-     * Class constructor which autowires RabbitManager bean.
-     *
-     * @param rabbitManager RabbitManager bean
-     */
     @Autowired
-    public Register(RabbitManager rabbitManager) {
-        this.rabbitManager = rabbitManager;
-    }
-
-    private final RabbitManager rabbitManager;
+    private RabbitManager rabbitManager;
 
 
 	@Value("${aam.deployment.owner.username}")
@@ -55,7 +46,7 @@ public class Register {
 
 		if (bindingResult.hasErrors()) {
 
-			return "register";
+			return "/register";
 		}
 
 		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
@@ -106,13 +97,13 @@ public class Register {
 
 			} else {
 				model.addAttribute("error","Authorization Manager is unreachable!");
-				return "register";				
+				return "/register";				
 			}
 		
 		} catch(CommunicationException e){
 
 				model.addAttribute("error",e.getMessage());
-				return "register";	
+				return "/register";	
 		}
 	}
 	
