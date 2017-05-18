@@ -1,21 +1,26 @@
 package eu.h2020.symbiote;
 
 import org.junit.Test;
-import org.springframework.test.web.servlet.MockMvc;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
 
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import eu.h2020.symbiote.communication.RabbitManager;
+import eu.h2020.symbiote.controller.Login;
 
 
 
 public class WebAppTests extends AdministrationTests {
 
+    @Mock
+    RabbitManager rabbitManager;
 
     @Test
     public void getHomePage() throws Exception {
@@ -33,6 +38,46 @@ public class WebAppTests extends AdministrationTests {
     }
 
     @Test
+    public void postPlatformRegisterErrors() throws Exception {
+        
+        mockMvc.perform(post("/platform/register"))
+            .andExpect(status().isOk())
+            .andExpect(model().hasErrors());
+    }
+
+    @Test
+    public void postPlatformRegisterUnreachable() throws Exception {
+        
+        mockMvc.perform(post("/platform/register")
+        		.param("validUsername", username)
+        		.param("validPassword", password)
+        		.param("platformUrl", url)
+        		.param("platformName", name)
+        		.param("recoveryMail", mail)
+        		.param("federatedId", federatedId)
+        		.param("platformId", platformId) )
+            .andExpect(status().isOk())
+            .andExpect(model().attribute("error", "Authorization Manager is unreachable!") );
+    }
+
+    // @Test
+    // public void postPlatformRegisterSuccess() throws Exception {
+
+    // 	when(rabbitManager.sendPlatformRegistrationRequest(any())).thenReturn(samplePlatformResponse());
+        
+    //     mockMvc.perform(post("/platform/register")
+    //     		.param("validUsername", username)
+    //     		.param("validPassword", password)
+    //     		.param("platformUrl", url)
+    //     		.param("platformName", name)
+    //     		.param("recoveryMail", mail)
+    //     		.param("federatedId", federatedId)
+    //     		.param("platformId", platformId) )
+    //         // .andExpect(status().isOk());
+    //         .andDo(MockMvcResultHandlers.print());
+    // }
+
+    @Test
     public void getAppRegisterPage() throws Exception {
         
         mockMvc.perform(get("/platform/register"))
@@ -43,6 +88,21 @@ public class WebAppTests extends AdministrationTests {
     public void getLoginPage() throws Exception {
         
         mockMvc.perform(get("/user/login"))
+            .andExpect(status().isOk());
+    }
+
+    @Test
+    public void getLoginPageAsUser() throws Exception {
+        
+        mockMvc.perform(get("/user/login").with(authentication(sampleAuth())) )
+            .andExpect(status().isOk())
+            .andExpect(forwardedUrl("/user/cpanel"));
+    }
+
+    @Test
+    public void getLogoutPage() throws Exception {
+        
+        mockMvc.perform(get("/user/logout").with(authentication(sampleAuth())) )
             .andExpect(status().isOk());
     }
 
@@ -70,9 +130,7 @@ public class WebAppTests extends AdministrationTests {
     @Test
     public void getControlPanelAsUserCommunicationError() throws Exception {
 
-        Authentication auth = new UsernamePasswordAuthenticationToken(sampleCoreUser(), null, sampleAuths());
-
-        mockMvc.perform( get("/user/cpanel").with(authentication(auth)) )
+        mockMvc.perform( get("/user/cpanel").with(authentication(sampleAuth())) )
             .andExpect(model().attribute("user", hasProperty("state", is(0))) );
     }
 

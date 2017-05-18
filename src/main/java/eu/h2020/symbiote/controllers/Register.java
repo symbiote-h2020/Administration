@@ -23,14 +23,25 @@ import eu.h2020.symbiote.model.CoreUser;
 @Controller
 public class Register {
 
+    /**
+     * Class constructor which autowires RabbitManager bean.
+     *
+     * @param rabbitManager RabbitManager bean
+     */
+    @Autowired
+    public Register(RabbitManager rabbitManager) {
+        this.rabbitManager = rabbitManager;
+    }
+
+    private final RabbitManager rabbitManager;
+
+
 	@Value("${aam.deployment.owner.username}")
 	private String AAMOwnerUsername;
 	@Value("${aam.deployment.owner.password}")
 	private String AAMOwnerPassword;
 
 
-	@Autowired
-	private RabbitManager rabbitManager;
 
 	@GetMapping("/platform/register")
 	public String coreUserRegisterForm(CoreUser coreUser) {
@@ -49,13 +60,17 @@ public class Register {
 
 		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
 		String platformUrl = coreUser.getPlatformUrl();
+		
 		if(!platformUrl.startsWith("http")){
 			platformUrl = "https://" + platformUrl;
+			
+		} else if(platformUrl.startsWith("http://")){
+			platformUrl.replace("http://","https://");
 		}
+
 		if(!platformUrl.matches("[^:]+:[^:]+:[^:]+")){ // if port isn't included
 
 			String[] parts = platformUrl.split("/");
-			// parts[0] += "/";
 			parts[2] += ":8101";
 			platformUrl = String.join("/",parts);
 		}
