@@ -112,12 +112,14 @@ public class RabbitManager {
 
     private Connection connection;
     private Channel channel;
+    private ObjectMapper mapper;
 
     /**
-     * Default, empty constructor.
+     * Default constructor, initializing the JSON mapper.
      */
     public RabbitManager() {
 
+        mapper = new ObjectMapper();
     }
 
     /**
@@ -126,6 +128,8 @@ public class RabbitManager {
      * but before using RabbitManager to send any message.
      */
     public void initCommunication() {
+
+
         try {
             ConnectionFactory factory = new ConnectionFactory();
 
@@ -250,16 +254,13 @@ public class RabbitManager {
      */
     public PlatformResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
         try {
-            String message;
-            ObjectMapper mapper = new ObjectMapper();
-            message = mapper.writeValueAsString(platform);
+            String message = mapper.writeValueAsString(platform);
 
             String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
             if (responseMsg == null)
                 return null;
 
-            mapper = new ObjectMapper();
             try {
                 PlatformResponse response = mapper.readValue(responseMsg, PlatformResponse.class);
                 return response;
@@ -314,16 +315,13 @@ public class RabbitManager {
     public PlatformRegistrationResponse sendAAMPlatformRegistrationMessage(String exchangeName, String routingKey,
              PlatformRegistrationRequest request) throws CommunicationException{
         try {
-            String message;
-            ObjectMapper mapper = new ObjectMapper();
-            message = mapper.writeValueAsString(request);
+            String message = mapper.writeValueAsString(request);
 
             String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
             if (responseMsg == null)
                 return null;
 
-            mapper = new ObjectMapper();
             try {
                 PlatformRegistrationResponse response = mapper.readValue(responseMsg, PlatformRegistrationResponse.class);
                 return response;
@@ -360,16 +358,13 @@ public class RabbitManager {
      */
     public Token sendAAMLoginMessage(String exchangeName, String routingKey, Credentials credentials) throws CommunicationException {
         try {
-            String message;
-            ObjectMapper mapper = new ObjectMapper();
-            message = mapper.writeValueAsString(credentials);
+            String message = mapper.writeValueAsString(credentials);
 
             String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
             if (responseMsg == null)
                 return null;
 
-            mapper = new ObjectMapper();
             try {
                 Token response = mapper.readValue(responseMsg, Token.class);
                 return response;
@@ -406,16 +401,13 @@ public class RabbitManager {
      */
     public OwnedPlatformDetails sendAAMDetailsMessage(String exchangeName, String routingKey, String token) throws CommunicationException {
         try {
-            String message;
-            ObjectMapper mapper = new ObjectMapper();
-            message = mapper.writeValueAsString(token);
+            String message = mapper.writeValueAsString(token);
 
             String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
             if (responseMsg == null)
                 return null;
 
-            mapper = new ObjectMapper();
             try {
                 OwnedPlatformDetails response = mapper.readValue(responseMsg, OwnedPlatformDetails.class);
                 return response;

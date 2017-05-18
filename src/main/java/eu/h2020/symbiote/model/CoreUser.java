@@ -84,83 +84,82 @@ public class CoreUser extends User {
     public String getValidUsername() {
         return this.validUsername;
     }
+    public void setValidUsername(String validUsername) {
+        this.validUsername = validUsername;
+    }
+    
 
     public String getValidPassword() {
         return this.validPassword;
     }
-
-    public String getRecoveryMail() {
-        return this.recoveryMail;
-    }
-
-    public String getFederatedId() {
-        return this.federatedId;
-    }
-
-    public String getPlatformId() {
-        return this.platformId;
-    }
-
-    public String getPlatformName() {
-        return this.platformName;
-    }
-
-    public String getPlatformUrl() {
-        return this.platformUrl;
-    }
-
-    public int getState() {
-        return this.state;
-    }
-
-    public PlatformDetails getPlatformDetails() {
-        return this.platformDetails;
-    }
-
-    public Token getToken() {
-        return this.token;
-    }
-
-
-    public void setValidUsername(String validUsername) {
-        this.validUsername = validUsername;
-    }
-
     public void setValidPassword(String validPassword) {
         this.validPassword = validPassword;
     }
 
+
+    public String getRecoveryMail() {
+        return this.recoveryMail;
+    }
     public void setRecoveryMail(String recoveryMail) {
         this.recoveryMail = recoveryMail;
     }
 
+
+    public String getFederatedId() {
+        return this.federatedId;
+    }
     public void setFederatedId(String federatedId) {
         this.federatedId = federatedId;
     }
 
+
+    public String getPlatformId() {
+        return this.platformId;
+    }
     public void setPlatformId(String platformId) {
         this.platformId = platformId;
     }
 
+
+    public String getPlatformName() {
+        return this.platformName;
+    }
     public void setPlatformName(String platformName) {
         this.platformName = platformName;
     }
 
+
+    public String getPlatformUrl() {
+        return this.platformUrl;
+    }
     public void setPlatformUrl(String platformUrl) {
         this.platformUrl = platformUrl;
     }
 
+
+    public int getState() {
+        return this.state;
+    }
     public void setState(int state) {
         this.state = state;
     }
 
+
+    public PlatformDetails getPlatformDetails() {
+        return this.platformDetails;
+    }
     public void setPlatformDetails(PlatformDetails platformDetails) {
         this.platformDetails = platformDetails;
     }
 
+
+    public Token getToken() {
+        return this.token;
+    }
     public void setToken(Token token) {
         this.token = token;
     }
+
 
 
     public void clearPassword() {
