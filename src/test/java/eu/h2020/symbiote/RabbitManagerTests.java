@@ -33,6 +33,9 @@ import eu.h2020.symbiote.security.token.Token;
 import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
 
 
+/**
+ * Test class for use in testing Rabbit Manager methods.
+ */
 public class RabbitManagerTests extends AdministrationTests {
 
     @Spy

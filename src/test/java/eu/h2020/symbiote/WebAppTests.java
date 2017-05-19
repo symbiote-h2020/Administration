@@ -10,15 +10,12 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import org.thymeleaf.spring4.view.ThymeleafViewResolver;
-import org.thymeleaf.spring4.SpringTemplateEngine;
-import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
-
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.*;
@@ -28,15 +25,18 @@ import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
 import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.controller.Login;
+import eu.h2020.symbiote.CustomAuthenticationProvider;
 import eu.h2020.symbiote.controller.Register;
 import eu.h2020.symbiote.controller.Cpanel;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 
-
-
+/**
+ * Test class for use in testing MVC and form validation.
+ */
 public class WebAppTests extends AdministrationTests {
+
+    @Autowired
+    private ApplicationContext appContext;
 
     @Autowired
     private WebApplicationContext wac;
@@ -50,14 +50,6 @@ public class WebAppTests extends AdministrationTests {
     @Mock
     RabbitManager mockRabbitManager;
 
-    @InjectMocks
-    Login loginController;
-    @InjectMocks
-    Register registerController;
-    @InjectMocks
-    Cpanel cpanelController;
-
-
     @Before
     public void setup(){
 
@@ -68,23 +60,14 @@ public class WebAppTests extends AdministrationTests {
 
         MockitoAnnotations.initMocks(this);
 
-        ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver();
-		templateResolver.setTemplateMode("HTML5");
-		templateResolver.setPrefix("templates/");
-		templateResolver.setSuffix(".html");
+        CustomAuthenticationProvider provider = appContext.getBean(CustomAuthenticationProvider.class);
+        provider.setRabbitManager(mockRabbitManager);
 
-		SpringTemplateEngine engine = new SpringTemplateEngine();
-		engine.setTemplateResolver(templateResolver);
+        Register registerController = appContext.getBean(Register.class);
+        registerController.setRabbitManager(mockRabbitManager);
 
-		ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
-		viewResolver.setTemplateEngine(engine);
-
-        this.controllerMockMvc = MockMvcBuilders
-            .standaloneSetup(loginController, registerController, cpanelController)
-            .addFilters(springSecurityFilterChain)
-            .setViewResolvers(viewResolver)
-            .build();
-
+        Cpanel cpanelController = appContext.getBean(Cpanel.class);
+        cpanelController.setRabbitManager(mockRabbitManager);
     }
 
     @Test
@@ -130,7 +113,7 @@ public class WebAppTests extends AdministrationTests {
 
         when(mockRabbitManager.sendPlatformRegistrationRequest(any())).thenReturn(samplePlatformResponse());
         
-        controllerMockMvc.perform(post("/platform/register")
+        mockMvc.perform(post("/platform/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("platformUrl", url.replace("https://","http://"))
@@ -162,6 +145,19 @@ public class WebAppTests extends AdministrationTests {
         mockMvc.perform(get("/user/login").with(authentication(sampleAuth())) )
             .andExpect(status().isOk())
             .andExpect(forwardedUrl("/user/cpanel"));
+    }
+
+    @Test
+    public void postLoginPage() throws Exception {
+        
+        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleToken());
+
+        mockMvc.perform(post("/user/login")
+            .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/user/cpanel"));
     }
 
     @Test
@@ -197,7 +193,7 @@ public class WebAppTests extends AdministrationTests {
         when(mockRabbitManager.sendPlatformModificationRequest(any())).thenReturn(samplePlatformResponseSuccess());
         when(mockRabbitManager.sendDetailsRequest(any())).thenReturn(sampleOwnerDetails());
 
-        controllerMockMvc.perform(get("/user/cpanel")
+        mockMvc.perform(get("/user/cpanel")
                 .with(authentication(sampleAuth())) )
             .andExpect(status().isOk())
             .andExpect(model().attributeExists("user"))
@@ -210,7 +206,7 @@ public class WebAppTests extends AdministrationTests {
         when(mockRabbitManager.sendPlatformModificationRequest(any())).thenReturn(samplePlatformResponseFail());
         when(mockRabbitManager.sendDetailsRequest(any())).thenReturn(sampleOwnerDetails());
 
-        controllerMockMvc.perform(get("/user/cpanel")
+        mockMvc.perform(get("/user/cpanel")
                 .with(authentication(sampleAuth())) )
             .andExpect(status().isOk())
             .andExpect(model().attributeExists("user"))
@@ -250,6 +246,23 @@ public class WebAppTests extends AdministrationTests {
             .andExpect(flash().attribute("error", "Error During Activation!") );
     }
 
+    @Test
+    public void postActivatePlatformSuccess() throws Exception {
+
+        when(mockRabbitManager.sendPlatformCreationRequest(any())).thenReturn(samplePlatformResponseSuccess());
+
+        mockMvc.perform( post("/user/cpanel/activate")
+                .param("description", description)
+                .param("informationModelId", informationModelId)
+                .with(authentication(sampleAuth()))
+                .with(csrf().asHeader()) )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/user/cpanel"))
+            .andExpect(flash().attribute("error", nullValue() ) )
+            .andExpect(flash().attribute("error_description", nullValue() ) )
+            .andExpect(flash().attribute("error_informationModelId", nullValue() ) );
+    }
+
 
     @Test
     public void postModifyPlatformWithErrors() throws Exception {
@@ -276,6 +289,21 @@ public class WebAppTests extends AdministrationTests {
     }
 
     @Test
+    public void postModifyPlatformSuccess() throws Exception {
+
+        when(mockRabbitManager.sendPlatformModificationRequest(any())).thenReturn(samplePlatformResponseSuccess());
+
+        mockMvc.perform( post("/user/cpanel/modify")
+                .param("description", "Modified Description")
+                .with(authentication(sampleAuth()))
+                .with(csrf().asHeader()) )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/user/cpanel"))
+            .andExpect(flash().attribute("error", nullValue() ) )
+            .andExpect(flash().attribute("error_description", nullValue() ) );
+    }
+
+    @Test
     public void postDisablePlatformTimeout() throws Exception {
 
         mockMvc.perform( post("/user/cpanel/disable")
@@ -284,5 +312,19 @@ public class WebAppTests extends AdministrationTests {
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/user/cpanel"))
             .andExpect(flash().attribute("error", "Authorization Manager is unreachable!") );
+    }
+
+    @Test
+    public void postDisablePlatformSuccess() throws Exception {
+
+        when(mockRabbitManager.sendPlatformRemovalRequest(any())).thenReturn(samplePlatformResponseSuccess());
+
+        mockMvc.perform( post("/user/cpanel/disable")
+                .param("description", "Modified Description")
+                .with(authentication(sampleAuth()))
+                .with(csrf().asHeader()) )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/user/cpanel"))
+            .andExpect(flash().attribute("error", nullValue() ) );
     }
 }

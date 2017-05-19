@@ -29,6 +29,11 @@ import eu.h2020.symbiote.model.PlatformDetails;
 import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.communication.CommunicationException;
  
+/**
+ * Spring controller for the User control panel, handles management views and form validation.
+ *
+ * @author Tilemachos Pechlivanoglou (ICOM)
+ */
 @Controller
 public class Cpanel {
     private static Log log = LogFactory.getLog(Cpanel.class);
@@ -39,12 +44,8 @@ public class Cpanel {
 
 
     /**
-     * Controller for the User control panel, if the userr is a platform owner, tries to fetch their details
-     * First Registry is polled and, the platform isn't activated there, AAM is polled for the owner details
-     *
-     * @param model model to be passed in the view
-     * @param principal object containing the user object in token form
-     * @return view the final view
+     * Gets the default view. If the user is a platform owner, tries to fetch their details.
+     * Registry is first polled and, if the platform isn't activated there, AAM is polled for them.
      */
     @GetMapping("/user/cpanel")
     public String userCPanel(Model model, Principal principal) {
@@ -53,22 +54,19 @@ public class Cpanel {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
 
-        if(user.getState() == CoreUser.PLATFORM_ACTIVE){
+        // If we hanen't fetched the details already
 
-            user.getPlatformId(); //get logged in platform id
-            // TODO get the rest
-
-        } else if(user.getState() == CoreUser.PLATFORM_INACTIVE || user.getState() == CoreUser.ERROR){
+        if(user.getState() == CoreUser.PLATFORM_INACTIVE || user.getState() == CoreUser.ERROR){
 
             // request owner's platform details from Registry
             Platform emptyPlatform = new Platform();
             emptyPlatform.setPlatformId(user.getPlatformId());
 
             try{
-
                 PlatformResponse response = rabbitManager.sendPlatformModificationRequest(emptyPlatform);
                 
-                if(response!=null && response.getStatus() == 200){ // platform exists
+                // if platform exists
+                if(response!=null && response.getStatus() == 200){ 
 
                     Platform platformReply = response.getPlatform();
                     user.setState(CoreUser.PLATFORM_ACTIVE);
@@ -78,12 +76,13 @@ public class Cpanel {
                         new PlatformDetails(platformReply.getDescription(), platformReply.getInformationModelId());
                     user.setPlatformDetails(platformDetails);
 
-                } else if (response!=null && response.getStatus() == 400){ // only owner exists
+                // if only owner exists
+                } else if (response!=null && response.getStatus() == 400){ 
 
                     // get owner details from AAM
                     OwnedPlatformDetails ownerDetails = rabbitManager.sendDetailsRequest(user.getToken().getToken());
-                    System.out.println(ownerDetails);
-                    if(ownerDetails != null && ownerDetails.getPlatformInstanceId().equals(user.getPlatformId() )){ // all is well
+                    if(ownerDetails != null && ownerDetails.getPlatformInstanceId().equals(user.getPlatformId() )){
+                        // plaform ids match, all is well
 
                         user.setPlatformDetails(null);
                         user.setPlatformName(ownerDetails.getPlatformInstanceFriendlyName());
@@ -124,6 +123,8 @@ public class Cpanel {
             return "redirect:/user/cpanel";  
         }
 
+        // if form is valid, construct the request
+
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
@@ -138,7 +139,6 @@ public class Cpanel {
         // Send registration to Registry
         try{
             PlatformResponse response = rabbitManager.sendPlatformCreationRequest(platform);
-            System.out.println("Received response in interface: " + response);
 
             if(response != null && response.getStatus() == 200 ){
 
@@ -173,6 +173,8 @@ public class Cpanel {
             return "redirect:/user/cpanel";  
         }
 
+        // if form is valid, construct the request
+        
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
@@ -187,7 +189,6 @@ public class Cpanel {
         // Send registration to Registry
         try{
             PlatformResponse response = rabbitManager.sendPlatformModificationRequest(platform);
-            System.out.println("Received response in interface: " + response);
 
             if(response != null && response.getStatus() == 200 ){
 
@@ -215,6 +216,7 @@ public class Cpanel {
         String platformId = user.getPlatformId(); //get logged in platform id
 
         // Create an empty Platform, add the id and send unregistration to Registry
+
         Platform platform = new Platform();
         platform.setPlatformId(platformId);
 
@@ -224,7 +226,6 @@ public class Cpanel {
         // Send update to Registry
         try{
             PlatformResponse response = rabbitManager.sendPlatformRemovalRequest(testPlatform);
-            System.out.println("Received response in interface: " + response);
 
             if(response != null && response.getStatus() == 200 ){
 
@@ -251,4 +252,11 @@ public class Cpanel {
         return "/user/cpanel";
     }
 
+
+    /**
+     * Used for testing
+     */
+    public void setRabbitManager(RabbitManager rabbitManager){
+        this.rabbitManager = rabbitManager;
+    }
 }

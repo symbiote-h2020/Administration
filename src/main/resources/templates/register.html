@@ -54,7 +54,7 @@
 
 				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/platform/register'}">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-briefcase"></i></span>
-					<input type="text" class="form-control" name="platformId" value="" placeholder="Preferred platform id (optional)"/>
+					<input type="text" class="form-control" name="platformId" value="" placeholder="Preferred platform id"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/platform/register' and #fields.hasErrors('platformId')}" >Invalid Platform Id! (Must be empty or contain only letters, numbers and "-" or "_", 4 up to 30 characters)</div>
 

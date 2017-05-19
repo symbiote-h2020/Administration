@@ -1,26 +1,39 @@
 package eu.h2020.symbiote.model;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.validation.constraints.Pattern;
-import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Collection;
+import javax.validation.constraints.Size;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
 import eu.h2020.symbiote.model.PlatformDetails;
 import eu.h2020.symbiote.security.token.Token;
 
+
+/**
+ * Class for a symbIoTe user entity
+ *
+ * The same class is used for form validation and as a UserDetails object passed in the session.
+ * That's why two constructors are needed, an empty validation one and a super-constructor one.
+ * During login, CustomAuthenticationProvider is used
+ *
+ * @author Tilemachos Pechlivanoglou (ICOM)
+ */
 public class CoreUser extends User {
+
+    /* -------- Constants -------- */
 
     public static final int ERROR = 0;
     public static final int APP = 1;
     public static final int PLATFORM_INACTIVE = 2;
     public static final int PLATFORM_ACTIVE = 3;
 
+
+    /* -------- Properties -------- */
+    
     @NotNull
     @Size(min=4, max=30)
     private String validUsername;
@@ -37,7 +50,9 @@ public class CoreUser extends User {
     // @Size(min=4, max=30)
     private String federatedId;
 
-    // Match either a word (letters, digits, "-" and "_") with min=4, max=30 characters or an empty string
+    // Match either a word (letters, digits, "-" and "_") with 30 characters max or an empty string
+    // TODO R3 not allowing empty id for platform generation for R2
+    @NotNull
     @Pattern(regexp="(^\\Z|^[\\w-][\\w-][\\w-][\\w-]+\\Z)")
     @Size(max=30)
     private String platformId;
@@ -57,11 +72,33 @@ public class CoreUser extends User {
     private Token token;
 
 
-    public CoreUser(String username, String password, boolean enabled,
-        boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities,
-        Token token, String platformId) {
+    /* -------- Constructors -------- */
 
-     super(username, password, enabled, accountNonExpired,
+    /**
+     * Empty constructor for form validation
+     */
+    public CoreUser () {
+        super("placeholder", "placeholder", false, false, false, false, new ArrayList<>());
+    }
+
+    /**
+     * Constructor for use in UserDetails (Principal) object
+     *
+     * @param username              username
+     * @param password              password
+     * @param enabled               user is enabled
+     * @param accountNonExpired     account isn't expired
+     * @param credentialsNonExpired credentials aren't expired
+     * @param accountNonLocked      account isn't locked
+     * @param authorities           authorities to be granted to the user (mostly USER_ROLE)
+     * @param token                 user token returned by Core AAM
+     * @param platformId            contains null or the platform's id, if user is a platform owner
+     */
+    public CoreUser(String username, String password, boolean enabled,
+            boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities,
+            Token token, String platformId) {
+
+        super(username, password, enabled, accountNonExpired,
         credentialsNonExpired, accountNonLocked, authorities);
 
         this.token = token;
@@ -74,12 +111,10 @@ public class CoreUser extends User {
             this.state = this.PLATFORM_INACTIVE;
             this.platformId = platformId;
         }
-
     }
+    
 
-    public CoreUser () {
-        super("placeholder", "placeholder", false, false, false, false, new ArrayList<>());
-    }
+    /* -------- Getters & Setters -------- */
 
     public String getValidUsername() {
         return this.validUsername;
@@ -161,11 +196,11 @@ public class CoreUser extends User {
     }
 
 
+    /* -------- Helper Methods -------- */
 
     public void clearPassword() {
         this.validPassword = null;
     }
-
 
     @Override
     public String toString() {

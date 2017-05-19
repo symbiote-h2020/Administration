@@ -10,6 +10,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
  
+/**
+ * Spring controller for user login.
+ *
+ * @author Tilemachos Pechlivanoglou (ICOM)
+ */
 @Controller
 public class Login {
 

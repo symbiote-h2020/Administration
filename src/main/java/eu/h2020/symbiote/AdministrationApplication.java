@@ -14,12 +14,14 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-
 /**
- * Administration module's entry point.
- * <p>
- * Administration is responsible for registering platforms by platform owners.
+ * Spring Boot Application class for Administration (AAM) component.
+ *
+ * Administration is responsible for registering platforms and apps by platform owners and users. 
  * It provides a web-based GUI for performing platform operations.
+ *
+ * @author Tilemachos Pechlivanoglou (ICOM)
+ * @author Artur Jaworski (PSNC)
  */
 @Configuration
 @EnableAutoConfiguration

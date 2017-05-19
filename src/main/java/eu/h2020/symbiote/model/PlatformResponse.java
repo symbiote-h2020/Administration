@@ -6,24 +6,44 @@ import eu.h2020.symbiote.core.model.Platform;
 /**
  * Class used as a response to RPC call requesting platform actions
  *
- * Created by mateuszl
+ * @author Mateusz Lukaszenko (PSNC)
+ * @author Tilemachos Pechlivanoglou (ICOM)
  */
 public class PlatformResponse {
+
+    /* -------- Properties -------- */
+
     private int status;
     private String message;
     private Platform platform;
 
+
+    /* -------- Constructors -------- */
+
+    /**
+     * Empty constructor
+     */
     public PlatformResponse() {
     }
 
+    /**
+     * Constructor with properties
+     *
+     * @param status    response status (HTTP)
+     * @param message   response message
+     * @param platform  response platform object
+     */
     public PlatformResponse(int status, String message, Platform platform) {
         this.status = status;
         this.message = message;
         this.platform = platform;
     }
 
+
+    /* -------- Getters & Setters -------- */
+
     /**
-     * @return
+     * @return status
      */
     public int getStatus() {
         return status;
@@ -37,7 +57,7 @@ public class PlatformResponse {
     }
 
     /**
-     * @return
+     * @return platform
      */
     public Platform getPlatform() {
         return platform;
@@ -51,7 +71,7 @@ public class PlatformResponse {
     }
 
     /**
-     * @return
+     * @return message
      */
     public String getMessage() {
         return message;

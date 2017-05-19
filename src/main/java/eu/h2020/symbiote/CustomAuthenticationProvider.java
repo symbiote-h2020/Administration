@@ -7,8 +7,8 @@ import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,6 +29,13 @@ import eu.h2020.symbiote.security.exceptions.aam.MalformedJWTException;
 
 
 
+/**
+ * Spring authentication provider used during login.
+ *
+ * To authenticate a user, CustomAuthenticationProvider checks with Core AAM over RabbitMQ
+ *
+ * @author Tilemachos Pechlivanoglou (ICOM)
+ */
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
     private static Log log = LogFactory.getLog(CustomAuthenticationProvider.class);
@@ -75,5 +82,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Override
     public boolean supports(Class<?> authentication) {
         return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
+    }
+
+    public void setRabbitManager(RabbitManager rabbitManager){
+        this.rabbitManager = rabbitManager;
     }
 }

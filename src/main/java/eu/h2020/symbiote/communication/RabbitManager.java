@@ -32,9 +32,10 @@ import eu.h2020.symbiote.communication.CommunicationException;
 
 /**
  * Class used for all internal communication using RabbitMQ AMQP implementation.
- * It works as a Spring Bean, and should be used via autowiring.
- * <p>
- * RabbitManager uses properties taken from CoreConfigServer to set up communication (exchange parameters, routing keys etc.)
+ *
+ * RabbitManager works as a Spring Bean, and should be used via autowiring.
+ * It uses properties taken from CoreConfigServer to set up communication 
+ * (exchange parameters, routing keys etc.)
  */
 @Component
 public class RabbitManager {
@@ -197,7 +198,7 @@ public class RabbitManager {
         QueueingConsumer consumer = new QueueingConsumer(channel);
 
         try {
-            log.debug("Sending message...");
+            // log.debug("Sending message...");
 
             String replyQueueName = this.channel.queueDeclare().getQueue();
 
@@ -229,7 +230,7 @@ public class RabbitManager {
                 }
             }
 
-            log.debug("Received response: " + responseMsg);
+            // log.debug("Received response: " + responseMsg);
             return responseMsg;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
@@ -263,10 +264,12 @@ public class RabbitManager {
 
             try {
                 PlatformResponse response = mapper.readValue(responseMsg, PlatformResponse.class);
+                log.info("Received response from Registry.");
                 return response;
 
             } catch (Exception e){
 
+                log.error("Error in response from Registry.", e);
                 throw new CommunicationException(e);
             }
         } catch (IOException e) {
@@ -324,10 +327,12 @@ public class RabbitManager {
 
             try {
                 PlatformRegistrationResponse response = mapper.readValue(responseMsg, PlatformRegistrationResponse.class);
+                log.info("Received platform registration response from AAM.");
                 return response;
 
             } catch (Exception e){
 
+                log.error("Error in platform registration response from AAM.", e);
                 ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
                 throw new CommunicationException(error.getErrorMessage());
             }
@@ -367,10 +372,12 @@ public class RabbitManager {
 
             try {
                 Token response = mapper.readValue(responseMsg, Token.class);
+                log.info("Received login response from AAM.");
                 return response;
 
             } catch (Exception e){
 
+                log.error("Error in login response from AAM.", e);
                 ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
                 throw new CommunicationException(error.getErrorMessage());
             }
@@ -410,15 +417,17 @@ public class RabbitManager {
 
             try {
                 OwnedPlatformDetails response = mapper.readValue(responseMsg, OwnedPlatformDetails.class);
+                log.info("Received platform owner details response from AAM.");
                 return response;
 
             } catch (Exception e){
 
+                log.error("Error in owner details response from AAM.", e);
                 ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
                 throw new CommunicationException(error.getErrorMessage());
             }
         } catch (IOException e) {
-            log.error("Failed (un)marshalling of rpc resource message", e);
+            log.error("Failed (un)marshalling of rpc resource message.", e);
         }
         return null;
     }

@@ -10,12 +10,12 @@ import org.thymeleaf.templateresolver.TemplateResolver;
 @Configuration
 public class MvcConfig extends WebMvcConfigurerAdapter {
 
-	@Override
-	public void addViewControllers(ViewControllerRegistry registry) {
-		registry.addViewController("/home").setViewName("home");
-		registry.addViewController("/").setViewName("home");
-		registry.addViewController("/denied").setViewName("denied");
-	}
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/home").setViewName("home");
+        registry.addViewController("/").setViewName("home");
+        registry.addViewController("/denied").setViewName("denied");
+    }
 
     @Bean
     public TemplateResolver templateResolver() {
@@ -24,6 +24,6 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode("HTML5");
         return templateResolver;
-	}
+    }
 
 }

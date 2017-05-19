@@ -7,72 +7,80 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
 
 import eu.h2020.symbiote.CustomAuthenticationProvider;
 
+
+/**
+ * Spring configuration for security.
+ *
+ * Two different restricted areas are created, one for users and one for administrators.
+ * During login, CustomAuthenticationProvider is used
+ *
+ * @author Tilemachos Pechlivanoglou (ICOM)
+ */
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig {
 
-	@Configuration
-	@Order(1)
-	public static class UserWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
+    @Configuration
+    @Order(1)
+    public static class UserWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
-		@Autowired
-		private CustomAuthenticationProvider authProvider;
+        @Autowired
+        private CustomAuthenticationProvider authProvider;
 
-		@Override
-		protected void configure( AuthenticationManagerBuilder auth) throws Exception {
+        @Override
+        protected void configure( AuthenticationManagerBuilder auth) throws Exception {
 
-			auth.authenticationProvider(authProvider);
-		}
+            auth.authenticationProvider(authProvider);
+        }
 
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			http
-				.antMatcher("/user/**")
-				.authorizeRequests()
-					.anyRequest().authenticated()
-					// .anyRequest().hasRole("USER")
-					.and()
-				.formLogin()
-					.loginPage("/user/login")
-					.defaultSuccessUrl("/user/cpanel")
-					.permitAll()
-					.and()
-				.logout()
-					.logoutUrl("/user/logout")
-					.logoutSuccessUrl("/")
-					.permitAll()
-					.and()
-				.exceptionHandling()
-					.accessDeniedPage("/denied");
-		}
-	}
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http
+                .antMatcher("/user/**")
+                .authorizeRequests()
+                    .anyRequest().authenticated()
+                    // .anyRequest().hasRole("USER")
+                    .and()
+                .formLogin()
+                    .loginPage("/user/login")
+                    .defaultSuccessUrl("/user/cpanel")
+                    .permitAll()
+                    .and()
+                .logout()
+                    .logoutUrl("/user/logout")
+                    .logoutSuccessUrl("/")
+                    .permitAll()
+                    .and()
+                .exceptionHandling()
+                    .accessDeniedPage("/denied");
+        }
+    }
 
-	@Configuration												   
-	public static class AdminWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+    @Configuration                                                   
+    public static class AdminWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
-		@Override
-		protected void configure(HttpSecurity http) throws Exception {
-			http
-				.antMatcher("/admin/**")
-				.authorizeRequests()
-					.anyRequest().hasRole("admin")
-					.and()
-				.formLogin()
-					.loginPage("/admin/login")
-					.defaultSuccessUrl("/admin/cpanel")
-					.permitAll()
-					.and()
-				.logout()
-					.logoutUrl("/admin/logout")
-					.logoutSuccessUrl("/")
-					.permitAll()
-					.and()
-				.exceptionHandling()
-					.accessDeniedPage("/denied");
-		}
-	}
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            http
+                .antMatcher("/admin/**")
+                .authorizeRequests()
+                    .anyRequest().hasRole("admin")
+                    .and()
+                .formLogin()
+                    .loginPage("/admin/login")
+                    .defaultSuccessUrl("/admin/cpanel")
+                    .permitAll()
+                    .and()
+                .logout()
+                    .logoutUrl("/admin/logout")
+                    .logoutSuccessUrl("/")
+                    .permitAll()
+                    .and()
+                .exceptionHandling()
+                    .accessDeniedPage("/denied");
+        }
+    }
 }

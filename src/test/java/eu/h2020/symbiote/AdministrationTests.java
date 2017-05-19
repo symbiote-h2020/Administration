@@ -30,6 +30,9 @@ import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.security.payloads.ErrorResponseContainer;
 
 
+/**
+ * Abstract class with sample objects, acts as parent to all tests.
+ */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 public abstract class AdministrationTests {
