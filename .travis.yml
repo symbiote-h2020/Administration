@@ -23,6 +23,7 @@ cache:
 before_script:
 - chmod a+x merge_script.sh
 - "./merge_script.sh"
+- gradle clean --refresh-dependencies
 after_success:
 - chmod a+x pushing_script.sh
 - "./pushing_script.sh"
