@@ -62,8 +62,11 @@ public class Register {
 			platformUrl = "https://" + platformUrl;
 			
 		} else if(platformUrl.startsWith("http://")){
-			platformUrl.replace("http://","https://");
+			platformUrl = platformUrl.replace("http://","https://");
 		}
+
+		// strip any trailing slashes
+		platformUrl = platformUrl.replaceAll("/$", "");
 		
 		// if port isn't included, add the default
 		if(!platformUrl.matches("[^:]+:[^:]+:[^:]+")){
