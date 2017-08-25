@@ -21,12 +21,12 @@ $( document ).ready( function() {
 
 	$( ".app .register.button" ).click(function(e){
 
-		getPopup( "/app/register" );
+		getPopup( "/register/app" );
 		e.preventDefault();
 	});
 	$( ".platform .register.button" ).click(function(e){
 
-		getPopup( "/platform/register" );
+		getPopup( "/register/platform" );
 		e.preventDefault();
 	});
 

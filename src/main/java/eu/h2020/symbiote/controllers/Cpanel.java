@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.controller;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -21,12 +22,13 @@ import java.security.Principal;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import eu.h2020.symbiote.core.model.Platform;
+import eu.h2020.symbiote.core.model.InterworkingService;
 import eu.h2020.symbiote.model.CoreUser;
 
 import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.model.PlatformResponse;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.PlatformDetails;
-import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
+import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.communication.CommunicationException;
  
 /**
@@ -60,20 +62,21 @@ public class Cpanel {
 
             // request owner's platform details from Registry
             Platform emptyPlatform = new Platform();
-            emptyPlatform.setPlatformId(user.getPlatformId());
+            emptyPlatform.setId(user.getPlatformId());
 
             try{
-                PlatformResponse response = rabbitManager.sendPlatformModificationRequest(emptyPlatform);
+                PlatformRegistryResponse response = rabbitManager.sendPlatformModificationRequest(emptyPlatform);
                 
                 // if platform exists
                 if(response!=null && response.getStatus() == 200){ 
 
                     Platform platformReply = response.getPlatform();
+                    InterworkingService interworkingServiceReply = platformReply.getInterworkingServices().get(0);
                     user.setState(CoreUser.PLATFORM_ACTIVE);
-                    user.setPlatformName(platformReply.getName());
-                    user.setPlatformUrl(platformReply.getUrl());
+                    user.setPlatformName(platformReply.getLabels().get(0));
+                    user.setPlatformUrl(interworkingServiceReply.getUrl());
                     PlatformDetails platformDetails = 
-                        new PlatformDetails(platformReply.getDescription(), platformReply.getInformationModelId());
+                        new PlatformDetails(platformReply.getComments().get(0), interworkingServiceReply.getInformationModelId());
                     user.setPlatformDetails(platformDetails);
 
                 // if only owner exists
@@ -129,16 +132,19 @@ public class Cpanel {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
         
+        InterworkingService interworkingService = new InterworkingService();
+        interworkingService.setInformationModelId(platformDetails.getInformationModelId());
+        interworkingService.setUrl(user.getPlatformUrl());
+
         Platform platform = new Platform();
-        platform.setPlatformId(user.getPlatformId());
-        platform.setName(user.getPlatformName());
-        platform.setUrl(user.getPlatformUrl());
-        platform.setDescription(platformDetails.getDescription());
-        platform.setInformationModelId(platformDetails.getInformationModelId());
+        platform.setId(user.getPlatformId());
+        platform.setLabels(Arrays.asList(user.getPlatformName()));
+        platform.setComments(Arrays.asList(platformDetails.getDescription()));
+        platform.setInterworkingServices(Arrays.asList(interworkingService));
 
         // Send registration to Registry
         try{
-            PlatformResponse response = rabbitManager.sendPlatformCreationRequest(platform);
+            PlatformRegistryResponse response = rabbitManager.sendPlatformCreationRequest(platform);
 
             if(response != null && response.getStatus() == 200 ){
 
@@ -179,16 +185,19 @@ public class Cpanel {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
         
+        InterworkingService interworkingService = new InterworkingService();
+        interworkingService.setInformationModelId(platformDetails.getInformationModelId());
+        interworkingService.setUrl(user.getPlatformUrl());
+
         Platform platform = new Platform();
-        platform.setPlatformId(user.getPlatformId());
-        platform.setName(user.getPlatformName());
-        platform.setUrl(user.getPlatformUrl());
-        platform.setDescription(platformDetails.getDescription());
-        platform.setInformationModelId(platformDetails.getInformationModelId());
+        platform.setId(user.getPlatformId());
+        platform.setLabels(Arrays.asList(user.getPlatformName()));
+        platform.setComments(Arrays.asList(platformDetails.getDescription()));
+        platform.setInterworkingServices(Arrays.asList(interworkingService));
 
         // Send registration to Registry
         try{
-            PlatformResponse response = rabbitManager.sendPlatformModificationRequest(platform);
+            PlatformRegistryResponse response = rabbitManager.sendPlatformModificationRequest(platform);
 
             if(response != null && response.getStatus() == 200 ){
 
@@ -218,14 +227,14 @@ public class Cpanel {
         // Create an empty Platform, add the id and send unregistration to Registry
 
         Platform platform = new Platform();
-        platform.setPlatformId(platformId);
+        platform.setId(platformId);
 
         Platform testPlatform = new Platform();
-        testPlatform.setPlatformId(platformId); //null platform
+        testPlatform.setId(platformId); //null platform
 
         // Send update to Registry
         try{
-            PlatformResponse response = rabbitManager.sendPlatformRemovalRequest(testPlatform);
+            PlatformRegistryResponse response = rabbitManager.sendPlatformRemovalRequest(testPlatform);
 
             if(response != null && response.getStatus() == 200 ){
 

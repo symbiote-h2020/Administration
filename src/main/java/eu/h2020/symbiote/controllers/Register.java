@@ -13,9 +13,13 @@ import javax.validation.Valid;
 
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.communication.CommunicationException;
-import eu.h2020.symbiote.security.enums.UserRole;
-import eu.h2020.symbiote.security.payloads.*;
 import eu.h2020.symbiote.model.CoreUser;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
+import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+import eu.h2020.symbiote.security.commons.enums.OperationType;
 
  
 /**
@@ -39,17 +43,17 @@ public class Register {
 
 
 
-	@GetMapping("/platform/register")
+	@GetMapping("/register/platform")
 	public String coreUserRegisterForm(CoreUser coreUser) {
 		return "register";
 	}
 
-	@PostMapping("/platform/register")
+	@PostMapping("/register/platform")
 	public String coreUserRegister(@Valid CoreUser coreUser, BindingResult bindingResult, Model model) {
 
 		if (bindingResult.hasErrors()) {
 
-			return "/register";
+			return "register";
 		}
 
 		// if form is valid, do some processing of the fields
@@ -78,48 +82,41 @@ public class Register {
 
 		// after processing, construct the request
 
-		UserDetails  coreUserUserDetails = new UserDetails(
-				new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
-				federatedId,
-				coreUser.getRecoveryMail(),
-				UserRole.PLATFORM_OWNER
-			);
-
-		PlatformRegistrationRequest platformRegistrationRequest = new PlatformRegistrationRequest(
+		PlatformManagementRequest platformRegistrationRequest = new PlatformManagementRequest(
 				new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-				coreUserUserDetails,
+				new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
 				coreUser.getPlatformUrl(),
 				coreUser.getPlatformName(),
-				coreUser.getPlatformId()
+				OperationType.CREATE
 			);
 
 
 		// Send platform owner registration to Core AAM
 		try{
-			PlatformRegistrationResponse response = rabbitManager.sendPlatformRegistrationRequest(platformRegistrationRequest);
+			PlatformManagementResponse response = rabbitManager.sendPlatformRegistrationRequest(platformRegistrationRequest);
 
-			if(response != null ){
+			if(response != null && response.getRegistrationStatus() == ManagementStatus.OK){
 
-				model.addAttribute("pcert",response.getPlatformOwnerCertificate());
-				model.addAttribute("pkey",response.getPlatformOwnerPrivateKey());
+				model.addAttribute("pcert","response.getPlatformOwnerCertificate()");
+				model.addAttribute("pkey","response.getPlatformOwnerPrivateKey()");
 				model.addAttribute("pid",response.getPlatformId());
 
 				return "success";
 
 			} else {
 				model.addAttribute("error","Authorization Manager is unreachable!");
-				return "/register";				
+				return "register";				
 			}
 		
 		} catch(CommunicationException e){
 
 				model.addAttribute("error",e.getMessage());
-				return "/register";	
+				return "register";	
 		}
 	}
 	
 
-	@GetMapping("/app/register")
+	@GetMapping("/register/app")
 	public String appOwnerRegisterForm(CoreUser coreUser) {
 		return "register";
 	}

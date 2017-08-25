@@ -19,14 +19,14 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import eu.h2020.symbiote.core.model.Platform;
-import eu.h2020.symbiote.model.PlatformResponse;
-import eu.h2020.symbiote.security.payloads.PlatformRegistrationRequest;
-import eu.h2020.symbiote.security.payloads.PlatformRegistrationResponse;
-import eu.h2020.symbiote.security.payloads.UserRegistrationRequest;
-import eu.h2020.symbiote.security.payloads.UserRegistrationResponse;
-import eu.h2020.symbiote.security.payloads.Credentials;
-import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
-import eu.h2020.symbiote.security.payloads.ErrorResponseContainer;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
+import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
+import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.security.token.Token;
 import eu.h2020.symbiote.communication.CommunicationException;
 
@@ -97,13 +97,13 @@ public class RabbitManager {
     @Value("${rabbit.exchange.aam.internal}")
     private boolean aamExchangeInternal;
 
-    @Value("${rabbit.routingKey.register.platform.request}")
-    private String platformRegisterRequestRoutingKey;
+    @Value("${rabbit.routingKey.manage.platform.request}")
+    private String platformManageRequestRoutingKey;
 
-    @Value("${rabbit.routingKey.register.app.request}")
+    @Value("${rabbit.routingKey.manage.user.request}")
     private String appRegisterRequestRoutingKey;
 
-    @Value("${rabbit.routingKey.login.request}")
+    @Value("${rabbit.routingKey.getHomeToken.request}")
     private String loginRoutingKey;
 
     @Value("${rabbit.routingKey.ownedplatformdetails.request}")
@@ -253,7 +253,7 @@ public class RabbitManager {
      * @param platform     platform to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
+    public PlatformRegistryResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
         try {
             String message = mapper.writeValueAsString(platform);
 
@@ -263,7 +263,7 @@ public class RabbitManager {
                 return null;
 
             try {
-                PlatformResponse response = mapper.readValue(responseMsg, PlatformResponse.class);
+                PlatformRegistryResponse response = mapper.readValue(responseMsg, PlatformRegistryResponse.class);
                 log.info("Received response from Registry.");
                 return response;
 
@@ -284,7 +284,7 @@ public class RabbitManager {
      *
      * @param platform platform to be created
      */
-    public PlatformResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
+    public PlatformRegistryResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
         return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
     }
 
@@ -293,7 +293,7 @@ public class RabbitManager {
      *
      * @param platform platform to be removed
      */
-    public PlatformResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
+    public PlatformRegistryResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
         return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
     }
 
@@ -302,7 +302,7 @@ public class RabbitManager {
      *
      * @param platform platform to be modified
      */
-    public PlatformResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
+    public PlatformRegistryResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
         return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 
@@ -315,8 +315,8 @@ public class RabbitManager {
      * @param request      request to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformRegistrationResponse sendAAMPlatformRegistrationMessage(String exchangeName, String routingKey,
-             PlatformRegistrationRequest request) throws CommunicationException{
+    public PlatformManagementResponse sendAAMPlatformRegistrationMessage(String exchangeName, String routingKey,
+             PlatformManagementRequest request) throws CommunicationException{
         try {
             String message = mapper.writeValueAsString(request);
 
@@ -326,7 +326,7 @@ public class RabbitManager {
                 return null;
 
             try {
-                PlatformRegistrationResponse response = mapper.readValue(responseMsg, PlatformRegistrationResponse.class);
+                PlatformManagementResponse response = mapper.readValue(responseMsg, PlatformManagementResponse.class);
                 log.info("Received platform registration response from AAM.");
                 return response;
 
@@ -348,8 +348,8 @@ public class RabbitManager {
      *
      * @param request  request for registration
      */
-    public PlatformRegistrationResponse sendPlatformRegistrationRequest(PlatformRegistrationRequest request) throws CommunicationException {
-        return sendAAMPlatformRegistrationMessage(this.aamExchangeName, this.platformRegisterRequestRoutingKey, request);
+    public PlatformManagementResponse sendPlatformRegistrationRequest(PlatformManagementRequest request) throws CommunicationException {
+        return sendAAMPlatformRegistrationMessage(this.aamExchangeName, this.platformManageRequestRoutingKey, request);
     }
 
 

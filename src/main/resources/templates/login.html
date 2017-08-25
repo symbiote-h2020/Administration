@@ -12,7 +12,7 @@
 			<form th:action="@{${#httpServletRequest.requestURI}}" class="login form-horizontal" role="form" method="post">
 
 				<div class="title" th:if="${#httpServletRequest.requestURI == '/admin/login'}">Administrator Login</div>
-				<div class="title" th:if="${#httpServletRequest.requestURI == '/user/login'}">User Login</div>
+				<div class="title" th:if="${#httpServletRequest.requestURI == '/platform/login'}">User Login</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
