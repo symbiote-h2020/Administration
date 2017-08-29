@@ -25,6 +25,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.model.InterworkingService;
 import eu.h2020.symbiote.model.CoreUser;
+import eu.h2020.symbiote.model.Federation;
 
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -272,6 +273,38 @@ public class Cpanel {
 
                 model.addFlashAttribute("error",e.getMessage());
         }
+
+        return "redirect:/user/cpanel";  
+    }
+
+    @PostMapping("/user/cpanel/create_federation")
+    public String createFederation(RedirectAttributes model, Principal principal) {
+
+        String username = principal.getName(); //get logged in username
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
+        CoreUser user = (CoreUser)token.getPrincipal();
+        String platformId = user.getPlatformId(); //get logged in platform id
+
+        // Create a Federation object and send it to the Federation Manager
+
+        Federation federation = new Federation();
+
+        // Send update to Federation Manager
+        // try{
+        //     FederationResponse response = rabbitManager.sendFederationRequest(federation);
+
+        //     if(response != null && response.getStatus() == 200 ){
+
+        //         user.setFederation(federation);
+
+        //     } else {
+        //         model.addFlashAttribute("error","Authorization Manager is unreachable!");
+        //     }
+        
+        // } catch(CommunicationException e){
+
+        //         model.addFlashAttribute("error",e.getMessage());
+        // }
 
         return "redirect:/user/cpanel";  
     }

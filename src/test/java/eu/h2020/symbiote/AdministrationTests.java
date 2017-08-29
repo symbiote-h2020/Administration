@@ -1,7 +1,10 @@
 package eu.h2020.symbiote;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,18 +19,26 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.beans.factory.annotation.Value;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import eu.h2020.symbiote.security.token.Token;
 import eu.h2020.symbiote.core.model.Platform;
-import eu.h2020.symbiote.model.PlatformResponse;
-import eu.h2020.symbiote.security.payloads.PlatformRegistrationRequest;
-import eu.h2020.symbiote.security.payloads.PlatformRegistrationResponse;
-import eu.h2020.symbiote.security.payloads.Credentials;
-import eu.h2020.symbiote.security.payloads.UserDetails;
-import eu.h2020.symbiote.security.enums.UserRole;
+import eu.h2020.symbiote.core.model.InterworkingService;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
+
+import eu.h2020.symbiote.security.commons.Token;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
+import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
+import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
+import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.model.CoreUser;
-import eu.h2020.symbiote.security.certificate.Certificate;
-import eu.h2020.symbiote.security.payloads.OwnedPlatformDetails;
-import eu.h2020.symbiote.security.payloads.ErrorResponseContainer;
+import eu.h2020.symbiote.security.commons.Certificate;
+import eu.h2020.symbiote.security.enums.CoreAttributes;
+import eu.h2020.symbiote.security.commons.jwt.JWTClaims;
+import io.jsonwebtoken.Claims;
 
 
 /**
@@ -77,7 +88,21 @@ public abstract class AdministrationTests {
 
     public Token sampleToken() throws Exception {
 
-        return new Token(sampleTokenString); 
+        // Map<String, String> claimsAttribute = new HashMap<String, String>();
+        // claimsAttribute.put(CoreAttributes.OWNED_PLATFORM.toString(), platformId);
+
+        // JWTClaims claims = new JWTClaims();
+        // claims.setAtt(claimsAttribute);
+
+        // Claims claims = new Claims();
+        // claims.setId(platformId);
+
+        // Token token = new Token();
+        // token.setClaims(claims);
+
+        // return token; 
+
+        return new Token();
     }
 
     public List<GrantedAuthority> sampleAuthorities(){
@@ -108,35 +133,38 @@ public abstract class AdministrationTests {
         
 
         Platform platform = new Platform();
-        platform.setPlatformId(platformId);
+        platform.setId(platformId);
 
         return platform;
     }
 
     public Platform samplePlatform(){
 
+        InterworkingService interworkingService = new InterworkingService();
+        interworkingService.setInformationModelId(informationModelId);
+        interworkingService.setUrl(url);
+
         Platform platform = new Platform();
-        platform.setPlatformId(platformId);
-        platform.setName(name);
-        platform.setUrl(url);
-        platform.setDescription(description);
-        platform.setInformationModelId(informationModelId);
+        platform.setId(platformId);
+        platform.setLabels(Arrays.asList(name));
+        platform.setComments(Arrays.asList(description));
+        platform.setInterworkingServices(Arrays.asList(interworkingService));
 
         return platform;
     }
 
-    public PlatformResponse samplePlatformResponseSuccess(){
+    public PlatformRegistryResponse samplePlatformResponseSuccess(){
 
-        PlatformResponse platformResponse = new PlatformResponse();
+        PlatformRegistryResponse platformResponse = new PlatformRegistryResponse();
         platformResponse.setStatus(200);
         platformResponse.setMessage("Success");
         platformResponse.setPlatform(samplePlatform());
         return platformResponse;
     }
 
-    public PlatformResponse samplePlatformResponseFail(){
+    public PlatformRegistryResponse samplePlatformResponseFail(){
 
-        PlatformResponse platformResponse = new PlatformResponse();
+        PlatformRegistryResponse platformResponse = new PlatformRegistryResponse();
         platformResponse.setStatus(400);
         platformResponse.setMessage("Fail");
         platformResponse.setPlatform(null);
@@ -149,34 +177,43 @@ public abstract class AdministrationTests {
         return new Credentials(user.getValidUsername(), user.getValidPassword());
     }
 
-    public PlatformRegistrationRequest samplePlatformRequest() throws Exception {
+    public UserManagementRequest sampleUserManagementRequest() throws Exception {
 
         CoreUser user = sampleCoreUser();
 
-        UserDetails userDetails = new UserDetails(
-                sampleCredentials(),
-                user.getFederatedId(),
-                user.getRecoveryMail(),
-                UserRole.PLATFORM_OWNER
-            );
-
-        PlatformRegistrationRequest request = new PlatformRegistrationRequest(
+        UserManagementRequest request = new UserManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
-                userDetails,
-                user.getPlatformUrl(),
-                user.getPlatformName(),
-                user.getPlatformId()
+                new Credentials(username, password),
+                new UserDetails(
+                    new Credentials( username, password),
+                    federatedId,
+                    mail,
+                    UserRole.PLATFORM_OWNER
+                ),
+                OperationType.CREATE
             );
 
         return request;
     }
 
-    public PlatformRegistrationResponse samplePlatformResponse() throws Exception {
+    public PlatformManagementRequest samplePlatformManagementRequest() throws Exception {
 
-        PlatformRegistrationResponse response = new PlatformRegistrationResponse(
-                new Certificate(certificate),
-                privateKey,
-                platformId
+        PlatformManagementRequest response = new PlatformManagementRequest(
+                new Credentials(AAMOwnerUsername, AAMOwnerPassword),
+                new Credentials( username, password),
+                url,
+                name,
+                OperationType.CREATE
+            );
+
+        return response;
+    }
+
+    public PlatformManagementResponse samplePlatformResponse() throws Exception {
+
+        PlatformManagementResponse response = new PlatformManagementResponse(
+                platformId,
+                ManagementStatus.OK
             );
 
         return response;
@@ -184,7 +221,8 @@ public abstract class AdministrationTests {
 
     public OwnedPlatformDetails sampleOwnerDetails() {
 
-        return new OwnedPlatformDetails(platformId, url, name);
+        Map<String, Certificate>  componentCerificates = new HashMap<String, Certificate>();
+        return new OwnedPlatformDetails(platformId, url, name, new Certificate(), componentCerificates);
     }
 
     public ErrorResponseContainer sampleErrorResponse() {

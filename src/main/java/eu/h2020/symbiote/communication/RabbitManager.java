@@ -29,7 +29,7 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
-import eu.h2020.symbiote.security.token.Token;
+import eu.h2020.symbiote.security.commons.Token;
 import eu.h2020.symbiote.communication.CommunicationException;
 
 /**
@@ -540,6 +540,51 @@ public class RabbitManager {
     public OwnedPlatformDetails sendDetailsRequest(String token) throws CommunicationException  {
         return sendAAMDetailsMessage(this.aamExchangeName, this.detailsRoutingKey, token);
     }
+
+
+    // /**
+    //  * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with Federation Manager
+    //  *
+    //  * @param exchangeName name of the exchange to send message to
+    //  * @param routingKey   routing key to send message to
+    //  * @param token  token to be sent
+    //  * @return response from the consumer or null if timeout occurs
+    //  */
+    // public FererationResponse sendFederationMessage(String exchangeName, String routingKey, Federation federation) throws CommunicationException {
+    //     try {
+    //         String message = mapper.writeValueAsString(federation);
+
+    //         String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+
+    //         if (responseMsg == null)
+    //             return null;
+
+    //         try {
+    //             FererationResponse response = mapper.readValue(responseMsg, FererationResponse.class);
+    //             log.info("Received platform owner details response from AAM.");
+    //             return response;
+
+    //         } catch (Exception e){
+
+    //             log.error("Error in owner details response from AAM.", e);
+    //             ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+    //             throw new CommunicationException(error.getErrorMessage());
+    //         }
+    //     } catch (IOException e) {
+    //         log.error("Failed (un)marshalling of rpc resource message.", e);
+    //     }
+    //     return null;
+    // }
+
+
+    // /**
+    //  * Method used to send RPC request to get a platform owner's platform details.
+    //  *
+    //  * @param token  token of user
+    //  */
+    // public FererationResponse sendFederationRequest(Federation federation) throws CommunicationException  {
+    //     return sendAAMDetailsMessage(this.aamExchangeName, this.detailsRoutingKey, token);
+    // }
 
 
 }

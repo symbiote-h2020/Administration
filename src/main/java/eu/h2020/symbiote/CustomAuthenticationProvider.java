@@ -19,13 +19,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.communication.CommunicationException;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.token.Token;
+import eu.h2020.symbiote.security.commons.Token;
 import eu.h2020.symbiote.model.CoreUser;
 
-import eu.h2020.symbiote.security.token.jwt.JWTEngine;
-import eu.h2020.symbiote.security.token.jwt.JWTClaims;
+import eu.h2020.symbiote.security.commons.jwt.JWTEngine;
+import eu.h2020.symbiote.security.commons.jwt.JWTClaims;
 import eu.h2020.symbiote.security.enums.CoreAttributes;
-import eu.h2020.symbiote.security.exceptions.aam.MalformedJWTException;
+import eu.h2020.symbiote.security.commons.exceptions.custom.MalformedJWTException;
 
 
 

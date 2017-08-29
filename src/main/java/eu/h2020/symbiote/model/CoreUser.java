@@ -10,7 +10,8 @@ import org.springframework.security.core.userdetails.User;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
 import eu.h2020.symbiote.model.PlatformDetails;
-import eu.h2020.symbiote.security.token.Token;
+import eu.h2020.symbiote.model.Federation;
+import eu.h2020.symbiote.security.commons.Token;
 
 
 /**
@@ -68,6 +69,7 @@ public class CoreUser extends User {
     private int state;
 
     private PlatformDetails platformDetails;
+    private Federation federation;
 
     private Token token;
 
@@ -185,6 +187,14 @@ public class CoreUser extends User {
     }
     public void setPlatformDetails(PlatformDetails platformDetails) {
         this.platformDetails = platformDetails;
+    }
+
+
+    public Federation getFederation() {
+        return this.federation;
+    }
+    public void setFederation(Federation federation) {
+        this.federation = federation;
     }
 
 
