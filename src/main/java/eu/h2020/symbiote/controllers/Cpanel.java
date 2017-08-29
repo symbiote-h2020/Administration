@@ -87,7 +87,7 @@ public class Cpanel {
                     resourcesRequest.setToken("Token"); // TODO set token
                     resourcesRequest.setPlatformId(user.getPlatformId());
 
-                    ResourceListResponse resourceList = sendPlatformResourcesRequest(resourcesRequest);
+                    ResourceListResponse resourceList = sendRegistryResourcesRequest(resourcesRequest);
 
                     List<Resource> resourceList = platformReply.getResources();
                     List<String> resourceStringList = new ArrayList<String>();

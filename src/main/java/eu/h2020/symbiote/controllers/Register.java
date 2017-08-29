@@ -18,8 +18,11 @@ import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
+import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 
  
 /**
@@ -58,7 +61,6 @@ public class Register {
 
 		// if form is valid, do some processing of the fields
 
-		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
 		String platformUrl = coreUser.getPlatformUrl();
 		
 		// make sure we are using https
@@ -79,8 +81,21 @@ public class Register {
 			parts[2] += ":" + defaultIIPort;
 			platformUrl = String.join("/",parts);
 		}
+		coreUser.setPlatformUrl(platformUrl);
 
 		// after processing, construct the request
+
+		UserManagementRequest userRegistrationRequest = new UserManagementRequest(
+				new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+				new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
+				new UserDetails(
+					new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
+					coreUser.getFederatedId(),
+					coreUser.getRecoveryMail(),
+					UserRole.PLATFORM_OWNER
+				),
+				OperationType.CREATE
+			);
 
 		PlatformManagementRequest platformRegistrationRequest = new PlatformManagementRequest(
 				new Credentials(aaMOwnerUsername, aaMOwnerPassword),

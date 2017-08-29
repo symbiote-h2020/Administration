@@ -102,6 +102,9 @@ public class RabbitManager {
     @Value("${rabbit.exchange.aam.internal}")
     private boolean aamExchangeInternal;
 
+    @Value("${rabbit.routingKey.manage.user.request}")
+    private String userManagementRequestRoutingKey;
+
     @Value("${rabbit.routingKey.manage.platform.request}")
     private String platformManageRequestRoutingKey;
 
@@ -255,12 +258,14 @@ public class RabbitManager {
      *
      * @param exchangeName name of the exchange to send message to
      * @param routingKey   routing key to send message to
-     * @param message     platform to be sent
+     * @param platform     platform to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformRegistryResponse sendRegistryMessage(String exchangeName, String routingKey, String message) throws CommunicationException  {
+    public PlatformRegistryResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException {
 
+        try {
             
+            String message = mapper.writeValueAsString(platform);
 
             String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
@@ -278,6 +283,10 @@ public class RabbitManager {
                 throw new CommunicationException(e);
             }
         
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
     }
 
 
@@ -287,15 +296,8 @@ public class RabbitManager {
      * @param platform platform to be created
      */
     public PlatformRegistryResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
-        try {
-    
-            String message = mapper.writeValueAsString(platform);
-            return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, message);
-    
-        } catch (IOException e) {
-            log.error("Failed (un)marshalling of rpc resource message", e);
-        }
-        return null;
+        
+        return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
     }
 
     /**
@@ -304,15 +306,8 @@ public class RabbitManager {
      * @param platform platform to be removed
      */
     public PlatformRegistryResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
-        try {
-    
-            String message = mapper.writeValueAsString(platform);
-            return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, message);
-    
-        } catch (IOException e) {
-            log.error("Failed (un)marshalling of rpc resource message", e);
-        }
-        return null;
+
+        return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
     }
 
     /**
@@ -321,11 +316,40 @@ public class RabbitManager {
      * @param platform platform to be modified
      */
     public PlatformRegistryResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
+    
+        return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
+    }
+
+
+    /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry for resource list retrieval
+     *
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param request      request for resources with id set
+     * @return response from the consumer or null if timeout occurs
+     */
+    public ResourceListResponse sendRegistryResourcesMessage(String exchangeName, String routingKey, CoreResourceRegistryRequest request) throws CommunicationException{
+
         try {
-    
-            String message = mapper.writeValueAsString(platform);
-            return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, message);
-    
+            String message = mapper.writeValueAsString(request);
+
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                ResourceListResponse response = mapper.readValue(responseMsg, ResourceListResponse.class);
+                log.info("Received response from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in response from Registry.", e);
+                throw new CommunicationException(e);
+            }
+        
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
         }
@@ -337,12 +361,35 @@ public class RabbitManager {
      *
      * @param request request for platform resources list
      */
-    public ResourceListResponse sendPlatformResourcesRequest(CoreResourceRegistryRequest request) throws CommunicationException  {
+    public ResourceListResponse sendRegistryResourcesRequest(CoreResourceRegistryRequest request) throws CommunicationException  {
+    
+            return sendRegistryMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey, request);
+    }
+
+
+    /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with AAM
+     *
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param request      request to be sent
+     * @return response from the consumer or null if timeout occurs
+     */
+    public String sendAAMUserRegistrationMessage(String exchangeName, String routingKey,
+             UserManagementRequest request) throws CommunicationException{
         try {
-    
             String message = mapper.writeValueAsString(request);
-            return sendRegistryMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey, message);
-    
+
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+
+            if (responseMsg == null){
+
+                throw new CommunicationException("invalid string response");
+            }
+
+            return responseMsg;
+
+            }
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
         }
@@ -351,7 +398,17 @@ public class RabbitManager {
 
 
     /**
-     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with AAM
+     * Method used to send RPC request to register user.
+     *
+     * @param request  request for registration
+     */
+    public String sendUserRegistrationRequest(UserManagementRequest request) throws CommunicationException {
+        return sendAAMUserRegistrationMessage(this.aamExchangeName, this.userManagementRequestRoutingKey, request);
+    }
+
+
+    /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with AAM for platform
      *
      * @param exchangeName name of the exchange to send message to
      * @param routingKey   routing key to send message to
@@ -387,7 +444,7 @@ public class RabbitManager {
 
 
     /**
-     * Method used to send RPC request to login user.
+     * Method used to send RPC request to register platform in AAM.
      *
      * @param request  request for registration
      */
