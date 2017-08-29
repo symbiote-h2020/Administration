@@ -2,6 +2,7 @@ package eu.h2020.symbiote.controller;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,19 +88,18 @@ public class Cpanel {
                     resourcesRequest.setToken("Token"); // TODO set token
                     resourcesRequest.setPlatformId(user.getPlatformId());
 
-                    ResourceListResponse resourceList = sendRegistryResourcesRequest(resourcesRequest);
+                    ResourceListResponse resourceList = rabbitManager.sendRegistryResourcesRequest(resourcesRequest);
 
-                    List<Resource> resourceList = platformReply.getResources();
                     List<String> resourceStringList = new ArrayList<String>();
 
-                    for (Resource resource : resourceList ) {
+                    for (Resource resource : resourceList.getResources() ) {
                         resourceStringList.add(
                             "Id: " + resource.getId() +
                             ", Name: " + resource.getLabels().get(0) +
-                            ", Description: " + resource.getComments().get(0))
+                            ", Description: " + resource.getComments().get(0));
                     }
                     
-                    model.addObject("resources", resourceList);
+                    model.addAttribute("resources", resourceList);
 
 
                 // if only owner exists

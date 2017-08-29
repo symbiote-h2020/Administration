@@ -363,7 +363,7 @@ public class RabbitManager {
      */
     public ResourceListResponse sendRegistryResourcesRequest(CoreResourceRegistryRequest request) throws CommunicationException  {
     
-            return sendRegistryMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey, request);
+            return sendRegistryResourcesMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey, request);
     }
 
 
@@ -389,7 +389,6 @@ public class RabbitManager {
 
             return responseMsg;
 
-            }
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
         }
