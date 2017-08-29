@@ -9,7 +9,7 @@ import org.thymeleaf.templateresolver.TemplateResolver;
 
 @Configuration
 public class MvcConfig extends WebMvcConfigurerAdapter {
-
+// Todo: explain usage
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/home").setViewName("home");
@@ -17,6 +17,7 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
         registry.addViewController("/denied").setViewName("denied");
     }
 
+    // Resolve
     @Bean
     public TemplateResolver templateResolver() {
         ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver();

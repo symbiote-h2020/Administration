@@ -1,6 +1,8 @@
 package eu.h2020.symbiote.controller;
 
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +16,6 @@ import javax.validation.Valid;
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.communication.CommunicationException;
 import eu.h2020.symbiote.model.CoreUser;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
@@ -30,6 +31,8 @@ import eu.h2020.symbiote.security.commons.enums.OperationType;
 @Controller
 public class Register {
 
+    private static Log log = LogFactory.getLog(Register.class);
+
     @Autowired
     private RabbitManager rabbitManager;
 
@@ -42,14 +45,17 @@ public class Register {
 	private String defaultIIPort;
 
 
-
+	// ToDo: Do we need the argument?
 	@GetMapping("/register/platform")
 	public String coreUserRegisterForm(CoreUser coreUser) {
-		return "register";
+		log.debug("GET request on /register/platform");
+	    return "register";
 	}
 
 	@PostMapping("/register/platform")
 	public String coreUserRegister(@Valid CoreUser coreUser, BindingResult bindingResult, Model model) {
+
+        log.debug("POST request on /register/platform");
 
 		if (bindingResult.hasErrors()) {
 
@@ -58,6 +64,7 @@ public class Register {
 
 		// if form is valid, do some processing of the fields
 
+        // ToDo: placeholder?
 		String federatedId = (coreUser.getFederatedId() == null)? "placeholder" : coreUser.getFederatedId();
 		String platformUrl = coreUser.getPlatformUrl();
 		
@@ -77,14 +84,17 @@ public class Register {
 
 			String[] parts = platformUrl.split("/");
 			parts[2] += ":" + defaultIIPort;
+
+			// ToDo: platformUrl is not used further on. Should we assign it to coreUser.platformUrl?
 			platformUrl = String.join("/",parts);
+			coreUser.setPlatformUrl(platformUrl);
 		}
 
 		// after processing, construct the request
 
 		PlatformManagementRequest platformRegistrationRequest = new PlatformManagementRequest(
 				new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-				new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
+				new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
 				coreUser.getPlatformUrl(),
 				coreUser.getPlatformName(),
 				OperationType.CREATE
@@ -97,6 +107,7 @@ public class Register {
 
 			if(response != null && response.getRegistrationStatus() == ManagementStatus.OK){
 
+			    // Todo: Should we remove the " "?
 				model.addAttribute("pcert","response.getPlatformOwnerCertificate()");
 				model.addAttribute("pkey","response.getPlatformOwnerPrivateKey()");
 				model.addAttribute("pid",response.getPlatformId());
@@ -116,11 +127,14 @@ public class Register {
 	}
 	
 
+	// Todo: CoreUser needed? Needed as object for form validation (look at spring mvc form validation)
 	@GetMapping("/register/app")
 	public String appOwnerRegisterForm(CoreUser coreUser) {
-		return "register";
+		log.debug("GET request on /register/app");
+	    return "register";
 	}
 
+	// Todo: POST method for app
 
     /**
      * Used for testing

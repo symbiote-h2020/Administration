@@ -3,7 +3,6 @@ package eu.h2020.symbiote;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,6 +43,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     private RabbitManager rabbitManager;
 
 
+    // Todo: How is this called from the login?
     @Override
     public Authentication authenticate(Authentication authentication) 
       throws AuthenticationException {
@@ -55,17 +55,22 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         try{
 
-            Token token = rabbitManager.sendLoginRequest(new Credentials( name, password ));
+            Token token = rabbitManager.sendLoginRequest(new Credentials(name, password));
 
             if(token != null){
 
+                // Todo: what happens if platform does not exist? Gets null and the status is INACTIVE
                 JWTClaims claims = JWTEngine.getClaimsFromToken(token.getToken());
                 String platformId = claims.getAtt().get(CoreAttributes.OWNED_PLATFORM.toString());                
 
                 List<GrantedAuthority> grantedAuths = new ArrayList<>();
+
+                // Todo: Are all the roles somewhere?
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
 
                 CoreUser user = new CoreUser(name, password, true, true, true, true, grantedAuths, token, platformId);
+
+                // Todo: why null credentials and clearPassword?
                 user.clearPassword();
                 Authentication auth = new UsernamePasswordAuthenticationToken(user, null, grantedAuths);
 

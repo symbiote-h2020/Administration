@@ -3,6 +3,7 @@ package eu.h2020.symbiote.controller;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -12,7 +13,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,11 +52,15 @@ public class Cpanel {
     @GetMapping("/user/cpanel")
     public String userCPanel(Model model, Principal principal) {
 
+        log.debug("GET request on /user/cpanel");
+
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
 
-        // If we hanen't fetched the details already
+        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
+
+        // If we haven't fetched the details already
 
         if(user.getState() == CoreUser.PLATFORM_INACTIVE || user.getState() == CoreUser.ERROR){
 
@@ -68,19 +72,22 @@ public class Cpanel {
                 PlatformRegistryResponse response = rabbitManager.sendPlatformModificationRequest(emptyPlatform);
                 
                 // if platform exists
-                if(response!=null && response.getStatus() == 200){ 
+                if(response!=null && response.getStatus() == 200){
+                    log.debug("Platform with id " + user.getPlatformId() + " exists!");
 
                     Platform platformReply = response.getPlatform();
                     InterworkingService interworkingServiceReply = platformReply.getInterworkingServices().get(0);
                     user.setState(CoreUser.PLATFORM_ACTIVE);
-                    user.setPlatformName(platformReply.getLabels().get(0));
+                    user.setPlatformName(platformReply.getLabels().get(0)); // Platform name
                     user.setPlatformUrl(interworkingServiceReply.getUrl());
+                    // Todo: getComments? Platform description
                     PlatformDetails platformDetails = 
                         new PlatformDetails(platformReply.getComments().get(0), interworkingServiceReply.getInformationModelId());
                     user.setPlatformDetails(platformDetails);
 
                 // if only owner exists
-                } else if (response!=null && response.getStatus() == 400){ 
+                } else if (response!=null && response.getStatus() == 400){
+                    log.debug("Only owner exists!");
 
                     // get owner details from AAM
                     OwnedPlatformDetails ownerDetails = rabbitManager.sendDetailsRequest(user.getToken().getToken());
@@ -113,6 +120,8 @@ public class Cpanel {
     @PostMapping("/user/cpanel/activate")
     public String activatePlatform(
         @Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+
+        log.debug("POST request on /user/cpanel/activate");
 
         if (bindingResult.hasErrors()) {
 
@@ -167,6 +176,8 @@ public class Cpanel {
     public String modifyPlatform(
         @Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
+        log.debug("POST request on /user/cpanel/modify");
+
         if (bindingResult.hasErrors()) {
 
             List<FieldError> errors = bindingResult.getFieldErrors();
@@ -219,6 +230,8 @@ public class Cpanel {
     @PostMapping("/user/cpanel/disable")
     public String disablePlatform(RedirectAttributes model, Principal principal) {
 
+        log.debug("POST request on /user/cpanel/disable");
+
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
@@ -237,12 +250,13 @@ public class Cpanel {
             PlatformRegistryResponse response = rabbitManager.sendPlatformRemovalRequest(testPlatform);
 
             if(response != null && response.getStatus() == 200 ){
+                log.debug("Successful removal of Platform with id = " + testPlatform.getId());
 
                 user.setState(CoreUser.PLATFORM_INACTIVE);
                 user.setPlatformDetails(null);
 
             } else {
-                model.addFlashAttribute("error","Authorization Manager is unreachable!");
+                model.addFlashAttribute("error","Registry is unreachable!");
             }
         
         } catch(CommunicationException e){
@@ -257,6 +271,8 @@ public class Cpanel {
 
     @RequestMapping("/admin/cpanel")
     public String adminCPanel(Model model) {
+        log.debug("request on /admin/cpanel");
+
         model.addAttribute("role", "admin");
         return "/user/cpanel";
     }

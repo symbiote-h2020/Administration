@@ -1,13 +1,11 @@
 package eu.h2020.symbiote.communication;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
-import com.rabbitmq.client.QueueingConsumer.Delivery;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,13 +20,11 @@ import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
-import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.security.token.Token;
-import eu.h2020.symbiote.communication.CommunicationException;
 
 /**
  * Class used for all internal communication using RabbitMQ AMQP implementation.
@@ -206,6 +202,7 @@ public class RabbitManager {
             AMQP.BasicProperties props = new AMQP.BasicProperties()
                     .builder()
                     .correlationId(correlationId)
+                    .contentType("application/json")
                     .replyTo(replyQueueName)
                     .build();
 
@@ -254,6 +251,9 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public PlatformRegistryResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
+
+        log.debug("sendRegistryMessage");
+
         try {
             String message = mapper.writeValueAsString(platform);
 
@@ -285,6 +285,7 @@ public class RabbitManager {
      * @param platform platform to be created
      */
     public PlatformRegistryResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
+        log.debug("sendPlatformCreationRequest");
         return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
     }
 
@@ -294,6 +295,7 @@ public class RabbitManager {
      * @param platform platform to be removed
      */
     public PlatformRegistryResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
+        log.debug("sendPlatformRemovalRequest");
         return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
     }
 
@@ -303,6 +305,7 @@ public class RabbitManager {
      * @param platform platform to be modified
      */
     public PlatformRegistryResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
+        log.debug("sendPlatformModificationRequest");
         return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 
@@ -316,7 +319,10 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public PlatformManagementResponse sendAAMPlatformRegistrationMessage(String exchangeName, String routingKey,
-             PlatformManagementRequest request) throws CommunicationException{
+             PlatformManagementRequest request) throws CommunicationException {
+
+        log.debug("sendAAMPlatformRegistrationMessage");
+
         try {
             String message = mapper.writeValueAsString(request);
 
@@ -342,13 +348,13 @@ public class RabbitManager {
         return null;
     }
 
-
     /**
      * Method used to send RPC request to login user.
      *
      * @param request  request for registration
      */
     public PlatformManagementResponse sendPlatformRegistrationRequest(PlatformManagementRequest request) throws CommunicationException {
+        log.debug("sendPlatformRegistrationRequest");
         return sendAAMPlatformRegistrationMessage(this.aamExchangeName, this.platformManageRequestRoutingKey, request);
     }
 
@@ -362,6 +368,9 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public Token sendAAMLoginMessage(String exchangeName, String routingKey, Credentials credentials) throws CommunicationException {
+
+        log.debug("sendAAMLoginMessage");
+
         try {
             String message = mapper.writeValueAsString(credentials);
 
@@ -394,6 +403,7 @@ public class RabbitManager {
      * @param credentials  credentials for login
      */
     public Token sendLoginRequest(Credentials credentials) throws CommunicationException  {
+        log.debug("sendLoginRequest");
         return sendAAMLoginMessage(this.aamExchangeName, this.loginRoutingKey, credentials);
     }
 
@@ -407,6 +417,9 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public OwnedPlatformDetails sendAAMDetailsMessage(String exchangeName, String routingKey, String token) throws CommunicationException {
+
+        log.debug("sendAAMDetailsMessage");
+
         try {
             String message = mapper.writeValueAsString(token);
 
@@ -439,6 +452,7 @@ public class RabbitManager {
      * @param token  token of user
      */
     public OwnedPlatformDetails sendDetailsRequest(String token) throws CommunicationException  {
+        log.debug("sendDetailsRequest");
         return sendAAMDetailsMessage(this.aamExchangeName, this.detailsRoutingKey, token);
     }
 
