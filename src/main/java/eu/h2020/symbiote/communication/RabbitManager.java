@@ -20,6 +20,8 @@ import java.util.concurrent.TimeoutException;
 
 import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
+import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
+import eu.h2020.symbiote.core.internal.ResourceListResponse;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
 import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
@@ -79,6 +81,9 @@ public class RabbitManager {
 
     @Value("${rabbit.routingKey.platform.modificationRequested}")
     private String platformModificationRequestedRoutingKey;
+
+    @Value("${rabbit.routingKey.platform.resourcesRequested}")
+    private String platformResourcesRequestedRoutingKey;
 
     // ------------ Core AAM communication ----------------
 
@@ -250,12 +255,12 @@ public class RabbitManager {
      *
      * @param exchangeName name of the exchange to send message to
      * @param routingKey   routing key to send message to
-     * @param platform     platform to be sent
+     * @param message     platform to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformRegistryResponse sendRegistryMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
-        try {
-            String message = mapper.writeValueAsString(platform);
+    public PlatformRegistryResponse sendRegistryMessage(String exchangeName, String routingKey, String message) throws CommunicationException  {
+
+            
 
             String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
 
@@ -272,10 +277,7 @@ public class RabbitManager {
                 log.error("Error in response from Registry.", e);
                 throw new CommunicationException(e);
             }
-        } catch (IOException e) {
-            log.error("Failed (un)marshalling of rpc resource message", e);
-        }
-        return null;
+        
     }
 
 
@@ -285,7 +287,15 @@ public class RabbitManager {
      * @param platform platform to be created
      */
     public PlatformRegistryResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
-        return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
+        try {
+    
+            String message = mapper.writeValueAsString(platform);
+            return sendRegistryMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, message);
+    
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
     }
 
     /**
@@ -294,7 +304,15 @@ public class RabbitManager {
      * @param platform platform to be removed
      */
     public PlatformRegistryResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
-        return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
+        try {
+    
+            String message = mapper.writeValueAsString(platform);
+            return sendRegistryMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, message);
+    
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
     }
 
     /**
@@ -303,7 +321,32 @@ public class RabbitManager {
      * @param platform platform to be modified
      */
     public PlatformRegistryResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
-        return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
+        try {
+    
+            String message = mapper.writeValueAsString(platform);
+            return sendRegistryMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, message);
+    
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
+    }
+
+    /**
+     * Method used to retrieve the list of resources of this platform from the Registry.
+     *
+     * @param request request for platform resources list
+     */
+    public ResourceListResponse sendPlatformResourcesRequest(CoreResourceRegistryRequest request) throws CommunicationException  {
+        try {
+    
+            String message = mapper.writeValueAsString(request);
+            return sendRegistryMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey, message);
+    
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
     }
 
 

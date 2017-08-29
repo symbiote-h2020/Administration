@@ -27,6 +27,10 @@ import eu.h2020.symbiote.model.CoreUser;
 
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
+import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
+import eu.h2020.symbiote.core.internal.ResourceListResponse;
+import eu.h2020.symbiote.core.model.resources.Resource;
+import eu.h2020.symbiote.core.model.internal.CoreResource;
 import eu.h2020.symbiote.model.PlatformDetails;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.communication.CommunicationException;
@@ -78,6 +82,25 @@ public class Cpanel {
                     PlatformDetails platformDetails = 
                         new PlatformDetails(platformReply.getComments().get(0), interworkingServiceReply.getInformationModelId());
                     user.setPlatformDetails(platformDetails);
+
+                    CoreResourceRegistryRequest resourcesRequest = new CoreResourceRegistryRequest();
+                    resourcesRequest.setToken("Token"); // TODO set token
+                    resourcesRequest.setPlatformId(user.getPlatformId());
+
+                    ResourceListResponse resourceList = sendPlatformResourcesRequest(resourcesRequest);
+
+                    List<Resource> resourceList = platformReply.getResources();
+                    List<String> resourceStringList = new ArrayList<String>();
+
+                    for (Resource resource : resourceList ) {
+                        resourceStringList.add(
+                            "Id: " + resource.getId() +
+                            ", Name: " + resource.getLabels().get(0) +
+                            ", Description: " + resource.getComments().get(0))
+                    }
+                    
+                    model.addObject("resources", resourceList);
+
 
                 // if only owner exists
                 } else if (response!=null && response.getStatus() == 400){ 

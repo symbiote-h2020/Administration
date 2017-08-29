@@ -56,6 +56,9 @@
                 <li th:classappend="${page=='disable'}?active" >
                     <a href="#platform_disable" data-toggle="tab">Disable Platform</a>
                 </li>
+                <li class="panel-heading">
+                    <span>Resource Management</span>
+                </li>
                 </th:block>
                 </th:block>
             </ul>
@@ -269,6 +272,18 @@
                         <input class="btn btn-danger" type="submit" name="submit" value="Disable"></input>
                     </div>
                 </form>
+                <div class="panel panel-default tab" id="resource_list" method="post">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            List of platform resources
+                        </h3>
+                        <ul>
+                        <th:block th:each="resource : ${resources}">
+                            <li th:text="${resource}"></li>
+                        </th:block>
+                        </ul>
+                    </div>
+                </div>
                 </th:block>
                 </th:block>
             </div>
