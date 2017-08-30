@@ -13,6 +13,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.security.Principal;
 
 
 /**
@@ -30,13 +31,13 @@ public class Login {
 
 	    log.debug("A user tries to login");
 
-	    // Todo: why AnonymousAuthenticationToken and not UsernamePasswordAuthenticationToken? This is what is found in the Session
+	    // Checking if the Principal is null also works
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
 
 			/* The user is logged in :) */
-			return "forward:/user/cpanel";
+			return "redirect:/user/cpanel";
 		} else {
 			return "login";
 		}
@@ -52,7 +53,7 @@ public class Login {
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
 
 			/* The user is logged in :) */
-			return "forward:/admin/cpanel";
+			return "redirect:/admin/cpanel";
 		} else {
 			return "login";
 		}

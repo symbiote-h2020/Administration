@@ -49,11 +49,10 @@ public class CoreUser extends User {
     // @Size(min=4, max=30)
     private String federatedId; // Todo: how is this used?
 
-    // Match either a word (letters, digits, "-" and "_") with 30 characters max or an empty string
-    // TODO R3 not allowing empty id for platform generation for R2
+    // Match either a word (letters, digits, "-" and "_") with 30 characters max
     @NotNull
     @Pattern(regexp="(^\\Z|^[\\w-][\\w-][\\w-][\\w-]+\\Z)")
-    @Size(max=30)
+    @Size(min=1, max=30)
     private String platformId;
 
     @NotNull
