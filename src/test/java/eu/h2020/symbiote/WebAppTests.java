@@ -4,9 +4,7 @@ import javax.servlet.Filter;
 import org.junit.Test;
 import org.junit.Before;
 import org.mockito.Mock;
-import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,20 +12,18 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+
+import eu.h2020.symbiote.communication.RabbitManager;
+import eu.h2020.symbiote.controller.Register;
+import eu.h2020.symbiote.controller.Cpanel;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
 
-import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.CustomAuthenticationProvider;
-import eu.h2020.symbiote.controller.Register;
-import eu.h2020.symbiote.controller.Cpanel;
+
+
 
 
 /**
@@ -44,11 +40,10 @@ public class WebAppTests extends AdministrationTests {
     @Autowired
     private Filter springSecurityFilterChain;
 
-    protected MockMvc mockMvc;
-    protected MockMvc controllerMockMvc;
+    private MockMvc mockMvc;
 
     @Mock
-    RabbitManager mockRabbitManager;
+    private RabbitManager mockRabbitManager;
 
     @Before
     public void setup(){
@@ -164,7 +159,7 @@ public class WebAppTests extends AdministrationTests {
     public void getLogoutPage() throws Exception {
         
         mockMvc.perform(get("/user/logout").with(authentication(sampleAuth())) )
-            .andExpect(status().isOk());
+            .andExpect(status().is3xxRedirection());
     }
 
     @Test
@@ -311,7 +306,7 @@ public class WebAppTests extends AdministrationTests {
                 .with(csrf().asHeader()) )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/user/cpanel"))
-            .andExpect(flash().attribute("error", "Authorization Manager is unreachable!") );
+            .andExpect(flash().attribute("error", "Registry is unreachable!") );
     }
 
     @Test

@@ -1,44 +1,20 @@
 package eu.h2020.symbiote;
 
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.mockito.Spy;
-import org.springframework.test.web.servlet.MockMvc;
 
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
-import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
-import com.rabbitmq.client.RpcClient;
-
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.communication.CommunicationException;
-
 import eu.h2020.symbiote.core.model.Platform;
-import eu.h2020.symbiote.core.model.InterworkingService;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
-import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
-import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.security.commons.Token;
 
 
@@ -48,13 +24,13 @@ import eu.h2020.symbiote.security.commons.Token;
 public class RabbitManagerTests extends AdministrationTests {
 
     @Spy
-    RabbitManager rabbitManager;
+    private RabbitManager rabbitManager;
 
     // ==== Registry Communication ====
     @Test
     public void registerPlatformSuccess() throws Exception {
 
-        doReturn( serialize(samplePlatformResponseSuccess()) )
+        doReturn(serialize(samplePlatformResponseSuccess()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -70,7 +46,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void registerPlatformFail() throws Exception {
 
-        doReturn( serialize(samplePlatformResponseFail()) )
+        doReturn(serialize(samplePlatformResponseFail()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -90,7 +66,7 @@ public class RabbitManagerTests extends AdministrationTests {
         newResponse.setPlatform(newPlatform);
         String serializedResponse = serialize(newResponse);
 
-        doReturn( serializedResponse )
+        doReturn(serializedResponse)
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -107,7 +83,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void deletePlatform() throws Exception {
 
-        doReturn( serialize(samplePlatformResponseSuccess()) )
+        doReturn(serialize(samplePlatformResponseSuccess()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -122,7 +98,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void registerPlatformOwnerSuccess() throws Exception {
 
-        doReturn( serialize(samplePlatformResponse()) )
+        doReturn(serialize(samplePlatformResponse()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -136,7 +112,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void registerPlatformOwnerFail() throws Exception {
 
-        doReturn( serialize(sampleErrorResponse()) )
+        doReturn(serialize(sampleErrorResponse()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -166,7 +142,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void loginPlatformOwnerFail() throws Exception {
 
-        doReturn( serialize(sampleErrorResponse()) )
+        doReturn(serialize(sampleErrorResponse()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -185,7 +161,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void ownerDetailsSuccess() throws Exception {
 
-        doReturn( serialize(sampleOwnerDetails()) )
+        doReturn(serialize(sampleOwnerDetails()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 
@@ -198,7 +174,7 @@ public class RabbitManagerTests extends AdministrationTests {
     @Test
     public void ownerDetailsFail() throws Exception {
 
-        doReturn( serialize(sampleErrorResponse()) )
+        doReturn(serialize(sampleErrorResponse()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any());
 

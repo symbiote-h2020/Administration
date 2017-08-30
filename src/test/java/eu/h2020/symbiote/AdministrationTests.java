@@ -36,9 +36,7 @@ import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
 import eu.h2020.symbiote.model.CoreUser;
 import eu.h2020.symbiote.security.commons.Certificate;
-import eu.h2020.symbiote.security.enums.CoreAttributes;
-import eu.h2020.symbiote.security.commons.jwt.JWTClaims;
-import io.jsonwebtoken.Claims;
+
 
 
 /**
@@ -221,7 +219,7 @@ public abstract class AdministrationTests {
 
     public OwnedPlatformDetails sampleOwnerDetails() {
 
-        Map<String, Certificate>  componentCerificates = new HashMap<String, Certificate>();
+        Map<String, Certificate>  componentCerificates = new HashMap<>();
         return new OwnedPlatformDetails(platformId, url, name, new Certificate(), componentCerificates);
     }
 

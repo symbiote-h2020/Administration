@@ -6,12 +6,10 @@ import javax.validation.constraints.Size;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+import eu.h2020.symbiote.security.commons.Token;
 import org.springframework.security.core.userdetails.User;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
-import eu.h2020.symbiote.model.PlatformDetails;
-import eu.h2020.symbiote.model.Federation;
-import eu.h2020.symbiote.security.commons.Token;
 
 
 /**
@@ -49,7 +47,7 @@ public class CoreUser extends User {
 
     // @NotNull
     // @Size(min=4, max=30)
-    private String federatedId;
+    private String federatedId; // Todo: how is this used?
 
     // Match either a word (letters, digits, "-" and "_") with 30 characters max or an empty string
     // TODO R3 not allowing empty id for platform generation for R2

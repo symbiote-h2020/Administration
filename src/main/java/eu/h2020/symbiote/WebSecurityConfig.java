@@ -23,6 +23,7 @@ import eu.h2020.symbiote.CustomAuthenticationProvider;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    // In order to support multiple security domains (WebSecurityConfigurerAdapter) we need the Order Annotation
     @Configuration
     @Order(1)
     public static class UserWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
@@ -31,7 +32,7 @@ public class WebSecurityConfig {
         private CustomAuthenticationProvider authProvider;
 
         @Override
-        protected void configure( AuthenticationManagerBuilder auth) throws Exception {
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
             auth.authenticationProvider(authProvider);
         }
@@ -50,8 +51,10 @@ public class WebSecurityConfig {
                     .permitAll()
                     .and()
                 .logout()
-                    .logoutUrl("/user/logout")
+                    .logoutUrl("/")
                     .logoutSuccessUrl("/")
+//                    .deleteCookies("JSESSIONID")
+//                    .invalidateHttpSession(true)
                     .permitAll()
                     .and()
                 .exceptionHandling()

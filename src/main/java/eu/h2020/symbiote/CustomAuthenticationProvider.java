@@ -3,7 +3,6 @@ package eu.h2020.symbiote;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,9 +18,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import eu.h2020.symbiote.communication.RabbitManager;
 import eu.h2020.symbiote.communication.CommunicationException;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.commons.Token;
 import eu.h2020.symbiote.model.CoreUser;
-
+import eu.h2020.symbiote.security.commons.Token;
 import eu.h2020.symbiote.security.commons.jwt.JWTEngine;
 import eu.h2020.symbiote.security.commons.jwt.JWTClaims;
 import eu.h2020.symbiote.security.enums.CoreAttributes;
@@ -55,17 +53,23 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         try{
 
-            Token token = rabbitManager.sendLoginRequest(new Credentials( name, password ));
+            Token token = rabbitManager.sendLoginRequest(new Credentials(name, password));
 
             if(token != null){
 
+                // When platform does not exist, we get null and the status is INACTIVE
+                // Todo: integration with AAM is needed
                 JWTClaims claims = JWTEngine.getClaimsFromToken(token.getToken());
                 String platformId = claims.getAtt().get(CoreAttributes.OWNED_PLATFORM.toString());                
 
                 List<GrantedAuthority> grantedAuths = new ArrayList<>();
+
+                // Todo: Are all the roles somewhere?
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
 
                 CoreUser user = new CoreUser(name, password, true, true, true, true, grantedAuths, token, platformId);
+
+                // We clear the credential so that they are not shown anywhere
                 user.clearPassword();
                 Authentication auth = new UsernamePasswordAuthenticationToken(user, null, grantedAuths);
 
