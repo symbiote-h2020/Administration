@@ -16,7 +16,7 @@
 				<!-- In the validation fields the th:errors when present overwrites the text message -->
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-					<input type="text" class="form-control" th:field="*{validUsername}" value="" placeholder="Username"/>
+					<input type="text" class="form-control" th:field="*{validUsername}" th:value="${usernameSelected}" placeholder="Username"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('validUsername')}" th:errors="*{validUsername}">Invalid Username!</div>
 
@@ -28,7 +28,7 @@
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-					<input type="text" class="form-control" th:field="*{recoveryMail}" value="" placeholder="Email"/>
+					<input type="text" class="form-control" th:field="*{recoveryMail}" th:value="${emailSelected}" placeholder="Email"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('recoveryMail')}" th:errors="*{recoveryMail}">Invalid Email!</div>
 
@@ -37,7 +37,8 @@
                     <select title="title to display for the select" style="float:right;" th:field="*{role}">
                         <option th:each="role : ${allRoles}"
                                 th:value="${role.enumValue}"
-                                th:text="${role.enumText}"></option>
+                                th:text="${role.enumText}"
+                                th:selected="${role.isSelected(roleSelected)}"></option>
                     </select>
                 </div>
 

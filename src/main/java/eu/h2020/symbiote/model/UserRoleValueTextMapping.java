@@ -27,6 +27,13 @@ public class UserRoleValueTextMapping {
     public String getEnumText() { return enumText; }
     public void setEnumText(String enumText) { this.enumText = enumText; }
 
+    public boolean isSelected(String enumValue){
+        if (enumValue != null) {
+            return this.enumValue.equals(enumValue);
+        }
+        return false;
+    }
+
     public static List<UserRoleValueTextMapping> getList() {
         List<UserRoleValueTextMapping> list = new ArrayList<>();
 

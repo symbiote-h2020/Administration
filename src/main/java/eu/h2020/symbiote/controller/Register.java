@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.validation.BindingResult;
@@ -26,7 +27,9 @@ import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -71,7 +74,7 @@ public class Register {
         log.debug("POST request on /register");
 
 		if (bindingResult.hasErrors()) {
-            model.addAttribute("allRoles", UserRoleValueTextMapping.getList());
+            model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
 			return "register";
 		}
 
@@ -95,20 +98,29 @@ public class Register {
         try {
             ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userRegistrationRequest);
 
-            if(managementStatus != null ){
+            if (managementStatus == null) {
+                model.addAttribute("error","Authorization Manager is unreachable!");
+                model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
+                return "register";
+
+            } else if(managementStatus == ManagementStatus.OK ){
                 return "success";
+
+            } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
+                model.addAttribute("error","Username exist!");
+                model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
+                return "register";
 
             } else {
                 model.addAttribute("error","Authorization Manager is unreachable!");
-                model.addAttribute("allRoles", UserRoleValueTextMapping.getList());
+                model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
                 return "register";
             }
         } catch (CommunicationException e) {
             model.addAttribute("error",e.getMessage());
-            model.addAttribute("allRoles", UserRoleValueTextMapping.getList());
+            model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
             return "register";
         }
-
 	}
 
     /**
@@ -116,6 +128,24 @@ public class Register {
      */
     public void setRabbitManager(RabbitManager rabbitManager){
         this.rabbitManager = rabbitManager;
+    }
+
+    private Map<String, Object> getAllAttributes(CoreUser coreUser, BindingResult bindingResult) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("allRoles", UserRoleValueTextMapping.getList());
+
+        List<String> errors = bindingResult.getFieldErrors().stream()
+                .map(FieldError::getField)
+                .collect(Collectors.toList());
+
+        if (!errors.contains("validUsername"))
+            map.put("usernameSelected", coreUser.getUsername());
+        if (!errors.contains("recoveryMail"))
+            map.put("emailSelected", coreUser.getUsername());
+        if (!errors.contains("role"))
+            map.put("roleSelected", coreUser.getUsername());
+
+        return map;
     }
 
 }
