@@ -7,6 +7,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import eu.h2020.symbiote.security.commons.Token;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.springframework.security.core.userdetails.User;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
@@ -43,6 +44,9 @@ public class CoreUser extends User {
 
     @NotNull
     @Size(min=4, max=30)
+    private UserRole role;
+
+    @NotNull
     private String recoveryMail;
 
     // @NotNull
@@ -85,6 +89,7 @@ public class CoreUser extends User {
      *
      * @param username              username
      * @param password              password
+     * @param role                  user role
      * @param enabled               user is enabled
      * @param accountNonExpired     account isn't expired
      * @param credentialsNonExpired credentials aren't expired
@@ -93,22 +98,21 @@ public class CoreUser extends User {
      * @param token                 user token returned by Core AAM
      * @param platformId            contains null or the platform's id, if user is a platform owner
      */
-    public CoreUser(String username, String password, boolean enabled,
+    public CoreUser(String username, String password, UserRole role, boolean enabled,
             boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities,
             Token token, String platformId) {
 
         super(username, password, enabled, accountNonExpired,
         credentialsNonExpired, accountNonLocked, authorities);
 
-        this.token = token;
+        setRole(role);
+        setToken(token);
 
         if(platformId == null){
-
-            this.state = this.APP;
+            setState(this.APP);
         } else {
-
-            this.state = this.PLATFORM_INACTIVE;
-            this.platformId = platformId;
+            setState(this.PLATFORM_INACTIVE);
+            setPlatformId(platformId);
         }
     }
     
@@ -130,6 +134,8 @@ public class CoreUser extends User {
         this.validPassword = validPassword;
     }
 
+    public UserRole getRole() { return role; }
+    public void setRole(UserRole role) { this.role = role; }
 
     public String getRecoveryMail() {
         return this.recoveryMail;

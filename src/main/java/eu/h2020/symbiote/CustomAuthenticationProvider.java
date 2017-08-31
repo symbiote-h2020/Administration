@@ -4,6 +4,7 @@ package eu.h2020.symbiote;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Component;
@@ -67,7 +68,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 // Todo: Are all the roles somewhere?
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-                CoreUser user = new CoreUser(name, password, true, true, true, true, grantedAuths, token, platformId);
+                // Todo: Change the user role
+                CoreUser user = new CoreUser(name, password, UserRole.USER,true, true, true, true, grantedAuths, token, platformId);
 
                 // We clear the credential so that they are not shown anywhere
                 user.clearPassword();

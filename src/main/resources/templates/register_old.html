@@ -33,14 +33,31 @@
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('recoveryMail')}" th:errors="*{recoveryMail}">Invalid Email!</div>
 
-                <div class="input-group">
-                    <span class="input-group-addon"><i class="glyphicon">Choose your User Role</i></span>
-                    <select title="title to display for the select" style="float:right;" th:field="*{role}">
-                        <option th:each="role : ${allRoles}"
-                                th:value="${role}"
-                                th:text="${role}"></option>
-                    </select>
-                </div>
+				<div class="input-group">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-magnet"></i></span>
+					<input disabled="true" type="text" class="form-control" th:field="*{federatedId}" value="" placeholder="Federated id (optional, unused in R2)"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#fields.hasErrors('federatedId')}" th:errors="*{federatedId}">Invalid Id!</div>
+
+				<hr />
+
+				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/register/platform'}">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-font"></i></span>
+					<input type="text" class="form-control" th:field="*{platformName}" value="" placeholder="Platform Name"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformName')}" th:errors="*{platformName}">Invalid Platform Name!</div>
+
+				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/register/platform'}">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
+					<input type="url" class="form-control" th:field="*{platformUrl}" value="" placeholder="Platform Address"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformUrl')}" th:errors="*{platformUrl}">Invalid Platform Address!</div>
+
+				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/register/platform'}">
+					<span class="input-group-addon"><i class="glyphicon glyphicon-briefcase"></i></span>
+					<input type="text" class="form-control" th:field="*{platformId}" value="" placeholder="Preferred platform id"/>
+				</div>
+				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformId')}" th:errors="*{platformId}">Invalid Platform Id! (Must not be empty and must contain only letters, numbers and "-" or "_", up to 30 characters)</div>
 
 				<div class="form-group">
 					<!-- Button -->

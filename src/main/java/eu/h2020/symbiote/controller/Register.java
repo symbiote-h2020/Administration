@@ -25,7 +25,14 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 
- 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 /**
  * Spring controller, handles user registration views and form validation.
  *
@@ -50,8 +57,25 @@ public class Register {
 
 	// The CoreUser argument is needed so that the template can associate form attributes with a CoreUser
 	@GetMapping("/register/platform")
-	public String coreUserRegisterForm(CoreUser coreUser) {
+	public String coreUserRegisterForm(CoreUser coreUser, Model model) {
 		log.debug("GET request on /register/platform");
+
+		List<String> allRoles = Stream.of(UserRole.values())
+				.map(Enum::name)
+				.collect(Collectors.toList());
+		allRoles.remove("NULL");
+
+        allRoles.replaceAll(role -> {
+            List<String> parts = new ArrayList<>(Arrays.asList(role.split("_")));
+            parts.replaceAll(p -> p.substring(0, 1) + p.substring(1).toLowerCase());
+
+            if (parts.size() > 1)
+                return String.join(" ", parts);
+            else
+                return parts.get(0);
+        });
+
+		model.addAttribute("allRoles", allRoles);
 	    return "register";
 	}
 
