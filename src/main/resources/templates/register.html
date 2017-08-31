@@ -14,27 +14,28 @@
 				<div class="title" th:if="${#httpServletRequest.requestURI == '/register/platform'}">Platform Owner Registration</div>
 				<div class="title" th:if="${#httpServletRequest.requestURI == '/register/app'}">Application Owner Registration</div>
 
+				<!-- In the validation fields the th:errors when present overwrites the text message -->
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-					<input type="text" class="form-control" name="validUsername" value="" placeholder="Username"/>
+					<input type="text" class="form-control" th:field="*{validUsername}" value="" placeholder="Username"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('validUsername')}" th:errors="*{validUsername}">Invalid Username!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-					<input type="password" class="form-control" name="validPassword" value="" placeholder="Password"/>
+					<input type="password" class="form-control" th:field="*{validPassword}" value="" placeholder="Password"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('validPassword')}" th:errors="*{validPassword}">Invalid Password!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-					<input type="text" class="form-control" name="recoveryMail" value="" placeholder="Email"/>
+					<input type="text" class="form-control" th:field="*{recoveryMail}" value="" placeholder="Email"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('recoveryMail')}" th:errors="*{recoveryMail}">Invalid Email!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-magnet"></i></span>
-					<input disabled="true" type="text" class="form-control" name="federatedId" value="" placeholder="Federated id (optional, unused in R2)"/>
+					<input disabled="true" type="text" class="form-control" th:field="*{federatedId}" value="" placeholder="Federated id (optional, unused in R2)"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('federatedId')}" th:errors="*{federatedId}">Invalid Id!</div>
 
@@ -42,21 +43,21 @@
 
 				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/register/platform'}">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-font"></i></span>
-					<input type="text" class="form-control" name="platformName" value="" placeholder="Platform Name"/>
+					<input type="text" class="form-control" th:field="*{platformName}" value="" placeholder="Platform Name"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformName')}" th:errors="*{platformName}">Invalid Platform Name!</div>
 
 				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/register/platform'}">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-					<input type="url" class="form-control" name="platformUrl" value="" placeholder="Platform Address"/>
+					<input type="url" class="form-control" th:field="*{platformUrl}" value="" placeholder="Platform Address"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformUrl')}" th:errors="*{platformUrl}">Invalid Platform Address!</div>
 
 				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/register/platform'}">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-briefcase"></i></span>
-					<input type="text" class="form-control" name="platformId" value="" placeholder="Preferred platform id"/>
+					<input type="text" class="form-control" th:field="*{platformId}" value="" placeholder="Preferred platform id"/>
 				</div>
-				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformId')}" >Invalid Platform Id! (Must not be empty and must contain only letters, numbers and "-" or "_", up to 30 characters)</div>
+				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/register/platform' and #fields.hasErrors('platformId')}" th:errors="*{platformId}">Invalid Platform Id! (Must not be empty and must contain only letters, numbers and "-" or "_", up to 30 characters)</div>
 
 				<div class="form-group">
 					<!-- Button -->

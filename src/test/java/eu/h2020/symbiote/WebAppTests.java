@@ -138,8 +138,8 @@ public class WebAppTests extends AdministrationTests {
     public void getLoginPageAsUser() throws Exception {
         
         mockMvc.perform(get("/user/login").with(authentication(sampleAuth())) )
-            .andExpect(status().isOk())
-            .andExpect(forwardedUrl("/user/cpanel"));
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/user/cpanel"));
     }
 
     @Test
@@ -152,7 +152,8 @@ public class WebAppTests extends AdministrationTests {
                 .param("username", username)
                 .param("password", password) )
             .andExpect(status().is3xxRedirection());
-            // .andExpect(redirectedUrl("/user/cpanel"));
+            // Todo: Fix it
+        // .andExpect(redirectedUrl("/user/cpanel"));
     }
 
     @Test
