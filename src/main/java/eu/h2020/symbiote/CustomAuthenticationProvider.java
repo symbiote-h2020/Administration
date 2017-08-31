@@ -69,7 +69,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
 
                 // Todo: Change the user role
-                CoreUser user = new CoreUser(name, password, UserRole.USER,true, true, true, true, grantedAuths, token, platformId);
+                CoreUser user = new CoreUser(name, password, UserRole.USER,true, true, true, true, grantedAuths, token);
 
                 // We clear the credential so that they are not shown anywhere
                 user.clearPassword();

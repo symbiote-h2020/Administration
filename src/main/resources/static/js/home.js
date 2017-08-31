@@ -26,7 +26,7 @@ $( document ).ready( function() {
 	});
 	$( ".platform .register.button" ).click(function(e){
 
-		getPopup( "/register/platform" );
+		getPopup("/register");
 		e.preventDefault();
 	});
 

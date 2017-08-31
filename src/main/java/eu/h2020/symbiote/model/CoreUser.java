@@ -2,12 +2,14 @@ package eu.h2020.symbiote.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 import javax.validation.constraints.Size;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import eu.h2020.symbiote.security.commons.Token;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import org.springframework.security.core.userdetails.User;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
@@ -43,33 +45,14 @@ public class CoreUser extends User {
     private String validPassword;
 
     @NotNull
-    @Size(min=4, max=30)
-    private UserRole role;
-
-    @NotNull
     private String recoveryMail;
 
-    // @NotNull
-    // @Size(min=4, max=30)
-    private String federatedId; // Todo: how is this used?
-
-    // Match either a word (letters, digits, "-" and "_") with 30 characters max
     @NotNull
-    @Pattern(regexp="(^\\Z|^[\\w-][\\w-][\\w-][\\w-]+\\Z)")
-    @Size(min=1, max=30)
-    private String platformId;
-
-    @NotNull
-    @Size(min=4, max=30)
-    private String platformName;
-
-    @NotNull
-    // @Size(min=4, max=120)
-    private String platformUrl;
+    private UserRole role;
 
     private int state;
 
-    private PlatformDetails platformDetails;
+    private Set<OwnedPlatformDetails> ownedPlatformDetails;
     private Federation federation;
 
     private Token token;
@@ -100,20 +83,13 @@ public class CoreUser extends User {
      */
     public CoreUser(String username, String password, UserRole role, boolean enabled,
             boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities,
-            Token token, String platformId) {
+            Token token) {
 
         super(username, password, enabled, accountNonExpired,
         credentialsNonExpired, accountNonLocked, authorities);
 
         setRole(role);
         setToken(token);
-
-        if(platformId == null){
-            setState(this.APP);
-        } else {
-            setState(this.PLATFORM_INACTIVE);
-            setPlatformId(platformId);
-        }
     }
     
 
@@ -125,7 +101,6 @@ public class CoreUser extends User {
     public void setValidUsername(String validUsername) {
         this.validUsername = validUsername;
     }
-    
 
     public String getValidPassword() {
         return this.validPassword;
@@ -144,39 +119,6 @@ public class CoreUser extends User {
         this.recoveryMail = recoveryMail;
     }
 
-
-    public String getFederatedId() {
-        return this.federatedId;
-    }
-    public void setFederatedId(String federatedId) {
-        this.federatedId = federatedId;
-    }
-
-
-    public String getPlatformId() {
-        return this.platformId;
-    }
-    public void setPlatformId(String platformId) {
-        this.platformId = platformId;
-    }
-
-
-    public String getPlatformName() {
-        return this.platformName;
-    }
-    public void setPlatformName(String platformName) {
-        this.platformName = platformName;
-    }
-
-
-    public String getPlatformUrl() {
-        return this.platformUrl;
-    }
-    public void setPlatformUrl(String platformUrl) {
-        this.platformUrl = platformUrl;
-    }
-
-
     public int getState() {
         return this.state;
     }
@@ -184,14 +126,8 @@ public class CoreUser extends User {
         this.state = state;
     }
 
-
-    public PlatformDetails getPlatformDetails() {
-        return this.platformDetails;
-    }
-    public void setPlatformDetails(PlatformDetails platformDetails) {
-        this.platformDetails = platformDetails;
-    }
-
+    public Set<OwnedPlatformDetails> getOwnedPlatformDetails() { return ownedPlatformDetails; }
+    public void setOwnedPlatformDetails(Set<OwnedPlatformDetails> ownedPlatformDetails) { this.ownedPlatformDetails = ownedPlatformDetails; }
 
     public Federation getFederation() {
         return this.federation;
@@ -199,7 +135,6 @@ public class CoreUser extends User {
     public void setFederation(Federation federation) {
         this.federation = federation;
     }
-
 
     public Token getToken() {
         return this.token;

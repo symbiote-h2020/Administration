@@ -66,80 +66,6 @@ public class Cpanel {
 
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
 
-        // If we haven't fetched the details already
-
-        if(user.getState() == CoreUser.PLATFORM_INACTIVE || user.getState() == CoreUser.ERROR){
-
-            // request owner's platform details from Registry
-            Platform emptyPlatform = new Platform();
-            emptyPlatform.setId(user.getPlatformId());
-
-            try{
-                PlatformRegistryResponse response = rabbitManager.sendPlatformModificationRequest(emptyPlatform);
-                
-                // if platform exists
-                if(response!=null && response.getStatus() == 200){
-                    log.debug("Platform with id " + user.getPlatformId() + " exists!");
-
-                    Platform platformReply = response.getPlatform();
-                    InterworkingService interworkingServiceReply = platformReply.getInterworkingServices().get(0);
-
-                    user.setState(CoreUser.PLATFORM_ACTIVE);
-                    user.setPlatformUrl(interworkingServiceReply.getUrl());
-
-                    // platformReply.getLabels().get(0) is the platform name
-                    user.setPlatformName(platformReply.getLabels().get(0));
-
-                    // platformReply.getComments.get(0) has the Platform description
-                    PlatformDetails platformDetails = 
-                        new PlatformDetails(platformReply.getComments().get(0), interworkingServiceReply.getInformationModelId());
-                    user.setPlatformDetails(platformDetails);
-
-                    // Todo: List resources
-//                    CoreResourceRegistryRequest resourcesRequest = new CoreResourceRegistryRequest();
-//                    resourcesRequest.setToken("Token"); // TODO set token
-//                    resourcesRequest.setPlatformId(user.getPlatformId());
-//
-//                    ResourceListResponse resourceList = rabbitManager.sendRegistryResourcesRequest(resourcesRequest);
-//
-//                    List<String> resourceStringList = new ArrayList<String>();
-//
-//                    for (Resource resource : resourceList.getResources() ) {
-//                        resourceStringList.add(
-//                            "Id: " + resource.getId() +
-//                            ", Name: " + resource.getLabels().get(0) +
-//                            ", Description: " + resource.getComments().get(0));
-//                    }
-//
-//                    model.addAttribute("resources", resourceList);
-
-
-                // if only owner exists
-                } else if (response!=null && response.getStatus() == 400){
-                    log.debug("Only owner exists!");
-
-                    // get owner details from AAM
-                    OwnedPlatformDetails ownerDetails = rabbitManager.sendDetailsRequest(user.getToken().getToken());
-                    if(ownerDetails != null && ownerDetails.getPlatformInstanceId().equals(user.getPlatformId() )){
-                        // plaform ids match, all is well
-
-                        user.setPlatformDetails(null);
-                        user.setPlatformName(ownerDetails.getPlatformInstanceFriendlyName());
-                        user.setPlatformUrl(ownerDetails.getPlatformInterworkingInterfaceAddress());
-
-                    } else {
-                        user.setState(CoreUser.ERROR);
-                    }
-                }  else {
-                    user.setState(CoreUser.ERROR);
-                }
-            } catch(CommunicationException e){
-                user.setState(CoreUser.ERROR);
-            } catch(NullPointerException e){
-                user.setState(CoreUser.ERROR);
-            }
-        }
-            
         model.addAttribute("user", user);
 
         return "controlpanel";
@@ -166,38 +92,6 @@ public class Cpanel {
 
         // if form is valid, construct the request
 
-        String username = principal.getName(); //get logged in username
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
-        CoreUser user = (CoreUser)token.getPrincipal();
-        
-        InterworkingService interworkingService = new InterworkingService();
-        interworkingService.setInformationModelId(platformDetails.getInformationModelId());
-        interworkingService.setUrl(user.getPlatformUrl());
-
-        Platform platform = new Platform();
-        platform.setId(user.getPlatformId());
-        platform.setLabels(Arrays.asList(user.getPlatformName()));
-        platform.setComments(Arrays.asList(platformDetails.getDescription()));
-        platform.setInterworkingServices(Arrays.asList(interworkingService));
-
-        // Send registration to Registry
-        try{
-            PlatformRegistryResponse response = rabbitManager.sendPlatformCreationRequest(platform);
-
-            if(response != null && response.getStatus() == 200 ){
-
-                // Platform platformReply = response.getPlatform();
-                user.setPlatformDetails(platformDetails);
-
-            } else {
-                model.addFlashAttribute("error","Error During Activation!");
-            }
-        
-        } catch(CommunicationException e){
-
-            model.addFlashAttribute("error",e.getMessage());
-        }
-
         return "redirect:/user/cpanel";  
     }
 
@@ -218,42 +112,7 @@ public class Cpanel {
             model.addFlashAttribute("page", "modify");
             return "redirect:/user/cpanel";  
         }
-
-        // if form is valid, construct the request
-        
-        String username = principal.getName(); //get logged in username
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
-        CoreUser user = (CoreUser)token.getPrincipal();
-        
-        InterworkingService interworkingService = new InterworkingService();
-        interworkingService.setInformationModelId(platformDetails.getInformationModelId());
-        interworkingService.setUrl(user.getPlatformUrl());
-
-        Platform platform = new Platform();
-        platform.setId(user.getPlatformId());
-        platform.setLabels(Arrays.asList(user.getPlatformName()));
-        platform.setComments(Arrays.asList(platformDetails.getDescription()));
-        platform.setInterworkingServices(Arrays.asList(interworkingService));
-
-        // Send registration to Registry
-        try{
-            PlatformRegistryResponse response = rabbitManager.sendPlatformModificationRequest(platform);
-
-            if(response != null && response.getStatus() == 200 ){
-
-                Platform platformReply = response.getPlatform();
-                user.setPlatformDetails(platformDetails);
-
-            } else {
-                model.addFlashAttribute("error","Error During Activation!");
-            }
-        
-        } catch(CommunicationException e){
-
-            model.addFlashAttribute("error",e.getMessage());
-        }
-
-        return "redirect:/user/cpanel";  
+        return "redirect:/user/cpanel";
     }
 
     @PostMapping("/user/cpanel/disable")
@@ -261,37 +120,6 @@ public class Cpanel {
 
         log.debug("POST request on /user/cpanel/disable");
 
-        String username = principal.getName(); //get logged in username
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
-        CoreUser user = (CoreUser)token.getPrincipal();
-        String platformId = user.getPlatformId(); //get logged in platform id
-
-        // Create an empty Platform, add the id and send unregistration to Registry
-
-        Platform platform = new Platform();
-        platform.setId(platformId);
-
-        Platform testPlatform = new Platform();
-        testPlatform.setId(platformId); //null platform
-
-        // Send update to Registry
-        try{
-            PlatformRegistryResponse response = rabbitManager.sendPlatformRemovalRequest(testPlatform);
-
-            if(response != null && response.getStatus() == 200 ){
-                log.debug("Successful removal of Platform with id = " + testPlatform.getId());
-
-                user.setState(CoreUser.PLATFORM_INACTIVE);
-                user.setPlatformDetails(null);
-
-            } else {
-                model.addFlashAttribute("error","Registry is unreachable!");
-            }
-        
-        } catch(CommunicationException e){
-
-                model.addFlashAttribute("error",e.getMessage());
-        }
 
         return "redirect:/user/cpanel";  
     }
@@ -302,7 +130,6 @@ public class Cpanel {
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
-        String platformId = user.getPlatformId(); //get logged in platform id
 
         // Create a Federation object and send it to the Federation Manager
 

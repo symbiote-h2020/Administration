@@ -11,8 +11,7 @@
 		<div class="popup">
 			<form th:action="@{${#httpServletRequest.requestURI}}" th:object="${coreUser}" class="login form-horizontal" role="form" method="post">
 
-				<div class="title" th:if="${#httpServletRequest.requestURI == '/register/platform'}">Platform Owner Registration</div>
-				<div class="title" th:if="${#httpServletRequest.requestURI == '/register/app'}">Application Owner Registration</div>
+				<div class="title">Registration</div>
 
 				<!-- In the validation fields the th:errors when present overwrites the text message -->
 				<div class="input-group">
@@ -37,8 +36,8 @@
                     <span class="input-group-addon"><i class="glyphicon">Choose your User Role</i></span>
                     <select title="title to display for the select" style="float:right;" th:field="*{role}">
                         <option th:each="role : ${allRoles}"
-                                th:value="${role}"
-                                th:text="${role}"></option>
+                                th:value="${role.enumValue}"
+                                th:text="${role.enumText}"></option>
                     </select>
                 </div>
 

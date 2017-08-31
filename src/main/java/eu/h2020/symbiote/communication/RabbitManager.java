@@ -6,6 +6,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.communication.payloads.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -367,9 +368,10 @@ public class RabbitManager {
      * Method used to send RPC request to register user.
      *
      * @param request  request for registration
+     * @return response status
      */
-    public String sendUserRegistrationRequest(UserManagementRequest request) throws CommunicationException {
-        log.debug("sendUserRegistrationRequest");
+    public ManagementStatus sendUserManagementRequest(UserManagementRequest request) throws CommunicationException {
+        log.debug("sendUserManagementRequest");
         try {
             String message = mapper.writeValueAsString(request);
 
@@ -377,10 +379,20 @@ public class RabbitManager {
 
             if (responseMsg == null){
 
-                throw new CommunicationException("invalid string response");
+                throw new CommunicationException("Communication Problem with AAM");
             }
 
-            return responseMsg;
+            try {
+                ManagementStatus response = mapper.readValue(responseMsg, ManagementStatus.class);
+                log.info("Received response from AAM.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in response from AAM.", e);
+                throw new CommunicationException(e);
+            }
+
 
         } catch (IOException e) {
             log.error("Failed (un)marshalling of rpc resource message", e);
