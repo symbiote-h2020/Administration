@@ -123,9 +123,7 @@ public class CoreUser extends User {
 
     /* -------- Helper Methods -------- */
 
-    public void clearPassword() {
-        this.validPassword = null;
-    }
+    public void clearPassword() { this.validPassword = null; }
 
     @Override
     public String toString() {

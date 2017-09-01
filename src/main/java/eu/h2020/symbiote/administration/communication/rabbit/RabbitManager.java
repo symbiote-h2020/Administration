@@ -6,19 +6,23 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -116,7 +120,7 @@ public class RabbitManager {
     private String getUserDetailsRoutingKey;
 
     @Value("${rabbit.routingKey.ownedplatformdetails.request}")
-    private String detailsRoutingKey;
+    private String getOwnedPlatformDetailsRoutingKey;
 
     // ----------------------------------------------------
 
@@ -499,26 +503,28 @@ public class RabbitManager {
      *
      * @param token  token of user
      */
-    public OwnedPlatformDetails sendDetailsRequest(String token) throws CommunicationException {
+    public Set<OwnedPlatformDetails> sendOwnedPlatformDetailsRequest(UserManagementRequest request)
+            throws CommunicationException {
 
-        log.debug("sendDetailsRequest");
+        log.debug("sendOwnedPlatformDetailsRequest");
 
         try {
-            String message = mapper.writeValueAsString(token);
+            String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.detailsRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.getOwnedPlatformDetailsRoutingKey, message);
 
             if (responseMsg == null)
                 return null;
 
             try {
-                OwnedPlatformDetails response = mapper.readValue(responseMsg, OwnedPlatformDetails.class);
+                Set<OwnedPlatformDetails> response = mapper.readValue(responseMsg,
+                        mapper.getTypeFactory().constructCollectionType(Set.class, OwnedPlatformDetails.class));
                 log.info("Received platform owner details response from AAM.");
                 return response;
 
             } catch (Exception e){
 
-                log.error("Error in owner details response from AAM.", e);
+                log.error("Error in owner platform details response from AAM.", e);
                 ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
                 throw new CommunicationException(error.getErrorMessage());
             }

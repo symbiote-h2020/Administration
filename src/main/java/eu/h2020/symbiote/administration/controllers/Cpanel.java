@@ -1,12 +1,22 @@
 package eu.h2020.symbiote.administration.controllers;
 
+import java.util.HashMap;
 import java.util.List;
+
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
+import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -18,6 +28,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Set;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import eu.h2020.symbiote.administration.model.CoreUser;
@@ -35,6 +47,11 @@ import eu.h2020.symbiote.administration.model.PlatformDetails;
 public class Cpanel {
     private static Log log = LogFactory.getLog(Cpanel.class);
 
+    @Value("${aam.deployment.owner.username}")
+    private String aaMOwnerUsername;
+
+    @Value("${aam.deployment.owner.password}")
+    private String aaMOwnerPassword;
 
     @Autowired
     private RabbitManager rabbitManager;
@@ -49,13 +66,41 @@ public class Cpanel {
 
         log.debug("GET request on /user/cpanel");
 
-        String username = principal.getName(); //get logged in username
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
-        CoreUser user = (CoreUser)token.getPrincipal();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
 
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
 
         model.addAttribute("user", user);
+
+        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), ""),
+                new UserDetails(
+                        new Credentials(user.getUsername(), ""),
+                        "",
+                        "",
+                        UserRole.NULL,
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.CREATE
+        );
+
+        try {
+            Set<OwnedPlatformDetails> ownedPlatformDetails =
+                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
+            if (ownedPlatformDetails != null) {
+                for (OwnedPlatformDetails detail : ownedPlatformDetails) {
+                    log.debug(ReflectionToStringBuilder.toString(detail));
+                }
+            } else {
+
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+        }
+
 
         return "controlpanel";
     }
