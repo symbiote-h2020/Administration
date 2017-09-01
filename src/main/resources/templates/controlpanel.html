@@ -32,9 +32,43 @@
         </div>
     </div>
 </div>
-<!--<div class="main">-->
-    <!--<div class="container tabbable">-->
-        <!--<ul class="nav nav-stacked sidebar panel-primary shadow">-->
+<div class="main">
+    <div class="container tabbable">
+        <ul class="nav nav-pills nav-stacked sidebar panel-primary shadow">
+            <!--<ul class="nav nav-stacked sidebar panel-primary shadow">-->
+
+            <li class="active">
+                <a href="#user_details" data-toggle="tab">User Details</a>
+            </li>
+            <li><a href="#clients_details" data-toggle="tab">Client Details</a>
+            </li>
+            <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                <a href="#platform_details" data-toggle="tab">Platform Details</a>
+            </li>
+            <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                <a href="#information_models" data-toggle="tab">Information Models</a>
+            </li>
+            <!--<li>-->
+                <!--<button class="btn" data-toggle="tab" data-target="#user_details">-->
+                    <!--User Details-->
+                <!--</button>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<button class="btn" data-toggle="tab" data-target="#client_details">-->
+                    <!--Client Details-->
+                <!--</button>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<button class="btn" data-toggle="tab" data-target="#platform_details" th:if="${user.role == 'PLATFORM_OWNER'}">-->
+                    <!--Platform Details-->
+                <!--</button>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<button class="btn" data-toggle="tab" data-target="#information_models" th:if="${user.role == 'PLATFORM_OWNER'}">-->
+                    <!--Information Models-->
+                <!--</button>-->
+            <!--</li>-->
+
             <!--<th:block th:if="${user.state!=1}">-->
                 <!--<li class="panel-heading">-->
                     <!--<span>Platform Management</span>-->
@@ -59,7 +93,22 @@
                     <!--</li>-->
                 <!--</th:block>-->
             <!--</th:block>-->
-        <!--</ul>-->
+        </ul>
+
+        <div class="tab-content clearfix">
+            <div class="tab-pane active" id="user_details">
+                <h3>User Details</h3>
+            </div>
+            <div class="tab-pane" id="clients_details">
+                <h3>Client Details</h3>
+            </div>
+            <div class="tab-pane" id="platform_details">
+                <h3>Platform Details</h3>
+            </div>
+            <div class="tab-pane" id="information_models">
+                <h3>Information Models</h3>
+            </div>
+        </div>
         <!--<div class="tabs content shadow">-->
             <!--<th:block th:if="${user.state!=1}">-->
                 <!--<div class="panel panel-default tab" th:classappend="${page}?:active" id="platform_details">-->
@@ -285,10 +334,8 @@
                 <!--</th:block>-->
             <!--</th:block>-->
         <!--</div>-->
-    <!--</div>-->
-<!--</div>-->
-
-
+    </div>
+</div>
 
 
 <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
