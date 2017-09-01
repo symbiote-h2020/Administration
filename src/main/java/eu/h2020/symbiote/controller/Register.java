@@ -31,7 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /**
@@ -87,10 +86,12 @@ public class Register {
 				new Credentials(aaMOwnerUsername, aaMOwnerPassword),
 				new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
 				new UserDetails(
-					new Credentials( coreUser.getValidUsername(), coreUser.getValidPassword()),
-					"",
-					coreUser.getRecoveryMail(),
-					UserRole.PLATFORM_OWNER
+				        new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
+                        "",
+                        coreUser.getRecoveryMail(),
+                        UserRole.PLATFORM_OWNER,
+                        new HashMap<>(),
+                        new HashMap<>()
 				),
 				OperationType.CREATE
 			);

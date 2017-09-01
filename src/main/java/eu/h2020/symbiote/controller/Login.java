@@ -25,13 +25,12 @@ import java.security.Principal;
 public class Login {
     private static Log log = LogFactory.getLog(Login.class);
 
-	// Todo: Can use get authentication as an argument e.g. Principal? No because you are not authenticated so it can be null
 	@GetMapping("/user/login")
 	public String userLogin() {
 
 	    log.debug("A user tries to login");
 
-	    // Checking if the Principal is null also works
+	    // Checking if the Principal == null also works
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
@@ -58,12 +57,6 @@ public class Login {
 			return "login";
 		}
 	}
-
-//	@GetMapping("/user/logout")
-//	public String userLogout() {
-//
-//		return "redirect:/";
-//	}
 
     @GetMapping("/user/logout")
     public String userLogout(HttpServletRequest request, HttpServletResponse response) {

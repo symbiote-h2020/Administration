@@ -34,6 +34,7 @@ import eu.h2020.symbiote.security.commons.exceptions.custom.MalformedJWTExceptio
  * To authenticate a user, CustomAuthenticationProvider checks with Core AAM over RabbitMQ
  *
  * @author Tilemachos Pechlivanoglou (ICOM)
+ * @author Vasileios Glykantzis (ICOM)
  */
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
