@@ -9,6 +9,7 @@
 
     <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
     <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/cpanel.js}" src="js/cpanel.js"></script>
 
 </head>
 <body>
@@ -38,306 +39,58 @@
 </div>
 <div class="main">
     <div class="container tabbable">
-        <ul class="nav nav-pills nav-stacked sidebar panel-primary shadow">
-            <!--<ul class="nav nav-stacked sidebar panel-primary shadow">-->
+        <div class="row">
+            <div class="col-md-3">
+                <ul class="nav nav-pills nav-stacked sidebar panel-primary shadow">
+                    <!--<ul class="nav nav-stacked sidebar panel-primary shadow">-->
 
-            <li class="active">
-                <a href="#user_details" data-toggle="tab">User Details</a>
-            </li>
-            <li><a href="#clients_details" data-toggle="tab">Client Details</a>
-            </li>
-            <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
-                <a href="#platform_details" data-toggle="tab">Platform Details</a>
-            </li>
-            <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
-                <a href="#information_models" data-toggle="tab">Information Models</a>
-            </li>
-            <!--<li>-->
-                <!--<button class="btn" data-toggle="tab" data-target="#user_details">-->
-                    <!--User Details-->
-                <!--</button>-->
-            <!--</li>-->
-            <!--<li>-->
-                <!--<button class="btn" data-toggle="tab" data-target="#client_details">-->
-                    <!--Client Details-->
-                <!--</button>-->
-            <!--</li>-->
-            <!--<li>-->
-                <!--<button class="btn" data-toggle="tab" data-target="#platform_details" th:if="${user.role == 'PLATFORM_OWNER'}">-->
-                    <!--Platform Details-->
-                <!--</button>-->
-            <!--</li>-->
-            <!--<li>-->
-                <!--<button class="btn" data-toggle="tab" data-target="#information_models" th:if="${user.role == 'PLATFORM_OWNER'}">-->
-                    <!--Information Models-->
-                <!--</button>-->
-            <!--</li>-->
+                    <li class="active">
+                        <a href="#user_details" data-toggle="tab">User Details</a>
+                    </li>
+                    <li><a href="#clients_details" data-toggle="tab">Client Details</a>
+                    </li>
+                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                        <a href="#platform_details" data-toggle="tab">Platform Details</a>
+                    </li>
+                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                        <a href="#information_models" data-toggle="tab">Information Models</a>
+                    </li>
+                </ul>
+            </div>
 
-            <!--<th:block th:if="${user.state!=1}">-->
-                <!--<li class="panel-heading">-->
-                    <!--<span>Platform Management</span>-->
-                <!--</li>-->
-                <!--<li th:classappend="${page}?:active">-->
-                    <!--<a href="#platform_details" data-toggle="tab">Platform Details</a>-->
-                <!--</li>-->
-                <!--<th:block th:if="${user.state==2}">-->
-                    <!--<li th:classappend="${page=='activate'}?active" >-->
-                        <!--<a href="#platform_activate" data-toggle="tab">Activate Platform</a>-->
-                    <!--</li>-->
-                <!--</th:block>-->
-                <!--<th:block th:if="${user.state==3}">-->
-                    <!--<li th:classappend="${page=='modify'}?active" >-->
-                        <!--<a href="#platform_modify" data-toggle="tab">Modify Platform</a>-->
-                    <!--</li>-->
-                    <!--<li th:classappend="${page=='disable'}?active" >-->
-                        <!--<a href="#platform_disable" data-toggle="tab">Disable Platform</a>-->
-                    <!--</li>-->
-                    <!--<li class="panel-heading">-->
-                        <!--<span>Resource Management</span>-->
-                    <!--</li>-->
-                <!--</th:block>-->
-            <!--</th:block>-->
-        </ul>
+            <div class="tab-content clearfix col-md-9">
 
-        <div class="tab-content clearfix">
-            <div class="tab-pane active" id="user_details">
-                <h3>User Details</h3>
-            </div>
-            <div class="tab-pane" id="clients_details">
-                <h3>Client Details</h3>
-            </div>
-            <div class="tab-pane" id="platform_details">
-                <h3>Platform Details</h3>
-            </div>
-            <div class="tab-pane" id="information_models">
-                <h3>Information Models</h3>
+                <div class="tab-pane active" id="user_details">
+                    <h3>User Details</h3>
+                </div>
+
+                <div class="tab-pane" id="clients_details">
+                    <h3>Client Details</h3>
+                </div>
+
+                <div class="tab-pane" id="platform_details" style="overflow: hidden; float: none">
+                    <h3>Platform Details</h3>
+                    <th:block th:each="platform : ${platforms}">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading clickable">
+                                <h3 class="panel-title" th:text="${platform.platformInstanceFriendlyName}">
+                                    Platform Name
+                                </h3>
+                                <span class="pull-right"><i class="glyphicon glyphicon-minus"></i></span>
+                            </div>
+                            <div class="panel-body" th:text="${platform.platformInstanceId}">
+                                Platform Id
+                            </div>
+                        </div>
+                    </th:block>
+                </div>
+
+                <div class="tab-pane" id="information_models">
+                    <h3>Information Models</h3>
+                </div>
             </div>
         </div>
-        <!--<div class="tabs content shadow">-->
-            <!--<th:block th:if="${user.state!=1}">-->
-                <!--<div class="panel panel-default tab" th:classappend="${page}?:active" id="platform_details">-->
-                    <!--<div class="panel-heading">-->
-                        <!--<h3 class="panel-title">-->
-                            <!--Platform Details-->
-                        <!--</h3>-->
-                    <!--</div>-->
-                    <!--<div class="panel-body list-group">-->
-                        <!--<div class="list-group-item">-->
-                            <!--<h4 class="">-->
-                                <!--Platform Status:-->
-                            <!--</h4>-->
-                            <!--<th:block th:if="${user.state==0}">-->
-                            <!--<span class="list-group-item-text btn btn-danger">-->
-                                <!--ERROR-->
-                            <!--</span>-->
-                            <!--</th:block>-->
-                            <!--<th:block th:if="${user.state==2}">-->
-                            <!--<span class="list-group-item-text btn btn-warning">-->
-                                <!--INACTIVE-->
-                            <!--</span>-->
-                            <!--</th:block>-->
-                            <!--<th:block th:if="${user.state==3}">-->
-                            <!--<span class="list-group-item-text btn btn-success">-->
-                                <!--ACTIVE-->
-                            <!--</span>-->
-                            <!--</th:block>-->
-                        <!--</div>-->
-                        <!--<div class="list-group-item">-->
-                            <!--<h4 class="list-group-item-heading">-->
-                                <!--Platform Id:-->
-                            <!--</h4>-->
-                            <!--<div class="list-group-item-text" th:inline="text">-->
-                                <!--[[${user.platformId}]]-->
-                            <!--</div>-->
-                        <!--</div>-->
-                        <!--<div class="list-group-item">-->
-                            <!--<h4 class="list-group-item-heading">-->
-                                <!--Platform Name:-->
-                            <!--</h4>-->
-                            <!--<div class="list-group-item-text" th:inline="text">-->
-                                <!--[[${user.platformName}]]-->
-                            <!--</div>-->
-                        <!--</div>-->
-                        <!--<div class="list-group-item">-->
-                            <!--<h4 class="list-group-item-heading">-->
-                                <!--Platform Address:-->
-                            <!--</h4>-->
-                            <!--<div class="list-group-item-text" th:inline="text">-->
-                                <!--[[${user.platformUrl}]]-->
-                            <!--</div>-->
-                        <!--</div>-->
-                        <!--<th:block th:if="${user.state==3}">-->
-                            <!--<div class="list-group-item description">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Description:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformDetails.description}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Information Model:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformDetails.informationModelId}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                        <!--</th:block>-->
-                    <!--</div>-->
-                <!--</div>-->
-                <!--<th:block th:if="${user.state==2}">-->
-                    <!--<form class="panel panel-default tab" th:classappend="${page=='activate'}?active" id="platform_activate" th:action="@{/user/cpanel/activate}" th:object="${platformDetails}" method="post">-->
-                        <!--<div class="panel-heading">-->
-                            <!--<h3 class="panel-title">-->
-                                <!--Activate Platform-->
-                            <!--</h3>-->
-                        <!--</div>-->
-                        <!--<div class="panel-body list-group">-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Id:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformId}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Name:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformName}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Address:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformUrl}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item description">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Description:-->
-                                <!--</h4>-->
-                                <!--<textarea class="list-group-item-text" id="description" name="description" value=""></textarea>-->
-                                <!--<div class="alert alert-danger" th:if="${error_description}" th:text="${error_description}"></div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Information Model:-->
-                                <!--</h4>-->
-                                <!--<input class="list-group-item-text input" id="informationModelId" name="informationModelId" value=""></input>-->
-                                <!--<div class="alert alert-danger" th:if="${error_informationModelId}" th:text="${error_informationModelId}"></div>-->
-                            <!--</div>-->
-                        <!--</div>-->
-                        <!--<div class="panel-footer">-->
-                            <!--<input class="btn btn-success" type="submit" name="submit" value="Activate"></input>-->
-                        <!--</div>-->
-                    <!--</form>-->
-                <!--</th:block>-->
-                <!--<th:block th:if="${user.state==3}">-->
-                    <!--<form class="panel panel-default tab" th:classappend="${page=='modify'}?active" id="platform_modify" th:action="@{/user/cpanel/modify}" method="post">-->
-                        <!--<div class="panel-heading">-->
-                            <!--<h3 class="panel-title">-->
-                                <!--Modify Platform-->
-                            <!--</h3>-->
-                        <!--</div>-->
-                        <!--<div class="panel-body list-group">-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Id:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformId}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Name:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformName}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Address:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformUrl}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item description">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Description:-->
-                                <!--</h4>-->
-                                <!--<textarea class="list-group-item-text" id="description" name="description" value=""></textarea>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Information Model:-->
-                                <!--</h4>-->
-                                <!--<input class="list-group-item-text input" id="informationModelId" name="informationModelId" value=""></input>-->
-                            <!--</div>-->
-                        <!--</div>-->
-                        <!--<div class="panel-footer">-->
-                            <!--<input class="btn btn-warning" type="submit" name="submit" value="Update"></input>-->
-                        <!--</div>-->
-                    <!--</form>-->
-                    <!--<form class="panel panel-default tab" th:classappend="${page=='disable'}?active" id="platform_disable" th:action="@{/user/cpanel/disable}" method="post">-->
-                        <!--<div class="panel-heading">-->
-                            <!--<h3 class="panel-title">-->
-                                <!--Disable Platform-->
-                            <!--</h3>-->
-                        <!--</div>-->
-                        <!--<div class="panel-body list-group">-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Id:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformId}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="list-group-item-heading">-->
-                                    <!--Platform Name:-->
-                                <!--</h4>-->
-                                <!--<div class="list-group-item-text" th:inline="text">-->
-                                    <!--[[${user.platformName}]]-->
-                                <!--</div>-->
-                            <!--</div>-->
-                            <!--<div class="list-group-item">-->
-                                <!--<h4 class="text-danger">-->
-                                    <!--Warning - if you disable this platform, some information may be lost!-->
-                                <!--</h4>-->
-                                <!--<p>-->
-                                    <!--(During release 0.2.0, make sure you have deleted all registered resources)-->
-                                <!--</p>-->
-                            <!--</div>-->
-                        <!--</div>-->
-                        <!--<div class="panel-footer">-->
-                            <!--<input class="btn btn-danger" type="submit" name="submit" value="Disable"></input>-->
-                        <!--</div>-->
-                    <!--</form>-->
-                    <!--<div class="panel panel-default tab" id="resource_list" method="post">-->
-                        <!--<div class="panel-heading">-->
-                            <!--<h3 class="panel-title">-->
-                                <!--List of platform resources-->
-                            <!--</h3>-->
-                            <!--<ul>-->
-                                <!--<th:block th:each="resource : ${resources}">-->
-                                    <!--<li th:text="${resource}"></li>-->
-                                <!--</th:block>-->
-                            <!--</ul>-->
-                        <!--</div>-->
-                    <!--</div>-->
-                <!--</th:block>-->
-            <!--</th:block>-->
-        <!--</div>-->
+
     </div>
 </div>
 

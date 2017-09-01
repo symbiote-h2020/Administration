@@ -88,12 +88,13 @@ public class Cpanel {
         );
 
         try {
-            Set<OwnedPlatformDetails> ownedPlatformDetails =
+            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
                     rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
-            if (ownedPlatformDetails != null) {
-                for (OwnedPlatformDetails detail : ownedPlatformDetails) {
+            if (ownedPlatformDetailsSet != null) {
+                for (OwnedPlatformDetails detail : ownedPlatformDetailsSet) {
                     log.debug(ReflectionToStringBuilder.toString(detail));
                 }
+                model.addAttribute("platforms", ownedPlatformDetailsSet);
             } else {
 
             }
