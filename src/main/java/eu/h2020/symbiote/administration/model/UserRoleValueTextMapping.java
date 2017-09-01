@@ -52,6 +52,7 @@ public class UserRoleValueTextMapping {
                 list.add(new UserRoleValueTextMapping(role, parts.get(0)));
         }
 
+        list.add(0, new UserRoleValueTextMapping("NULL", "Choose your User Role"));
         return list;
     }
 }

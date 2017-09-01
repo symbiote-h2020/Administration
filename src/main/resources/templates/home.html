@@ -3,9 +3,22 @@
 	<head>
 		<title>SymbIoTe Core</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
 		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
 		<link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
-	</head>
+        <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
+
+        <script type="text/javascript" src="webjars/jquery/3.1.1-1/jquery.min.js"></script>
+        <script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+        <script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
+        <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
+        <script>
+            $(document).ready(function(e) {
+                $('.selectpicker').selectpicker();
+            });
+        </script>
+
+    </head>
 	<body>
 		<div class="header">
 			<img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
@@ -45,8 +58,6 @@
 			<div class="popup">
 			</div>
 		</div>
-		<script type="text/javascript" src="webjars/jquery/3.1.1-1/jquery.min.js"></script>
-		<script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
-		<script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
+
 	</body>
 </html>

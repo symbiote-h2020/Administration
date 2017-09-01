@@ -79,6 +79,11 @@ public class Register {
 
 		log.debug(ReflectionToStringBuilder.toString(coreUser));
 
+		if (coreUser.getRole() == UserRole.NULL) {
+            model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
+            return "register";
+        }
+
 		// Construct the UserManagementRequest
         // Todo: Change the federatedId in R4
 
@@ -143,8 +148,10 @@ public class Register {
             map.put("usernameSelected", coreUser.getUsername());
         if (!errors.contains("recoveryMail"))
             map.put("emailSelected", coreUser.getUsername());
-        if (!errors.contains("role"))
+        if (!errors.contains("role") && coreUser.getRole() != UserRole.NULL)
             map.put("roleSelected", coreUser.getUsername());
+        if (coreUser.getRole() == UserRole.NULL)
+            map.put("error_role", "Choose a valid User Role");
 
         return map;
     }
