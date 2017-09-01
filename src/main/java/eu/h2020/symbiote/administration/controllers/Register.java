@@ -1,8 +1,8 @@
-package eu.h2020.symbiote.controller;
+package eu.h2020.symbiote.administration.controllers;
 
 
-import eu.h2020.symbiote.communication.CommunicationException;
-import eu.h2020.symbiote.model.UserRoleValueTextMapping;
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.UserRoleValueTextMapping;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
@@ -19,8 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.Valid;
 
-import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.model.CoreUser;
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.UserDetails;

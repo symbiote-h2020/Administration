@@ -1,4 +1,4 @@
-package eu.h2020.symbiote;
+package eu.h2020.symbiote.administration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

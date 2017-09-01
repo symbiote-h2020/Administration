@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.communication;
+package eu.h2020.symbiote.administration.communication.rabbit.exceptions;
 
 import org.springframework.http.HttpStatus;
 

@@ -1,8 +1,6 @@
-package eu.h2020.symbiote.controller;
+package eu.h2020.symbiote.administration.controllers;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
@@ -22,21 +20,12 @@ import javax.validation.Valid;
 import java.security.Principal;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import eu.h2020.symbiote.core.model.Platform;
-import eu.h2020.symbiote.core.model.InterworkingService;
-import eu.h2020.symbiote.model.CoreUser;
-import eu.h2020.symbiote.model.Federation;
+import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.Federation;
 
-import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
-import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
-import eu.h2020.symbiote.core.internal.ResourceListResponse;
-import eu.h2020.symbiote.core.model.resources.Resource;
-import eu.h2020.symbiote.core.model.internal.CoreResource;
-import eu.h2020.symbiote.model.PlatformDetails;
-import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
-import eu.h2020.symbiote.communication.CommunicationException;
- 
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.model.PlatformDetails;
+
 /**
  * Spring controller for the User control panel, handles management views and form validation.
  *

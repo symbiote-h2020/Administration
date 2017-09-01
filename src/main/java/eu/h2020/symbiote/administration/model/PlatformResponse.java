@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.model;
+package eu.h2020.symbiote.administration.model;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import eu.h2020.symbiote.core.model.Platform;

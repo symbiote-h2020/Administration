@@ -34,7 +34,7 @@ import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
-import eu.h2020.symbiote.model.CoreUser;
+import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.security.commons.Certificate;
 
 

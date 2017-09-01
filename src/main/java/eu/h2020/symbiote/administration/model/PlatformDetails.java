@@ -1,27 +1,26 @@
-package eu.h2020.symbiote.model;
+package eu.h2020.symbiote.administration.model;
 
 import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
 
 /**
- * Class for a symbIoTe federation entity, used in form validation and messages
+ * Class for a symbIoTe platform secondary details entity, used in form validation and messages
+ * // TODO R3 more details e.g. location etc
  *
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
-public class Federation {
+public class PlatformDetails {
 
     /* -------- Properties -------- */
-
-    // @NotNull
-    @Size(min=3, max=30)
-    private String name;
 
     @Size(min=3, max=300)
     private String description;
 
+    // @NotNull
+    @Size(min=3, max=30)
+    private String informationModelId;
 
 
     /* -------- Constructors -------- */
@@ -29,30 +28,30 @@ public class Federation {
     /**
      * Empty constructor
      */
-    public Federation() {
+    public PlatformDetails() {
     }
 
     /**
      * Constructor with properties
      *
-     * @param name              federation's name
-     * @param description       federation's description
+     * @param description           platform's description
+     * @param informationModelId    id of the platform's information model
      */
-    public Federation(String name, String description) {
+    public PlatformDetails(String description, String informationModelId) {
 
-        this.name = name;
         this.description = description;
+        this.informationModelId = informationModelId;
     }
 
 
     /* -------- Getters & Setters -------- */
 
-    public String getName() {
-        return this.name;
-    }
-
     public String getDescription() {
         return this.description;
+    }
+
+    public String getInformationModelId() {
+        return this.informationModelId;
     }
 
 
@@ -60,8 +59,8 @@ public class Federation {
         this.description = description;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setInformationModelId(String informationModelId) {
+        this.informationModelId = informationModelId;
     }
 
 

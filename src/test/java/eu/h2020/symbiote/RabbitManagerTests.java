@@ -8,8 +8,8 @@ import org.mockito.Spy;
 import static org.mockito.Mockito.*;
 import static org.junit.Assert.*;
 
-import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.communication.CommunicationException;
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;

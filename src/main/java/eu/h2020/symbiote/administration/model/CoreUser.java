@@ -1,13 +1,11 @@
-package eu.h2020.symbiote.model;
+package eu.h2020.symbiote.administration.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 import javax.validation.constraints.Size;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 
-import eu.h2020.symbiote.security.commons.Token;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 import org.springframework.security.core.userdetails.User;
@@ -53,9 +51,6 @@ public class CoreUser extends User {
     private int state;
 
     private Set<OwnedPlatformDetails> ownedPlatformDetails;
-    private Federation federation;
-
-    private Token token;
 
 
     /* -------- Constructors -------- */
@@ -78,18 +73,14 @@ public class CoreUser extends User {
      * @param credentialsNonExpired credentials aren't expired
      * @param accountNonLocked      account isn't locked
      * @param authorities           authorities to be granted to the user (mostly USER_ROLE)
-     * @param token                 user token returned by Core AAM
-     * @param platformId            contains null or the platform's id, if user is a platform owner
      */
     public CoreUser(String username, String password, UserRole role, boolean enabled,
-            boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities,
-            Token token) {
+            boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities) {
 
         super(username, password, enabled, accountNonExpired,
         credentialsNonExpired, accountNonLocked, authorities);
 
         setRole(role);
-        setToken(token);
     }
     
 
@@ -128,20 +119,6 @@ public class CoreUser extends User {
 
     public Set<OwnedPlatformDetails> getOwnedPlatformDetails() { return ownedPlatformDetails; }
     public void setOwnedPlatformDetails(Set<OwnedPlatformDetails> ownedPlatformDetails) { this.ownedPlatformDetails = ownedPlatformDetails; }
-
-    public Federation getFederation() {
-        return this.federation;
-    }
-    public void setFederation(Federation federation) {
-        this.federation = federation;
-    }
-
-    public Token getToken() {
-        return this.token;
-    }
-    public void setToken(Token token) {
-        this.token = token;
-    }
 
 
     /* -------- Helper Methods -------- */

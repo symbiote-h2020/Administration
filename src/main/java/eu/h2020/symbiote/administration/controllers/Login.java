@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.controller;
+package eu.h2020.symbiote.administration.controllers;
 
 
 import org.apache.commons.logging.Log;
@@ -13,7 +13,6 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.security.Principal;
 
 
 /**

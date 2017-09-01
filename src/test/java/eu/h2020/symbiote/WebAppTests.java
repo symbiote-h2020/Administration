@@ -1,6 +1,8 @@
 package eu.h2020.symbiote;
 
 import javax.servlet.Filter;
+
+import eu.h2020.symbiote.administration.CustomAuthenticationProvider;
 import org.junit.Test;
 import org.junit.Before;
 import org.mockito.Mock;
@@ -13,9 +15,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import eu.h2020.symbiote.communication.RabbitManager;
-import eu.h2020.symbiote.controller.Register;
-import eu.h2020.symbiote.controller.Cpanel;
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.controllers.Register;
+import eu.h2020.symbiote.administration.controllers.Cpanel;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;

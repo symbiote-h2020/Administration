@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.communication;
+package eu.h2020.symbiote.administration.communication.rabbit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
@@ -6,7 +6,10 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
@@ -22,7 +26,6 @@ import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
-import eu.h2020.symbiote.security.commons.Token;
 
 
 /**
@@ -47,7 +50,12 @@ public class RabbitManager {
 
     @Value("${rabbit.timeoutMillis}")
     private Long rabbitTimeout;
-    
+
+    @Value("${aam.deployment.owner.username}")
+    private String aaMOwnerUsername;
+
+    @Value("${aam.deployment.owner.password}")
+    private String aaMOwnerPassword;
 
     // ------------ Registry communication ----------------
 
@@ -104,8 +112,8 @@ public class RabbitManager {
     @Value("${rabbit.routingKey.manage.user.request}")
     private String appRegisterRequestRoutingKey;
 
-    @Value("${rabbit.routingKey.getHomeToken.request}")
-    private String loginRoutingKey;
+    @Value("${rabbit.routingKey.get.user.details}")
+    private String getUserDetailsRoutingKey;
 
     @Value("${rabbit.routingKey.ownedplatformdetails.request}")
     private String detailsRoutingKey;
@@ -255,7 +263,7 @@ public class RabbitManager {
      * @param platform     platform to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformRegistryResponse sendRegistryPlatformMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException  {
+    public PlatformRegistryResponse sendRegistryPlatformMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException {
 
         log.debug("sendRegistryPlatformMessage");
 
@@ -440,22 +448,36 @@ public class RabbitManager {
     /**
      * Method used to send RPC request to login user.
      *
-     * @param credentials  credentials for login
+     * @param userCredentials  the credentials of the user trying to login
      */
-    public Token sendLoginRequest(Credentials credentials) throws CommunicationException {
+    public UserDetailsResponse sendLoginRequest(Credentials userCredentials) throws CommunicationException {
 
         log.debug("sendLoginRequest");
 
         try {
-            String message = mapper.writeValueAsString(credentials);
+            // Todo: wait Mikolaj's response about the arguments
+            UserManagementRequest request = new UserManagementRequest(
+                    new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                    new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),
+                    new UserDetails(
+                            new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),
+                            "",
+                            "",
+                            UserRole.NULL,
+                            new HashMap<>(),
+                            new HashMap<>()
+                    ),
+                    OperationType.CREATE
+            );
+            String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.loginRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.getUserDetailsRoutingKey, message);
 
             if (responseMsg == null)
                 return null;
 
             try {
-                Token response = mapper.readValue(responseMsg, Token.class);
+                UserDetailsResponse response = mapper.readValue(responseMsg, UserDetailsResponse.class);
                 log.info("Received login response from AAM.");
                 return response;
 
