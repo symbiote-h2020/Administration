@@ -68,8 +68,24 @@
                     <h3>Client Details</h3>
                 </div>
 
+                <!-- Platform Details Tab-->
                 <div class="tab-pane" id="platform_details" style="overflow: hidden; float: none">
                     <h3>Platform Details</h3>
+
+                    <!-- Display errors -->
+                    <div class="alert alert-danger alert-dismissable" th:if="${ownedPlatformDetailsError}">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong>
+                        <p th:text="${ownedPlatformDetailsError}"></p>
+                    </div>
+                    <div class="alert alert-danger alert-dismissable" th:if="${communicationException}">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong>
+                        <p th:text="${communicationException}"></p>
+                    </div>
+
+                    <!-- Show Platform Details -->
+
                     <th:block th:each="platform : ${platforms}">
                         <div class="panel panel-primary">
                             <div class="panel-heading clickable">

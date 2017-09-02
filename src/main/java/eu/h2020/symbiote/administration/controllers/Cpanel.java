@@ -96,10 +96,12 @@ public class Cpanel {
                 }
                 model.addAttribute("platforms", ownedPlatformDetailsSet);
             } else {
-
+                model.addAttribute("ownedPlatformDetailsError",
+                        "Could not get Owned Platform Details from Core AAM");
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
+            model.addAttribute("communicationException", e.getErrorMessage());
         }
 
 
