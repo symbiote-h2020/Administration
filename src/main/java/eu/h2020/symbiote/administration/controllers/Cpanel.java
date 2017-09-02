@@ -1,9 +1,12 @@
 package eu.h2020.symbiote.administration.controllers;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.Label;
+import eu.h2020.symbiote.core.model.InformationModel;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
@@ -11,6 +14,7 @@ import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 
+import javafx.application.Platform;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,6 +25,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -109,26 +114,41 @@ public class Cpanel {
     }
 
 
-    @PostMapping("/user/cpanel/activate")
-    public String activatePlatform(
-        @Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+    @PostMapping("/user/cpanel/register_platform")
+    public String registerPlatform(@Valid @ModelAttribute("platformDetails") PlatformDetails platformDetails,
+                                   BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
-        log.debug("POST request on /user/cpanel/activate");
+        log.debug("POST request on /user/cpanel/register_platform");
 
         if (bindingResult.hasErrors()) {
 
             List<FieldError> errors = bindingResult.getFieldErrors();
-            String errorMessage = "";
             for (FieldError fieldError : errors) {
-                errorMessage = fieldError.getDefaultMessage();
-                model.addFlashAttribute("error_"+fieldError.getField(), errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
+                String errorField = "";
+                String errorMessage = fieldError.getDefaultMessage();
+                String[] parts = fieldError.getField().split("\\.");
+
+                if (parts.length > 0){
+                    errorField = "pl_reg_error_" + parts[0].replace("[", "_").replace("]", "");
+                }
+                else
+                    errorField = "pl_reg_error_" + fieldError.getField();
+
+                log.debug(errorField + ": " + errorMessage);
+                model.addFlashAttribute(errorField,
+                        errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
             }
-            model.addFlashAttribute("page", "activate");
+
+            model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
+            model.addFlashAttribute("activeTab", "platform_details");
             return "redirect:/user/cpanel";  
         }
 
+        log.debug(platformDetails);
+
         // if form is valid, construct the request
 
+        model.addFlashAttribute("activeTab", "platform_details");
         return "redirect:/user/cpanel";  
     }
 
@@ -144,7 +164,7 @@ public class Cpanel {
             String errorMessage = "";
             for (FieldError fieldError : errors) {
                 errorMessage = fieldError.getDefaultMessage();
-                model.addFlashAttribute("error_"+fieldError.getField(), errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
+                model.addFlashAttribute("pl_mod_error_" + fieldError.getField(), errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
             }
             model.addFlashAttribute("page", "modify");
             return "redirect:/user/cpanel";  
@@ -159,6 +179,34 @@ public class Cpanel {
 
 
         return "redirect:/user/cpanel";  
+    }
+
+    @PostMapping("/user/cpanel/register_info_model")
+    public String registerInformationModel(@Valid @ModelAttribute("informationModel") InformationModel informationModel,
+                                           BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+
+        log.debug("POST request on /user/cpanel/register_info_model");
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            String errorMessage = "";
+            for (FieldError fieldError : errors) {
+                errorMessage = fieldError.getDefaultMessage();
+                log.debug(fieldError.getField() + ": " + errorMessage);
+                model.addFlashAttribute("error_"+fieldError.getField(), errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
+            }
+
+            model.addFlashAttribute("activeTab", "information_models");
+            return "redirect:/user/cpanel";
+        }
+
+        log.debug(ReflectionToStringBuilder.toString(informationModel));
+
+        // if form is valid, construct the request
+
+        model.addFlashAttribute("activeTab", "information_models");
+        return "redirect:/user/cpanel";
     }
 
     @PostMapping("/user/cpanel/create_federation")
@@ -208,5 +256,15 @@ public class Cpanel {
      */
     public void setRabbitManager(RabbitManager rabbitManager){
         this.rabbitManager = rabbitManager;
+    }
+
+    @ModelAttribute("platformDetails")
+    public PlatformDetails getEmptyPlatformDetails() {
+        return new PlatformDetails();
+    }
+
+    @ModelAttribute("informationModel")
+    public InformationModel getEmptyInformationModel() {
+        return new InformationModel();
     }
 }

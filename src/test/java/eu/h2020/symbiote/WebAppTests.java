@@ -223,7 +223,7 @@ public class WebAppTests extends AdministrationTests {
     @Test
     public void postActivatePlatformWithErrors() throws Exception {
 
-        mockMvc.perform( post("/user/cpanel/activate")
+        mockMvc.perform( post("/user/cpanel/register_platform")
                 .param("description", "ER")
                 .with(authentication(sampleAuth()))
                 .with(csrf().asHeader()) )
@@ -236,7 +236,7 @@ public class WebAppTests extends AdministrationTests {
     @Test
     public void postActivatePlatformTimeout() throws Exception {
 
-        mockMvc.perform( post("/user/cpanel/activate")
+        mockMvc.perform( post("/user/cpanel/register_platform")
                 .with(authentication(sampleAuth()))
                 .with(csrf().asHeader()) )
             .andExpect(status().is3xxRedirection())
@@ -249,7 +249,7 @@ public class WebAppTests extends AdministrationTests {
 
         when(mockRabbitManager.sendPlatformCreationRequest(any())).thenReturn(samplePlatformResponseSuccess());
 
-        mockMvc.perform( post("/user/cpanel/activate")
+        mockMvc.perform( post("/user/cpanel/register_platform")
                 .param("description", description)
                 .param("informationModelId", informationModelId)
                 .with(authentication(sampleAuth()))

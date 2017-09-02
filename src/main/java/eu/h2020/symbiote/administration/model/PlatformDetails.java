@@ -30,11 +30,13 @@ public class PlatformDetails {
     @Size(min=3, max=300)
     private String description;
 
+    // ToDo: Adding validation
     @Valid
-    private List<String> labels;
+    private List<Label> labels;
 
+    // ToDo: Adding validation
     @Valid
-    private List<String> comments;
+    private List<Comment> comments;
 
     // ToDo: Adding validation
     private List<InterworkingService> interworkingServices;
@@ -58,8 +60,8 @@ public class PlatformDetails {
      * @param interworkingServices          list of interworking services
      * @param enabler                       specify if it is an enabler
      */
-    public PlatformDetails(String id, String name, String description, List<String> labels,
-                           List<String> comments, List<InterworkingService> interworkingServices, boolean enabler) {
+    public PlatformDetails(String id, String name, String description, List<Label> labels,
+                           List<Comment> comments, List<InterworkingService> interworkingServices, boolean enabler) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -78,11 +80,11 @@ public class PlatformDetails {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public List<String> getLabels() { return labels; }
-    public void setLabels(List<String> labels) { this.labels = labels; }
+    public List<Label> getLabels() { return labels; }
+    public void setLabels(List<Label> labels) { this.labels = labels; }
 
-    public List<String> getComments() { return comments; }
-    public void setComments(List<String> comments) { this.comments = comments; }
+    public List<Comment> getComments() { return comments; }
+    public void setComments(List<Comment> comments) { this.comments = comments; }
 
     public List<InterworkingService> getInterworkingServices() { return interworkingServices; }
     public void setInterworkingServices(List<InterworkingService> interworkingServices) { this.interworkingServices = interworkingServices; }

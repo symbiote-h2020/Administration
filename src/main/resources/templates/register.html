@@ -51,7 +51,6 @@
                                 th:selected="${role.isSelected(roleSelected)}"></option>
                     </select>
                 </div>
-                <div class="alert alert-danger" th:if="${#fields.hasErrors('role')}" th:errors="*{recoveryMail}">Invalid Email!</div>
                 <div class="alert alert-danger" th:if="${error_role}" th:text="${error_role}">Invalid Email!</div>
 
                 <div class="form-group">

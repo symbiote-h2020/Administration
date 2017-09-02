@@ -12,5 +12,7 @@ $(document).on('click', '.panel div.clickable', function (e) {
 });
 
 $(document).ready(function () {
-    $('.panel div.clickable').click();
+    if (document.getElementById("platformRegistrationError") != null) {
+        $('#platformRegistrationModal').modal('show');
+    }
 });

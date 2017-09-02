@@ -201,3 +201,17 @@ a {
 a.clickable { color: inherit; }
 
 a.clickable:hover { text-decoration:none; }
+
+
+#showPlatformRegBtn {
+    margin-bottom: 0.3em;
+    float: right;
+}
+#platformPanel {
+    clear:both;
+    margin-bottom:0.3em;
+}
+
+.platformRegField {
+    margin-bottom: 0.5em;
+}
