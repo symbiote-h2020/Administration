@@ -2,7 +2,7 @@ package eu.h2020.symbiote.administration.controllers;
 
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.model.UserRoleValueTextMapping;
+import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
@@ -72,17 +72,14 @@ public class Register {
 
         log.debug("POST request on /register");
 
-		if (bindingResult.hasErrors()) {
+        boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL)?true:false;
+
+		if (bindingResult.hasErrors() || invalidUserRole) {
             model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
 			return "register";
 		}
 
 		log.debug(ReflectionToStringBuilder.toString(coreUser));
-
-		if (coreUser.getRole() == UserRole.NULL) {
-            model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
-            return "register";
-        }
 
 		// Construct the UserManagementRequest
         // Todo: Change the federatedId in R4

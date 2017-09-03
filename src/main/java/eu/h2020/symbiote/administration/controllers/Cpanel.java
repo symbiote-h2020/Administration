@@ -1,11 +1,12 @@
 package eu.h2020.symbiote.administration.controllers;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.mappers.InformationModelMapper;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
+import eu.h2020.symbiote.core.model.InterworkingService;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
@@ -32,7 +33,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
@@ -60,6 +61,7 @@ public class Cpanel {
     @Autowired
     private RabbitManager rabbitManager;
 
+    private List<String> validInfoModelIds = new ArrayList<>();
 
     /**
      * Gets the default view. If the user is a platform owner, tries to fetch their details.
@@ -113,13 +115,20 @@ public class Cpanel {
         try {
             InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
             if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
+                List<InformationModelMapper> infoModelsList = new ArrayList<>();
+                validInfoModelIds.clear();
+
                 for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
                     log.debug("Information Model" + ReflectionToStringBuilder.toString(informationModel));
+                    infoModelsList.add(new InformationModelMapper(informationModel.getId(), informationModel.getName()));
+                    validInfoModelIds.add(informationModel.getId());
                 }
-                model.addAttribute("infoModels", informationModelListResponse.getInformationModels());
+
+                infoModelsList.sort(InformationModelMapper.NameComparator);
+                model.addAttribute("infoModels", infoModelsList);
             } else {
                 model.addAttribute("infoModelListError",
-                        "Could not acquire full information model list from registry");
+                        "Could not retrieve information models list from registry");
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
@@ -134,8 +143,21 @@ public class Cpanel {
                                    BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
         log.debug("POST request on /user/cpanel/register_platform");
+        log.debug(platformDetails.toString());
 
-        if (bindingResult.hasErrors()) {
+        boolean invalidInfoModel = false;
+
+        int counter = 0;
+        for (InterworkingService service : platformDetails.getInterworkingServices()) {
+            if (!validInfoModelIds.contains(service.getInformationModelId())) {
+                model.addFlashAttribute("pl_reg_error_interworkingServices_" + counter + "_informationModelId",
+                        "Choose a valid information model");
+                invalidInfoModel = true;
+            }
+            counter++;
+        }
+
+        if (bindingResult.hasErrors() || invalidInfoModel) {
 
             List<FieldError> errors = bindingResult.getFieldErrors();
             for (FieldError fieldError : errors) {
@@ -143,8 +165,9 @@ public class Cpanel {
                 String errorMessage = fieldError.getDefaultMessage();
                 String[] parts = fieldError.getField().split("\\.");
 
-                if (parts.length > 0){
-                    errorField = "pl_reg_error_" + parts[0].replace("[", "_").replace("]", "");
+                if (parts.length > 1){
+                    errorField = "pl_reg_error_" + parts[0].replace("[", "_").replace("]", "_") +
+                    parts[1];
                 }
                 else
                     errorField = "pl_reg_error_" + fieldError.getField();
@@ -156,10 +179,10 @@ public class Cpanel {
 
             model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
             model.addFlashAttribute("activeTab", "platform_details");
+            model.addFlashAttribute("insertedPlatformDetails", platformDetails);
             return "redirect:/user/cpanel";  
         }
 
-        log.debug(platformDetails);
 
         // if form is valid, construct the request
 

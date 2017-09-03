@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.model;
+package eu.h2020.symbiote.administration.model.mappers;
 
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 

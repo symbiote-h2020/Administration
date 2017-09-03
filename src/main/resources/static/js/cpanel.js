@@ -15,4 +15,6 @@ $(document).ready(function () {
     if (document.getElementById("platformRegistrationError") != null) {
         $('#platformRegistrationModal').modal('show');
     }
+
+    // $('#platformRegFrom').formValidation();
 });

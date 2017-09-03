@@ -19,30 +19,28 @@ import java.util.List;
 public class PlatformDetails {
 
     @NotNull
-    @Pattern(regexp="(^\\Z|^[\\w-][\\w-][\\w-][\\w-]+\\Z)")
+    @Pattern(regexp="^(\\Z|[\\w-][\\w-][\\w-][\\w-]+)")
     @Size(max=30)
     private String id;
 
     @NotNull
-    @Size(min=4, max=30)
+    @Size(min=3, max=30)
     private String name;
 
     @Size(min=3, max=300)
     private String description;
 
-    // ToDo: Adding validation
     @Valid
     private List<Label> labels;
 
-    // ToDo: Adding validation
     @Valid
     private List<Comment> comments;
 
-    // ToDo: Adding validation
+    @Valid
     private List<InterworkingService> interworkingServices;
 
     @NotNull
-    private boolean enabler;
+    private Boolean isEnabler;
 
     /**
      * Empty constructor
@@ -58,17 +56,17 @@ public class PlatformDetails {
      * @param labels                        labels
      * @param comments                      comments
      * @param interworkingServices          list of interworking services
-     * @param enabler                       specify if it is an enabler
+     * @param isEnabler                     specify if it is an enabler
      */
     public PlatformDetails(String id, String name, String description, List<Label> labels,
-                           List<Comment> comments, List<InterworkingService> interworkingServices, boolean enabler) {
+                           List<Comment> comments, List<InterworkingService> interworkingServices, Boolean isEnabler) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.labels = labels;
         this.comments = comments;
         this.interworkingServices = interworkingServices;
-        this.enabler = enabler;
+        this.isEnabler = isEnabler;
     }
 
     public String getId() { return id; }
@@ -89,8 +87,8 @@ public class PlatformDetails {
     public List<InterworkingService> getInterworkingServices() { return interworkingServices; }
     public void setInterworkingServices(List<InterworkingService> interworkingServices) { this.interworkingServices = interworkingServices; }
 
-    public boolean isEnabler() { return enabler; }
-    public void setEnabler(boolean enabler) { this.enabler = enabler; }
+    public Boolean getIsEnabler() { return isEnabler; }
+    public void setIsEnabler(Boolean isEnabler) { this.isEnabler = isEnabler; }
 
     @Override
     public String toString() {
