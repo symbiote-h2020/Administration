@@ -8,6 +8,7 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -45,19 +46,15 @@ public class RabbitManager {
 
     @Value("${rabbit.host}")
     private String rabbitHost;
-
     @Value("${rabbit.username}")
     private String rabbitUsername;
-
     @Value("${rabbit.password}")
     private String rabbitPassword;
-
     @Value("${rabbit.timeoutMillis}")
     private Long rabbitTimeout;
 
     @Value("${aam.deployment.owner.username}")
     private String aaMOwnerUsername;
-
     @Value("${aam.deployment.owner.password}")
     private String aaMOwnerPassword;
 
@@ -65,60 +62,59 @@ public class RabbitManager {
 
     @Value("${rabbit.exchange.platform.name}")
     private String platformExchangeName;
-
     @Value("${rabbit.exchange.platform.type}")
     private String platformExchangeType;
-
     @Value("${rabbit.exchange.platform.durable}")
     private boolean platformExchangeDurable;
-
     @Value("${rabbit.exchange.platform.autodelete}")
     private boolean platformExchangeAutodelete;
-
     @Value("${rabbit.exchange.platform.internal}")
     private boolean platformExchangeInternal;
 
+    @Value("${rabbit.exchange.platform.name}")
+    private String informationModelExchangeName;
+    @Value("${rabbit.exchange.platform.type}")
+    private String informationModelExchangeType;
+    @Value("${rabbit.exchange.platform.durable}")
+    private boolean informationModelExchangeDurable;
+    @Value("${rabbit.exchange.platform.autodelete}")
+    private boolean informationModelExchangeAutodelete;
+    @Value("${rabbit.exchange.platform.internal}")
+    private boolean informationModelExchangeInternal;
+
     @Value("${rabbit.routingKey.platform.creationRequested}")
     private String platformCreationRequestedRoutingKey;
-
     @Value("${rabbit.routingKey.platform.removalRequested}")
     private String platformRemovalRequestedRoutingKey;
-
     @Value("${rabbit.routingKey.platform.modificationRequested}")
     private String platformModificationRequestedRoutingKey;
-
     @Value("${rabbit.routingKey.platform.resourcesRequested}")
     private String platformResourcesRequestedRoutingKey;
+
+    @Value("${rabbit.routingKey.platform.model.allInformationModelsRequested}")
+    private String informationModelsRequestedRoutingKey;
 
     // ------------ Core AAM communication ----------------
 
     @Value("${rabbit.exchange.aam.name}")
     private String aamExchangeName;
-
     @Value("${rabbit.exchange.aam.type}")
     private String aamExchangeType;
-
     @Value("${rabbit.exchange.aam.durable}")
     private boolean aamExchangeDurable;
-
     @Value("${rabbit.exchange.aam.autodelete}")
     private boolean aamExchangeAutodelete;
-
     @Value("${rabbit.exchange.aam.internal}")
     private boolean aamExchangeInternal;
 
     @Value("${rabbit.routingKey.manage.user.request}")
     private String userManagementRequestRoutingKey;
-
     @Value("${rabbit.routingKey.manage.platform.request}")
     private String platformManageRequestRoutingKey;
-
     @Value("${rabbit.routingKey.manage.user.request}")
     private String appRegisterRequestRoutingKey;
-
     @Value("${rabbit.routingKey.get.user.details}")
     private String getUserDetailsRoutingKey;
-
     @Value("${rabbit.routingKey.ownedplatformdetails.request}")
     private String getOwnedPlatformDetailsRoutingKey;
 
@@ -162,6 +158,13 @@ public class RabbitManager {
                     this.platformExchangeInternal,
                     null);
 
+            this.channel.exchangeDeclare(this.informationModelExchangeName,
+                    this.informationModelExchangeType,
+                    this.informationModelExchangeDurable,
+                    this.informationModelExchangeAutodelete,
+                    this.informationModelExchangeInternal,
+                    null);
+
             this.channel.exchangeDeclare(this.aamExchangeName,
                     this.aamExchangeType,
                     this.aamExchangeDurable,
@@ -169,9 +172,7 @@ public class RabbitManager {
                     this.aamExchangeInternal,
                     null);
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
+        } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
     }
@@ -186,9 +187,7 @@ public class RabbitManager {
                 this.channel.close();
             if (this.connection != null && this.connection.isOpen())
                 this.connection.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
+        } catch (IOException | TimeoutException e) {
             e.printStackTrace();
         }
     }
@@ -208,12 +207,14 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public String sendRpcMessage(String exchangeName, String routingKey, String message) {
+        // Todo: Replace QueueingConsumer
         QueueingConsumer consumer = new QueueingConsumer(channel);
 
         try {
             // log.debug("Sending message...");
 
             String replyQueueName = this.channel.queueDeclare().getQueue();
+            String responseMsg;
 
             String correlationId = UUID.randomUUID().toString();
             AMQP.BasicProperties props = new AMQP.BasicProperties()
@@ -225,9 +226,6 @@ public class RabbitManager {
 
 
             this.channel.basicConsume(replyQueueName, true, consumer);
-
-            String responseMsg = null;
-
             this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
             while (true) {
                 QueueingConsumer.Delivery delivery = consumer.nextDelivery(rabbitTimeout);
@@ -328,6 +326,42 @@ public class RabbitManager {
         return sendRegistryPlatformMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 
+
+    /**
+     * Method used to get all the available information models from the Registry
+     *
+     */
+    public InformationModelListResponse sendListInfoModelsRequest()
+            throws CommunicationException {
+
+        log.debug("sendListInfoModelsRequest");
+
+        try {
+            // Emtpy since the message is not important in this case
+            String message = mapper.writeValueAsString("Dummy message");
+            String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
+                    this.informationModelsRequestedRoutingKey, message);
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                InformationModelListResponse response = mapper.readValue(responseMsg,
+                        InformationModelListResponse.class);
+                log.info("Received information model details response from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in information model details response response from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc information model request message.", e);
+        }
+        return null;
+    }
 
     /**
      * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry for resource list retrieval
@@ -459,7 +493,6 @@ public class RabbitManager {
         log.debug("sendLoginRequest");
 
         try {
-            // Todo: wait Mikolaj's response about the arguments
             UserManagementRequest request = new UserManagementRequest(
                     new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                     new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),
@@ -501,7 +534,7 @@ public class RabbitManager {
     /**
      * Method used to send RPC request to get a platform owner's platform details.
      *
-     * @param token  token of user
+     * @param request  request for user management
      */
     public Set<OwnedPlatformDetails> sendOwnedPlatformDetailsRequest(UserManagementRequest request)
             throws CommunicationException {

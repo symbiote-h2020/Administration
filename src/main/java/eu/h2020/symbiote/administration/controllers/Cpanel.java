@@ -1,11 +1,10 @@
 package eu.h2020.symbiote.administration.controllers;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.model.Label;
+import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -14,13 +13,13 @@ import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 
-import javafx.application.Platform;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -92,12 +91,13 @@ public class Cpanel {
                 OperationType.CREATE
         );
 
+        // Get OwnedPlatformDetails from AAM
         try {
             Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
                     rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
             if (ownedPlatformDetailsSet != null) {
                 for (OwnedPlatformDetails detail : ownedPlatformDetailsSet) {
-                    log.debug(ReflectionToStringBuilder.toString(detail));
+                    log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(detail));
                 }
                 model.addAttribute("platforms", ownedPlatformDetailsSet);
             } else {
@@ -109,6 +109,21 @@ public class Cpanel {
             model.addAttribute("communicationException", e.getErrorMessage());
         }
 
+        // Get InformationModelList from Registry
+        try {
+            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
+            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
+                for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
+                    log.debug("Information Model" + ReflectionToStringBuilder.toString(informationModel));
+                }
+                model.addAttribute("infoModels", informationModelListResponse.getInformationModels());
+            } else {
+                model.addAttribute("infoModelListError",
+                        "Could not acquire full information model list from registry");
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+        }
 
         return "controlpanel";
     }
