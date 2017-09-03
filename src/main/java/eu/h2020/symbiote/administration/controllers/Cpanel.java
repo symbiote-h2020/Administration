@@ -7,12 +7,10 @@ import eu.h2020.symbiote.administration.model.mappers.InformationModelMapper;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
 import eu.h2020.symbiote.core.model.InterworkingService;
+import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.UserDetails;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
-import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
+import eu.h2020.symbiote.security.communication.payloads.*;
 
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
@@ -124,7 +122,6 @@ public class Cpanel {
                     validInfoModelIds.add(informationModel.getId());
                 }
 
-                infoModelsList.sort(InformationModelMapper.NameComparator);
                 model.addAttribute("infoModels", infoModelsList);
             } else {
                 model.addAttribute("infoModelListError",
@@ -143,6 +140,11 @@ public class Cpanel {
                                    BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
         log.debug("POST request on /user/cpanel/register_platform");
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
         log.debug(platformDetails.toString());
 
         boolean invalidInfoModel = false;
@@ -184,8 +186,39 @@ public class Cpanel {
         }
 
 
-        // if form is valid, construct the request
+        // If form is valid, construct the PlatformManagementResponse to the AAM
+        PlatformManagementRequest aamRequest = new PlatformManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), user.getPassword()),
+                platformDetails.getInterworkingServices().get(0).getUrl(), platformDetails.getName(),
+                platformDetails.getId(), OperationType.CREATE);
+        try {
+            PlatformManagementResponse aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+            if(aamResponse != null) {
+                log.debug("AAM responded with: " + aamResponse.getRegistrationStatus());
 
+                if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
+                    // Inform Registry
+                } else if (aamResponse.getRegistrationStatus() == ManagementStatus.PLATFORM_EXISTS) {
+                    model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
+                    model.addFlashAttribute("aamPlatformRegistrationError", "The Platform exists!");
+                    model.addFlashAttribute("activeTab", "platform_details");
+                    model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                } else {
+                    model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
+                    model.addFlashAttribute("aamPlatformRegistrationError", "Error during platform Registration");
+                    model.addFlashAttribute("activeTab", "platform_details");
+                    model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                }
+            } else {
+                log.debug("AAM unreachable!");
+                model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
+                model.addFlashAttribute("aamPlatformRegistrationError", "AAM unreacheable");
+                model.addFlashAttribute("activeTab", "platform_details");
+                model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+        }
         model.addFlashAttribute("activeTab", "platform_details");
         return "redirect:/user/cpanel";  
     }

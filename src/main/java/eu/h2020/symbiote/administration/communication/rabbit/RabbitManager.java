@@ -452,10 +452,10 @@ public class RabbitManager {
      *
      * @param request  request for registration
      */
-    public PlatformManagementResponse sendPlatformRegistrationRequest(PlatformManagementRequest request)
+    public PlatformManagementResponse sendManagePlatformRequest(PlatformManagementRequest request)
             throws CommunicationException {
 
-        log.debug("sendPlatformRegistrationRequest");
+        log.debug("sendManagePlatformRequest");
 
         try {
             String message = mapper.writeValueAsString(request);
@@ -467,7 +467,7 @@ public class RabbitManager {
 
             try {
                 PlatformManagementResponse response = mapper.readValue(responseMsg, PlatformManagementResponse.class);
-                log.info("Received platform registration response from AAM.");
+                log.info("Received ManagePlatformResponse from AAM.");
                 return response;
 
             } catch (Exception e){

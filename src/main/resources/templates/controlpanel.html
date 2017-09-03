@@ -85,12 +85,10 @@
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong>
                         <p th:text="${ownedPlatformDetailsError}"></p>
-                    </div>
-                    <div class="alert alert-danger alert-dismissable" th:if="${communicationException}">
+                    </div><div class="alert alert-danger alert-dismissable" th:if="${communicationException}">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong>
-                        <p th:text="${communicationException}"></p>
-                    </div>
+                        <p th:text="${communicationException}"></p></div>
 
                     <!-- Register new Platform by triggering the button-->
                     <!-- Trigger the modal with a button -->
@@ -120,8 +118,12 @@
                                         <div class="alert alert-danger alert-dismissable" th:if="${infoModelListError}">
                                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                                             <strong>Error!</strong>
-                                            <p th:text="${infoModelListError}"></p>
-                                        </div>
+                                            <p th:text="${infoModelListError}"></p></div>
+                                        <div class="alert alert-danger alert-dismissable" th:if="${aamPlatformRegistrationError}">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong>
+                                            <p th:text="${aamPlatformRegistrationError}"></p></div>
+
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="row">
@@ -281,8 +283,7 @@
                     <div class="alert alert-danger alert-dismissable" th:if="${infoModelListError}">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong>
-                        <p th:text="${infoModelListError}"></p>
-                    </div>
+                        <p th:text="${infoModelListError}"></p></div>
 
                     <!-- Register new Information Model by triggering the button-->
                     <!-- Trigger the modal with a button -->

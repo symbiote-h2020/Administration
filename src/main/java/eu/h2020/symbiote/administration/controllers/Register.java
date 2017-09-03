@@ -115,7 +115,7 @@ public class Register {
                 return "register";
 
             } else {
-                model.addAttribute("error","Authorization Manager is unreachable!");
+                model.addAttribute("error","Authorization Manager responded with ERROR!");
                 model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
                 return "register";
             }
