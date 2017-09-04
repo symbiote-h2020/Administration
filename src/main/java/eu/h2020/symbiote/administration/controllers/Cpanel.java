@@ -3,10 +3,13 @@ package eu.h2020.symbiote.administration.controllers;
 import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.model.mappers.InformationModelMapper;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
 import eu.h2020.symbiote.core.model.InterworkingService;
+import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -35,11 +38,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.administration.model.Federation;
-
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.model.PlatformDetails;
 
 /**
  * Spring controller for the User control panel, handles management views and form validation.
@@ -179,7 +178,7 @@ public class Cpanel {
                         errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
             }
 
-            model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
+            model.addFlashAttribute("platformRegistrationError", "Error in binding");
             model.addFlashAttribute("activeTab", "platform_details");
             model.addFlashAttribute("insertedPlatformDetails", platformDetails);
             return "redirect:/user/cpanel";  
@@ -197,27 +196,93 @@ public class Cpanel {
                 log.debug("AAM responded with: " + aamResponse.getRegistrationStatus());
 
                 if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
-                    // Inform Registry
+                    // If AAM responds with OK construct the Platform registration request and send it to registry
+                    Platform registryRequest = new Platform();
+                    registryRequest.setId(platformDetails.getId());
+                    registryRequest.setInterworkingServices(platformDetails.getInterworkingServices());
+                    registryRequest.setEnabler(platformDetails.getIsEnabler());
+
+                    // FIll in the labels. The first label is the name
+                    ArrayList<String> labels = new ArrayList<>();
+                    labels.add(platformDetails.getName());
+                    for (Label label : platformDetails.getLabels())
+                        labels.add(label.getLabel());
+                    registryRequest.setLabels(labels);
+
+                    // FIll in the comments. The first comment is the description
+                    ArrayList<String> comments = new ArrayList<>();
+                    comments.add(platformDetails.getDescription());
+                    for (Comment comment : platformDetails.getComments())
+                        comments.add(comment.getComment());
+                    registryRequest.setComments(comments);
+
+                    // Todo: Change to PlatformRegistryRequest?
+                    try {
+                        PlatformRegistryResponse registryResponse = rabbitManager.sendPlatformCreationRequest(registryRequest);
+                        if (registryResponse != null) {
+                            if (registryResponse.getStatus() == HttpStatus.OK.value()) {
+                                // Platform registered successfully
+                                model.addFlashAttribute("platformRegistrationSuccessful",
+                                        "The Platform Registration was successful!");
+                                model.addFlashAttribute("activeTab", "platform_details");
+
+                            } else {
+                                log.debug("Registration Failed: " + registryResponse.getMessage());
+
+                                // Send deletion message to AAM
+                                aamRequest.setOperationType(OperationType.DELETE);
+                                aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+
+                                // Todo: Check what happens when platform deletion request is not successful at this stage
+                                if (aamResponse != null) {
+                                    if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
+                                        log.debug("Platform was removed from AAM");
+                                    } else {
+                                        log.debug("Platform was NOT removed from AAM");
+                                    }
+                                } else {
+                                    log.debug("AAM unreachable during platform deletion request");
+                                }
+
+                                model.addFlashAttribute("platformRegistrationError", registryResponse.getMessage());
+                                model.addFlashAttribute("registryPlatformRegistrationError", registryResponse.getMessage());
+                                model.addFlashAttribute("activeTab", "platform_details");
+                                model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                            }
+                        } else {
+                            log.debug("Registry unreachable!");
+                            // Send deletion message to AAM
+                            model.addFlashAttribute("platformRegistrationError", "Registry unreacheable");
+                            model.addFlashAttribute("registryPlatformRegistrationError", "Registry unreacheable");
+                            model.addFlashAttribute("activeTab", "platform_details");
+                            model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                        }
+                    } catch (CommunicationException e) {
+                        e.printStackTrace();
+                        log.debug("Registry threw communication exception");
+                    }
+
                 } else if (aamResponse.getRegistrationStatus() == ManagementStatus.PLATFORM_EXISTS) {
-                    model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
-                    model.addFlashAttribute("aamPlatformRegistrationError", "The Platform exists!");
+                    model.addFlashAttribute("platformRegistrationError", "AAM says that the Platform exists!");
+                    model.addFlashAttribute("aamPlatformRegistrationError", "AAM says that the Platform exists!");
                     model.addFlashAttribute("activeTab", "platform_details");
                     model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                 } else {
-                    model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
-                    model.addFlashAttribute("aamPlatformRegistrationError", "Error during platform Registration");
+                    model.addFlashAttribute("platformRegistrationError", "AAM says that there was an ERROR");
+                    model.addFlashAttribute("aamPlatformRegistrationError", "AAM says that there was an ERROR");
                     model.addFlashAttribute("activeTab", "platform_details");
                     model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                 }
             } else {
                 log.debug("AAM unreachable!");
-                model.addFlashAttribute("platformRegistrationError", "Error during platform Registration");
+                model.addFlashAttribute("platformRegistrationError", "AAM unreacheable");
                 model.addFlashAttribute("aamPlatformRegistrationError", "AAM unreacheable");
                 model.addFlashAttribute("activeTab", "platform_details");
                 model.addFlashAttribute("insertedPlatformDetails", platformDetails);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
+            log.debug("AAM threw communication exception");
         }
         model.addFlashAttribute("activeTab", "platform_details");
         return "redirect:/user/cpanel";  

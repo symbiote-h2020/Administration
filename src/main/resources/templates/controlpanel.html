@@ -84,11 +84,17 @@
                     <div class="alert alert-danger alert-dismissable" th:if="${ownedPlatformDetailsError}">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong>
-                        <p th:text="${ownedPlatformDetailsError}"></p>
-                    </div><div class="alert alert-danger alert-dismissable" th:if="${communicationException}">
+                        <p th:text="${ownedPlatformDetailsError}"></p></div>
+                    <div class="alert alert-danger alert-dismissable" th:if="${communicationException}">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong>
                         <p th:text="${communicationException}"></p></div>
+
+                    <!-- Display success message -->
+                    <div class="alert alert-success alert-dismissable" th:if="${platformRegistrationSuccessful}">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p th:text="${platformRegistrationSuccessful}"></p></div>
 
                     <!-- Register new Platform by triggering the button-->
                     <!-- Trigger the modal with a button -->
@@ -123,7 +129,12 @@
                                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                                             <strong>Error!</strong>
                                             <p th:text="${aamPlatformRegistrationError}"></p></div>
+                                        <div class="alert alert-danger alert-dismissable" th:if="${registryPlatformRegistrationError}">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong>
+                                            <p th:text="${registryPlatformRegistrationError}"></p></div>
 
+                                        <!-- Registration Form -->
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="row">

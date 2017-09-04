@@ -19,18 +19,6 @@ $(document).ready( function() {
 		e.preventDefault();
 	});
 
-	$(".app .register.button").click(function(e) {
-
-		getPopup( "/register/app" );
-		e.preventDefault();
-	});
-	$(".platform .register.button").click(function(e) {
-
-		getPopup("/register");
-		e.preventDefault();
-	});
-
-
 	// Retrieve the popup html and show it
 
 	function getPopup(url) {
