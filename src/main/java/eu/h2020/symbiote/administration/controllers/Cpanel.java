@@ -365,6 +365,34 @@ public class Cpanel {
             return "redirect:/user/cpanel";
         }
 
+        // Check with Registry
+        try {
+            Platform registryRequest = new Platform();
+            registryRequest.setId(platformIdToDelete);
+
+            PlatformRegistryResponse registryResponse = rabbitManager.sendPlatformRemovalRequest(registryRequest);
+            if (registryResponse != null) {
+                if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                    model.addFlashAttribute("platformDeleteError",
+                            registryResponse.getMessage());
+                    model.addFlashAttribute("activeTab", "platform_details");
+                    return "redirect:/user/cpanel";
+                }
+            } else {
+                log.debug("Registry unreachable!");
+                // Send deletion message to AAM
+                model.addFlashAttribute("platformDeleteError", "Registry unreacheable");
+                model.addFlashAttribute("activeTab", "platform_details");
+                return "redirect:/user/cpanel";
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            log.debug("Registry threw communication exception");
+            model.addFlashAttribute("platformDeleteError", "Registry unreacheable");
+            model.addFlashAttribute("activeTab", "platform_details");
+            return "redirect:/user/cpanel";
+        }
+
         model.addFlashAttribute("platformDeleted", "The platform was deleted successfully!");
         model.addFlashAttribute("activeTab", "platform_details");
         return "redirect:/user/cpanel";
