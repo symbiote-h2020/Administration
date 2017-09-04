@@ -3,11 +3,11 @@ $(document).on('click', '.panel div.clickable', function (e) {
     if (!$this.hasClass('panel-collapsed')) {
         $this.parents('.panel').find('.panel-body').slideToggle();
         $this.addClass('panel-collapsed');
-        $this.find('i').removeClass('glyphicon-minus').addClass('glyphicon-plus');
+        $this.find('i').removeClass('glyphicon-plus').addClass('glyphicon-minus');
     } else {
         $this.parents('.panel').find('.panel-body').slideToggle();
         $this.removeClass('panel-collapsed');
-        $this.find('i').removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        $this.find('i').removeClass('glyphicon-minus').addClass('glyphicon-plus');
     }
 });
 
@@ -25,5 +25,22 @@ function toggleElement(elementId) {
         x.style.display = 'block';
     } else {
         x.style.display = 'none';
+    }
+}
+
+function toggleElement(elementId1, elementId2) {
+    var x = document.getElementById(elementId1);
+    var y = document.getElementById(elementId2);
+
+    if (x.style.display === 'none') {
+        x.style.display = 'block';
+    } else {
+        x.style.display = 'none';
+    }
+
+    if (y.style.display === 'none') {
+        y.style.display = 'block';
+    } else {
+        y.style.display = 'none';
     }
 }

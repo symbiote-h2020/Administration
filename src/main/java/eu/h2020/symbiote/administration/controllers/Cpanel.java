@@ -26,11 +26,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -317,9 +314,10 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/delete_platform")
-    public String disablePlatform(String platformIdToDelete, RedirectAttributes model, Principal principal) {
+    public String deletePlatforms(@RequestParam String platformIdToDelete, RedirectAttributes model, Principal principal) {
 
-        log.debug("POST request on /user/cpanel/delete_platform for platform with id: " + platformIdToDelete);
+        log.debug("POST request on /user/cpanel/delete_platform for platform with id: " +
+                platformIdToDelete);
 
 
         return "redirect:/user/cpanel";  
@@ -403,13 +401,9 @@ public class Cpanel {
     }
 
     @ModelAttribute("platformDetails")
-    public PlatformDetails getEmptyPlatformDetails() {
-        return new PlatformDetails();
-    }
+    public PlatformDetails getEmptyPlatformDetails() { return new PlatformDetails(); }
 
     @ModelAttribute("informationModel")
-    public InformationModel getEmptyInformationModel() {
-        return new InformationModel();
-    }
+    public InformationModel getEmptyInformationModel() { return new InformationModel(); }
 
 }
