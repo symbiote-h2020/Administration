@@ -243,7 +243,6 @@ public class Cpanel {
 
                                 model.addFlashAttribute("platformRegistrationError", registryResponse.getMessage());
                                 model.addFlashAttribute("registryPlatformRegistrationError", registryResponse.getMessage());
-                                model.addFlashAttribute("activeTab", "platform_details");
                                 model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                             }
                         } else {
@@ -251,7 +250,6 @@ public class Cpanel {
                             // Send deletion message to AAM
                             model.addFlashAttribute("platformRegistrationError", "Registry unreacheable");
                             model.addFlashAttribute("registryPlatformRegistrationError", "Registry unreacheable");
-                            model.addFlashAttribute("activeTab", "platform_details");
                             model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                         }
                     } catch (CommunicationException e) {
@@ -259,26 +257,22 @@ public class Cpanel {
                         log.debug("Registry threw communication exception");
                         model.addFlashAttribute("platformRegistrationError", "Registry unreacheable");
                         model.addFlashAttribute("registryPlatformRegistrationError", "Registry unreacheable");
-                        model.addFlashAttribute("activeTab", "platform_details");
                         model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                     }
 
                 } else if (aamResponse.getRegistrationStatus() == ManagementStatus.PLATFORM_EXISTS) {
                     model.addFlashAttribute("platformRegistrationError", "AAM says that the Platform exists!");
                     model.addFlashAttribute("aamPlatformRegistrationError", "AAM says that the Platform exists!");
-                    model.addFlashAttribute("activeTab", "platform_details");
                     model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                 } else {
                     model.addFlashAttribute("platformRegistrationError", "AAM says that there was an ERROR");
                     model.addFlashAttribute("aamPlatformRegistrationError", "AAM says that there was an ERROR");
-                    model.addFlashAttribute("activeTab", "platform_details");
                     model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                 }
             } else {
                 log.debug("AAM unreachable!");
                 model.addFlashAttribute("platformRegistrationError", "AAM unreacheable");
                 model.addFlashAttribute("aamPlatformRegistrationError", "AAM unreacheable");
-                model.addFlashAttribute("activeTab", "platform_details");
                 model.addFlashAttribute("insertedPlatformDetails", platformDetails);
             }
         } catch (CommunicationException e) {
@@ -319,8 +313,61 @@ public class Cpanel {
         log.debug("POST request on /user/cpanel/delete_platform for platform with id: " +
                 platformIdToDelete);
 
+        // Checking if the user owns the platform
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
 
-        return "redirect:/user/cpanel";  
+        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), ""),
+                new UserDetails(
+                        new Credentials(user.getUsername(), ""),
+                        "",
+                        "",
+                        UserRole.NULL,
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.CREATE
+        );
+
+        try {
+            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
+                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
+            if (ownedPlatformDetailsSet != null) {
+                boolean ownsPlatform = false;
+                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
+                    log.debug(platformDetails);
+                    if (platformDetails.getPlatformInstanceId().equals(platformIdToDelete)) {
+                        log.debug("The user owns the platform with " + platformIdToDelete + " which tried to delete.");
+                        ownsPlatform = true;
+                        break;
+                    }
+                }
+
+                if (!ownsPlatform) {
+                    log.debug("You do not own the platform you tried to delete");
+                    model.addFlashAttribute("platformDeleteError",
+                            "You do not own the platform you tried to delete");
+                    model.addFlashAttribute("activeTab", "platform_details");
+                    return "redirect:/user/cpanel";
+                }
+            } else {
+                model.addFlashAttribute("platformDeleteError",
+                        "Could not get Owned Platform Details from Core AAM");
+                model.addFlashAttribute("activeTab", "platform_details");
+                return "redirect:/user/cpanel";
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            model.addFlashAttribute("platformDeleteError", e.getErrorMessage());
+            model.addFlashAttribute("activeTab", "platform_details");
+            return "redirect:/user/cpanel";
+        }
+
+        model.addFlashAttribute("platformDeleted", "The platform was deleted successfully!");
+        model.addFlashAttribute("activeTab", "platform_details");
+        return "redirect:/user/cpanel";
     }
 
     @PostMapping("/user/cpanel/register_info_model")

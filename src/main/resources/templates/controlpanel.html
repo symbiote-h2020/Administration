@@ -89,12 +89,20 @@
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong>
                         <p th:text="${communicationException}"></p></div>
+                    <div class="alert alert-danger alert-dismissable" th:if="${platformDeleteError}">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong>
+                        <p th:text="${platformDeleteError}"></p></div>
 
                     <!-- Display success message -->
                     <div class="alert alert-success alert-dismissable" th:if="${platformRegistrationSuccessful}">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Success!</strong>
                         <p th:text="${platformRegistrationSuccessful}"></p></div>
+                    <div class="alert alert-success alert-dismissable" th:if="${platformDeleted}">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p th:text="${platformDeleted}"></p></div>
 
                     <!-- Register new Platform by triggering the button-->
                     <!-- Trigger the modal with a button -->
@@ -213,7 +221,7 @@
                                                     <label>Interworking Service</label>
                                                     <div class="row">
                                                         <div class="col-sm-8 form-group has-feedback">
-                                                            <input type="text" class="form-control platformRegField"
+                                                            <input type="url" class="form-control platformRegField"
                                                                    id="interworkingServices[0].url" name= "interworkingServices[0].url" placeholder="Enter a valid https url"
                                                                    th:value="${insertedPlatformDetails == null or insertedPlatformDetails.interworkingServices == null or
                                                                    insertedPlatformDetails.interworkingServices[0].url == null}?'':${insertedPlatformDetails.interworkingServices[0].url}"
