@@ -116,8 +116,8 @@
 
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h3 class="modal-title">Platform Registration</h3>
-                                    </div>
+                                        <h3 class="modal-title">Platform Registration</h3></div>
+
                                     <div class="modal-body">
 
                                         <!-- Display errors -->
@@ -281,6 +281,20 @@
                             </div>
                             <div class="panel-body" th:text="${platform.platformInstanceId}" style="display: none;">
                                 Platform Id
+                            </div>
+                            <div class="panel-footer platform-info-footer">
+                                <button class="btn btn-default btn-warning" id="platformDeletionWarningBtn"
+                                        name="platformDeletionWarningBtn" onclick="toggleElement('platformDelForm')">Delete</button>
+                                <form class="list-group-item" id="platformDelForm" th:action="@{/user/cpanel/delete_platform}"
+                                      role="form" method="post" style="display: none">
+                                        <h4 class="text-danger">
+                                            Warning - if you delete this platform, some information may be lost!</h4>
+                                        <p>(During release 0.2.0, make sure you have deleted all registered resources)</p>
+                                        <input type="hidden" id="platformIdToDelete" name="platformIdToDelete"
+                                               th:value="${platform.platformInstanceId}"/>
+                                        <button type="submit" id="delPlatformBtn" name="delPlatformBtn"
+                                                class="btn btn-default btn-danger">Verify Deletion</button>
+                                </form>
                             </div>
                         </div>
                     </th:block>

@@ -202,14 +202,14 @@ public class Cpanel {
                     registryRequest.setInterworkingServices(platformDetails.getInterworkingServices());
                     registryRequest.setEnabler(platformDetails.getIsEnabler());
 
-                    // FIll in the labels. The first label is the name
+                    // FIll in the labels. The first label is the platform name
                     ArrayList<String> labels = new ArrayList<>();
                     labels.add(platformDetails.getName());
                     for (Label label : platformDetails.getLabels())
                         labels.add(label.getLabel());
                     registryRequest.setLabels(labels);
 
-                    // FIll in the comments. The first comment is the description
+                    // FIll in the comments. The first comment is the platform description
                     ArrayList<String> comments = new ArrayList<>();
                     comments.add(platformDetails.getDescription());
                     for (Comment comment : platformDetails.getComments())
@@ -260,6 +260,10 @@ public class Cpanel {
                     } catch (CommunicationException e) {
                         e.printStackTrace();
                         log.debug("Registry threw communication exception");
+                        model.addFlashAttribute("platformRegistrationError", "Registry unreacheable");
+                        model.addFlashAttribute("registryPlatformRegistrationError", "Registry unreacheable");
+                        model.addFlashAttribute("activeTab", "platform_details");
+                        model.addFlashAttribute("insertedPlatformDetails", platformDetails);
                     }
 
                 } else if (aamResponse.getRegistrationStatus() == ManagementStatus.PLATFORM_EXISTS) {
@@ -283,14 +287,18 @@ public class Cpanel {
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("AAM threw communication exception");
+            model.addFlashAttribute("platformRegistrationError", "AAM unreacheable");
+            model.addFlashAttribute("aamPlatformRegistrationError", "AAM unreacheable");
+            model.addFlashAttribute("insertedPlatformDetails", platformDetails);
         }
+
         model.addFlashAttribute("activeTab", "platform_details");
         return "redirect:/user/cpanel";  
     }
 
-    @PostMapping("/user/cpanel/modify")
-    public String modifyPlatform(
-        @Valid PlatformDetails platformDetails, BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+    @PostMapping("/user/cpanel/modify_platform")
+    public String modifyPlatform(@Valid PlatformDetails platformDetails, BindingResult bindingResult,
+                                 RedirectAttributes model, Principal principal) {
 
         log.debug("POST request on /user/cpanel/modify");
 
@@ -308,10 +316,10 @@ public class Cpanel {
         return "redirect:/user/cpanel";
     }
 
-    @PostMapping("/user/cpanel/disable")
-    public String disablePlatform(RedirectAttributes model, Principal principal) {
+    @PostMapping("/user/cpanel/delete_platform")
+    public String disablePlatform(String platformIdToDelete, RedirectAttributes model, Principal principal) {
 
-        log.debug("POST request on /user/cpanel/disable");
+        log.debug("POST request on /user/cpanel/delete_platform for platform with id: " + platformIdToDelete);
 
 
         return "redirect:/user/cpanel";  
@@ -403,4 +411,5 @@ public class Cpanel {
     public InformationModel getEmptyInformationModel() {
         return new InformationModel();
     }
+
 }

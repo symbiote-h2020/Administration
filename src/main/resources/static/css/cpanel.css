@@ -225,3 +225,21 @@ a.clickable:hover { text-decoration:none; }
     top: 0px;
     right: 15px;
 }
+
+#delPlatformBtn {
+    float: right;
+}
+
+#platformDeletionWarningBtn {
+    float: right;
+    margin-bottom: 0.25em;
+}
+
+.platform-info-footer {
+    overflow: hidden;
+}
+
+#platformDelForm {
+    clear: both;
+    overflow: hidden;
+}
