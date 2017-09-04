@@ -393,6 +393,34 @@ public class Cpanel {
             return "redirect:/user/cpanel";
         }
 
+        // Check with AAM
+        PlatformManagementRequest aamRequest = new PlatformManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), user.getPassword()),
+                "", "", platformIdToDelete, OperationType.DELETE);
+        try {
+            PlatformManagementResponse aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+            if(aamResponse != null) {
+                log.debug("AAM responded with: " + aamResponse.getRegistrationStatus());
+
+                if (aamResponse.getRegistrationStatus() != ManagementStatus.OK) {
+                    model.addFlashAttribute("platformDeleteError", "AAM says that the Platform does not exist!");
+                    model.addFlashAttribute("activeTab", "platform_details");
+                    return "redirect:/user/cpanel";
+                }
+            } else {
+                log.debug("AAM unreachable!");
+                model.addFlashAttribute("platformDeleteError", "AAM unreacheable");
+                model.addFlashAttribute("activeTab", "platform_details");
+                return "redirect:/user/cpanel";
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            log.debug("AAM threw communication exception");
+            model.addFlashAttribute("platformDeleteError", "AAM unreacheable");
+            model.addFlashAttribute("activeTab", "platform_details");
+            return "redirect:/user/cpanel";
+        }
+
         model.addFlashAttribute("platformDeleted", "The platform was deleted successfully!");
         model.addFlashAttribute("activeTab", "platform_details");
         return "redirect:/user/cpanel";
