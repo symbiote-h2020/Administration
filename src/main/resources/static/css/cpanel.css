@@ -203,11 +203,12 @@ a.clickable { color: inherit; }
 a.clickable:hover { text-decoration:none; }
 
 
-#showPlatformRegBtn {
+.registrationBtn {
     margin-bottom: 0.3em;
     float: right;
 }
-#platformPanel {
+
+.panelEntry {
     clear:both;
     margin-bottom:0.3em;
 }

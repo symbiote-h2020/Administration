@@ -21,7 +21,10 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -452,6 +455,76 @@ public class Cpanel {
 
         model.addFlashAttribute("activeTab", "information_models");
         return "redirect:/user/cpanel";
+    }
+
+    @PostMapping("/user/cpanel/list_info_models")
+    public ResponseEntity<?> listInformationModels(@RequestHeader("X-CSRF-TOKEN") String csrf,
+                                                                        Principal principal) {
+
+        log.debug("POST request on /user/cpanel/list_info_models");
+
+        // Get InformationModelList from Registry
+        try {
+            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
+            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
+                List<InformationModelMapper> infoModelsList = new ArrayList<>();
+                validInfoModelIds.clear();
+
+                for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
+                    log.debug("Information Model" + ReflectionToStringBuilder.toString(informationModel));
+                    infoModelsList.add(new InformationModelMapper(informationModel.getId(), informationModel.getName()));
+                    validInfoModelIds.add(informationModel.getId());
+                }
+
+                return new ResponseEntity<>(informationModelListResponse.getInformationModels(),
+                        new HttpHeaders(), HttpStatus.OK);
+
+            } else {
+                if (informationModelListResponse != null)
+                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                else
+                    return new ResponseEntity<>("Could not retrieve the information models from registry",
+                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Communication exception while retrieving the information models",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
+
+    @PostMapping("/user/cpanel/reg_info_model")
+    public ResponseEntity<InformationModelCustom> registerInformationModel2(@RequestHeader("X-CSRF-TOKEN") String csrf,
+                                                                            @Valid @RequestBody InformationModelCustom informationModel,
+                                                                            BindingResult bindingResult, Principal principal) {
+
+        log.debug("POST request on //user/cpanel/reg_info_model");
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            String errorMessage = "";
+            for (FieldError fieldError : errors) {
+                errorMessage = fieldError.getDefaultMessage();
+                log.debug(fieldError.getField() + ": " + errorMessage);
+            }
+
+        }
+
+        log.debug(ReflectionToStringBuilder.toString(informationModel));
+
+        // if form is valid, construct the request
+        InformationModelCustom response = new InformationModelCustom();
+        response.setId("Works!");
+        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.CREATED);
     }
 
     @PostMapping("/user/cpanel/create_federation")

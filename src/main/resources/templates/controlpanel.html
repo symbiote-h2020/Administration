@@ -3,6 +3,8 @@
 <head>
     <title>Control Panel</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
     <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
@@ -106,7 +108,8 @@
 
                     <!-- Register new Platform by triggering the button-->
                     <!-- Trigger the modal with a button -->
-                    <button type="button" class="btn btn-info btn-default" id="showPlatformRegBtn" data-toggle="modal" data-target="#platformRegistrationModal">Register New Platform</button>
+                    <button type="button" class="btn btn-info btn-default registrationBtn" data-toggle="modal"
+                            data-target="#platformRegistrationModal">Register New Platform</button>
 
                     <!-- If there is an error during platform registration use this input field to notify the javascript
                     to keep the modal open -->
@@ -280,7 +283,7 @@
 
                     <!-- Show Platform Details -->
                     <th:block th:each="platform, iter : ${platforms}">
-                        <div class="panel panel-primary" id="platformPanel">
+                        <div class="panel panel-primary panelEntry">
                             <div class="panel-heading clickable">
                                 <h3 class="panel-title" th:text="${platform.platformInstanceFriendlyName}">
                                     Platform Name
@@ -333,14 +336,13 @@
                     <h3>Information Models</h3>
 
                     <!-- Display errors -->
-                    <div class="alert alert-danger alert-dismissable" th:if="${infoModelListError}">
+                    <div class="alert alert-danger alert-dismissable information-model-list-error" id="information-model-list-error" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <strong>Error!</strong>
-                        <p th:text="${infoModelListError}"></p></div>
+                        <strong>Error!</strong></div>
 
                     <!-- Register new Information Model by triggering the button-->
                     <!-- Trigger the modal with a button -->
-                    <button type="button" class="btn btn-info btn-default" id="showInfoModelRegBtn" data-toggle="modal"
+                    <button type="button" class="btn btn-info btn-default registrationBtn" data-toggle="modal"
                             data-target="#infoModelModal">Register New Information Model</button>
 
                     <!-- Modal -->
@@ -349,36 +351,100 @@
 
                             <!-- Modal content-->
                             <div class="modal-content">
-                                <form th:action="@{/user/cpanel/register_info_model}" th:object="${informationModel}" role="form" method="post">
-
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h3 class="modal-title">Platform Registration</h3>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <div class="row">
-                                                    <div class="col-sm-6 form-group">
-                                                        <label>Name</label>
-                                                        <input type="text" class="form-control" th:field="*{name}" placeholder="Enter name of the information model" />
-                                                    </div>
-                                                    <div class="col-sm-6 form-group">
-                                                        <label>Owner</label>
-                                                        <input type="text"  class="form-control" th:field="*{owner}" placeholder="Enter the owner of the information model" />
-                                                    </div>
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <h3 class="modal-title">Platform Registration</h3>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="row">
+                                                <div class="col-sm-6 form-group">
+                                                    <label>Id</label>
+                                                    <input type="text" class="form-control" id="infoModelId"
+                                                           name="infoModelId" placeholder="Enter the id of the information model" />
+                                                </div>
+                                                <div class="col-sm-6 form-group">
+                                                    <label>Uri</label>
+                                                    <input type="text"  class="form-control" id="infoModelUri"
+                                                           name="infoModelUri" placeholder="Enter the uri of the information model" />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" name="infoModelRegBtn" class="btn btn-default btn-info">Submit</button>
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="row">
+                                                <div class="col-sm-6 form-group">
+                                                    <label>Name</label>
+                                                    <input type="text" class="form-control" id="infoModelName"
+                                                           name="infoModelName" placeholder="Enter name of the information model" />
+                                                </div>
+                                                <div class="col-sm-6 form-group">
+                                                    <label>Owner</label>
+                                                    <input type="text"  class="form-control" id="infoModelOwner"
+                                                           name="infoModelOwner" placeholder="Enter the owner of the information model" />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </form>
+                                    <div class="row">
+                                        <div class="col-sm-12">
+                                            <div class="row">
+                                                <div class="col-sm-6 form-group">
+                                                    <label>Rdf</label>
+                                                    <input type="text" class="form-control" id="infoModelRdf"
+                                                           name="infoModelRdf" placeholder="Enter rdf of the information model" />
+                                                </div>
+                                                <div class="col-sm-6 form-group">
+                                                    <label>RdfFormat</label>
+                                                    <input type="text"  class="form-control" id="infoModelRdfFormat"
+                                                           name="infoModelRdfFormat" placeholder="Enter the rdfFormat of the information model" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" name="infoModelRegBtn" class="btn btn-default btn-info" onclick="registerInfoModel()">Submit</button>
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                </div>
+                                <!--<form th:action="@{/user/cpanel/register_info_model}" th:object="${informationModel}" role="form" method="post">-->
+
+                                    <!--<div class="modal-header">-->
+                                        <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
+                                        <!--<h3 class="modal-title">Platform Registration</h3>-->
+                                    <!--</div>-->
+                                    <!--<div class="modal-body">-->
+                                        <!--<div class="row">-->
+                                            <!--<div class="col-sm-12">-->
+                                                <!--<div class="row">-->
+                                                    <!--<div class="col-sm-6 form-group">-->
+                                                        <!--<label>Name</label>-->
+                                                        <!--<input type="text" class="form-control" th:field="*{name}" placeholder="Enter name of the information model" />-->
+                                                    <!--</div>-->
+                                                    <!--<div class="col-sm-6 form-group">-->
+                                                        <!--<label>Owner</label>-->
+                                                        <!--<input type="text"  class="form-control" th:field="*{owner}" placeholder="Enter the owner of the information model" />-->
+                                                    <!--</div>-->
+                                                <!--</div>-->
+                                            <!--</div>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
+                                    <!--<div class="modal-footer">-->
+                                        <!--<button type="submit" name="infoModelRegBtn" class="btn btn-default btn-info">Submit</button>-->
+                                        <!--<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>-->
+                                    <!--</div>-->
+                                <!--</form>-->
                             </div>
                         </div>
                     </div>
+
+
+                    <!-- Show Information Model Details -->
+                    <script>buildInfoModelsPanel();</script>
+
                 </div>
             </div>
         </div>
