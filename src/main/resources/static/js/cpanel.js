@@ -100,7 +100,7 @@ function buildInfoModelsPanel() {
 
     var response;
     $.ajax({
-        url: "/user/cpanel/list_info_models",
+        url: "/user/cpanel/list_user_info_models",
         type: "POST",
         dataType: "json",
         contentType: "application/json",

@@ -459,25 +459,16 @@ public class Cpanel {
         return "redirect:/user/cpanel";
     }
 
-    @PostMapping("/user/cpanel/list_info_models")
-    public ResponseEntity<?> listInformationModels(@RequestHeader("X-CSRF-TOKEN") String csrf,
+    @PostMapping("/user/cpanel/list_all_info_models")
+    public ResponseEntity<?> listAllInformationModels(@RequestHeader("X-CSRF-TOKEN") String csrf,
                                                                         Principal principal) {
 
-        log.debug("POST request on /user/cpanel/list_info_models");
+        log.debug("POST request on /user/cpanel/list_all_info_models");
 
         // Get InformationModelList from Registry
         try {
             InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
             if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                List<InformationModelMapper> infoModelsList = new ArrayList<>();
-                validInfoModelIds.clear();
-
-                for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
-                    log.debug("Information Model" + ReflectionToStringBuilder.toString(informationModel));
-                    infoModelsList.add(new InformationModelMapper(informationModel.getId(), informationModel.getName()));
-                    validInfoModelIds.add(informationModel.getId());
-                }
-
                 return new ResponseEntity<>(informationModelListResponse.getInformationModels(),
                         new HttpHeaders(), HttpStatus.OK);
 
@@ -485,6 +476,44 @@ public class Cpanel {
                 if (informationModelListResponse != null)
                     return new ResponseEntity<>(informationModelListResponse.getMessage(),
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                else
+                    return new ResponseEntity<>("Could not retrieve the information models from registry",
+                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Communication exception while retrieving the information models",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
+
+    @PostMapping("/user/cpanel/list_user_info_models")
+    public ResponseEntity<?> listUserInformationModels(@RequestHeader("X-CSRF-TOKEN") String csrf,
+                                                   Principal principal) {
+
+        log.debug("POST request on /user/cpanel/list_user_info_models");
+
+        // Checking if the user owns the platform
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        // Get InformationModelList from Registry
+        try {
+            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
+            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
+                ArrayList<InformationModel> userInfoModels = new ArrayList<>();
+                for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
+                    if (informationModel.getOwner().equals(user.getUsername()))
+                        userInfoModels.add(informationModel);
+                }
+                return new ResponseEntity<>(userInfoModels, new HttpHeaders(), HttpStatus.OK);
+
+            } else {
+                if (informationModelListResponse != null)
+                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
+                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                 else
                     return new ResponseEntity<>("Could not retrieve the information models from registry",
                             new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
