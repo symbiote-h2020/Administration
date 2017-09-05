@@ -73,7 +73,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
                     // We clear the credential so that they are not shown anywhere
                     user.clearPassword();
-                    return new UsernamePasswordAuthenticationToken(user, null, grantedAuths);
+                    return new UsernamePasswordAuthenticationToken(user, password, grantedAuths);
                 } else if (response.getHttpStatus() == HttpStatus.BAD_REQUEST) {
                     log.info("Username does not exist");
                     throw new WrongUserNameException();

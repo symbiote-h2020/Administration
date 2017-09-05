@@ -142,6 +142,7 @@ public class Cpanel {
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
 
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
         log.debug(platformDetails.toString());
@@ -187,7 +188,7 @@ public class Cpanel {
 
         // If form is valid, construct the PlatformManagementResponse to the AAM
         PlatformManagementRequest aamRequest = new PlatformManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), user.getPassword()),
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), password),
                 platformDetails.getInterworkingServices().get(0).getUrl(), platformDetails.getName(),
                 platformDetails.getId(), OperationType.CREATE);
         try {
@@ -319,6 +320,7 @@ public class Cpanel {
         // Checking if the user owns the platform
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
 
         UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
@@ -398,7 +400,7 @@ public class Cpanel {
 
         // Check with AAM
         PlatformManagementRequest aamRequest = new PlatformManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), user.getPassword()),
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), password),
                 "", "", platformIdToDelete, OperationType.DELETE);
         try {
             PlatformManagementResponse aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);

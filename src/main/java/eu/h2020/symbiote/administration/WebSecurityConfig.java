@@ -32,7 +32,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-            auth.authenticationProvider(authProvider);
+            auth.authenticationProvider(authProvider).eraseCredentials(false);
         }
 
         @Override
