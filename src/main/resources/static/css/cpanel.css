@@ -232,7 +232,7 @@ a.clickable:hover { text-decoration:none; }
 	margin-left: 0.25em;
 }
 
-.platformDelWarnBtn {
+.btn-warning-delete {
     float: right;
     margin-bottom: 0.25em;
 }

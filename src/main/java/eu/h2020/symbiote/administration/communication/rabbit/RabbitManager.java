@@ -337,10 +337,9 @@ public class RabbitManager {
         log.debug("sendListInfoModelsRequest");
 
         try {
-            // Emtpy since the message is not important in this case
-            String message = mapper.writeValueAsString("Dummy message");
+            // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelsRequestedRoutingKey, message);
+                    this.informationModelsRequestedRoutingKey, "false");
 
             if (responseMsg == null)
                 return null;

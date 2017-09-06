@@ -1,3 +1,7 @@
+var $infoModelPanelEntry = null;
+var csrfToken = null;
+var csrfHeader = null;
+
 function InformationModel(id, uri, name, owner, rdf, rdfFormat) {
     this.id = id;
     this.uri = uri;
@@ -7,7 +11,7 @@ function InformationModel(id, uri, name, owner, rdf, rdfFormat) {
     this.rdfFormat = rdfFormat;
 }
 
-$(document).on('click', '.panel div.clickable', function (e) {
+$(document).on('click', '.panel div.clickable', function () {
     var $this = $(this);
     if (!$this.hasClass('panel-collapsed')) {
         $this.parents('.panel').find('.panel-body').slideToggle();
@@ -21,37 +25,66 @@ $(document).on('click', '.panel div.clickable', function (e) {
 });
 
 $(document).ready(function () {
-    if (document.getElementById("platformRegistrationError") != null) {
+    if (document.getElementById("platformRegistrationError") !== null) {
         $('#platformRegistrationModal').modal('show');
     }
 
     // $('#platformRegFrom').formValidation();
 });
 
-function toggleElement(elementId) {
-    var x = document.getElementById(elementId);
-    if (x.style.display === 'none') {
-        x.style.display = 'block';
-    } else {
-        x.style.display = 'none';
+function buildInfoModelsPanel() {
+    var $infoModelTab = $("#information_models");
+
+    if (csrfToken === null || csrfHeader === null) {
+        csrfToken = $("meta[name='_csrf']").attr("content");
+        csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+        $.ajaxSetup({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            }
+        });
     }
+
+    if ($infoModelPanelEntry === null) {
+        $infoModelPanelEntry = $("#info-model-entry").clone();
+        $("#info-model-entry").remove();
+    }
+
+    $.ajax({
+        url: "/user/cpanel/list_user_info_models",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        success: function(data) {
+            for (var i = 0; i < data.length; i++) {
+                $infoModelTab.append(infoModelPanel(data[i]));
+            }
+        },
+        error : function(xhr) {
+            var message = document.createElement('p');
+            message.innerHTML = xhr.responseText;
+            $(".information-model-list-error").append(message).show();
+        }
+    });
 }
 
-function toggleElement(elementId1, elementId2) {
-    var x = document.getElementById(elementId1);
-    var y = document.getElementById(elementId2);
+function infoModelPanel(infoModel) {
+    var $infoModelPanel = $infoModelPanelEntry.clone();
 
-    if (x.style.display === 'none') {
-        x.style.display = 'block';
-    } else {
-        x.style.display = 'none';
-    }
+    var deleteInfoModalId = "info-model-modal-" + infoModel.id;
+    $infoModelPanel.find(".panel-title").text(infoModel.name);
+    $infoModelPanel.find(".panel-body").text(infoModel.owner);
+    $infoModelPanel.find(".btn-warning-delete").attr("data-target", "#" + deleteInfoModalId);
+    $infoModelPanel.find("#INFO-MODEL-MODAL").attr("id", deleteInfoModalId);
+    $infoModelPanel.find(".text-danger").find("strong").text(infoModel.name);
+    $infoModelPanel.show();
 
-    if (y.style.display === 'none') {
-        y.style.display = 'block';
-    } else {
-        y.style.display = 'none';
-    }
+    return $infoModelPanel;
+}
+
+function deleteInfoModelsPanel() {
+    $(".panelEntry").remove();
 }
 
 function registerInfoModel() {
@@ -84,61 +117,4 @@ function registerInfoModel() {
             alert("There was an error!");
         }
     });
-}
-
-
-function buildInfoModelsPanel() {
-    var infoModelTab = document.getElementById("information_models");
-    var token = $("meta[name='_csrf']").attr("content");
-    var header = $("meta[name='_csrf_header']").attr("content");
-
-    $.ajaxSetup({
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader(header, token);
-        }
-    });
-
-    var response;
-    $.ajax({
-        url: "/user/cpanel/list_user_info_models",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        success: function(data) {
-            for (var i = 0; i < data.length; i++) {
-                infoModelTab.appendChild(infoModelPanel(data[i]));
-            }
-        },
-        error : function(xhr) {
-            var infoModelListError = document.getElementsByClassName("information-model-list-error");
-            var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
-            $(".information-model-list-error").append(message).show();
-        }
-    });
-
-
-}
-
-function infoModelPanel(infoModel) {
-    var infoModelPanel = document.createElement('div');
-    infoModelPanel.classList.add("panel", "panel-primary", "panelEntry");
-
-    infoModelPanel.innerHTML = '' +
-        '                        <div class="panel-heading clickable">\n' +
-        '                            <h3 class="panel-title">\n' +
-                                     infoModel.name +
-        '                            </h3>\n' +
-        '                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>\n' +
-        '                        </div>\n' +
-        '                        <div class="panel-body" style="display: none;">\n' +
-                                     infoModel.owner +
-        '                        </div>\n' +
-        '                        <div class="panel-footer platform-info-footer"></div>';
-
-    return infoModelPanel;
-}
-
-function deleteInfoModelsPanel() {
-    $(".panelEntry").remove();
 }
