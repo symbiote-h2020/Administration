@@ -4,7 +4,6 @@ import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
-import eu.h2020.symbiote.administration.model.mappers.InformationModelMapper;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -26,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -36,7 +34,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
@@ -78,6 +75,17 @@ public class Cpanel {
 
         model.addAttribute("user", user);
 
+        return "controlpanel";
+    }
+
+    @PostMapping("/user/cpanel/list_user_platforms")
+    public ResponseEntity<?> listUserPlatforms(Model model, Principal principal) {
+
+        log.debug("POST request on /user/cpanel/list_user_platforms");
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
         UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                 new Credentials(user.getUsername(), ""),
@@ -100,41 +108,18 @@ public class Cpanel {
                 for (OwnedPlatformDetails detail : ownedPlatformDetailsSet) {
                     log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(detail));
                 }
-                model.addAttribute("platforms", ownedPlatformDetailsSet);
+                return new ResponseEntity<>(ownedPlatformDetailsSet, new HttpHeaders(), HttpStatus.OK);
             } else {
-                model.addAttribute("ownedPlatformDetailsError",
-                        "Could not get Owned Platform Details from Core AAM");
+                return new ResponseEntity<>("AAM responded with null",
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            model.addAttribute("communicationException", e.getErrorMessage());
+            return new ResponseEntity<>("Communication exception when tried to get the owned platform details",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
         }
-
-        // Get InformationModelList from Registry
-        try {
-            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
-            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                List<InformationModelMapper> infoModelsList = new ArrayList<>();
-                validInfoModelIds.clear();
-
-                for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
-                    log.debug("Information Model" + ReflectionToStringBuilder.toString(informationModel));
-                    infoModelsList.add(new InformationModelMapper(informationModel.getId(), informationModel.getName()));
-                    validInfoModelIds.add(informationModel.getId());
-                }
-
-                model.addAttribute("infoModels", infoModelsList);
-            } else {
-                model.addAttribute("infoModelListError",
-                        "Could not retrieve information models list from registry");
-            }
-        } catch (CommunicationException e) {
-            e.printStackTrace();
-        }
-
-        return "controlpanel";
     }
-
 
     @PostMapping("/user/cpanel/register_platform")
     public String registerPlatform(@Valid @ModelAttribute("platformDetails") PlatformDetails platformDetails,
@@ -182,7 +167,7 @@ public class Cpanel {
             }
 
             model.addFlashAttribute("platformRegistrationError", "Error in binding");
-            model.addFlashAttribute("activeTab", "platform_details");
+            model.addFlashAttribute("activeTab", "platform-details");
             model.addFlashAttribute("insertedPlatformDetails", platformDetails);
             return "redirect:/user/cpanel";  
         }
@@ -227,7 +212,7 @@ public class Cpanel {
                                 // Platform registered successfully
                                 model.addFlashAttribute("platformRegistrationSuccessful",
                                         "The Platform Registration was successful!");
-                                model.addFlashAttribute("activeTab", "platform_details");
+                                model.addFlashAttribute("activeTab", "platform-details");
 
                             } else {
                                 log.debug("Registration Failed: " + registryResponse.getMessage());
@@ -289,7 +274,7 @@ public class Cpanel {
             model.addFlashAttribute("insertedPlatformDetails", platformDetails);
         }
 
-        model.addFlashAttribute("activeTab", "platform_details");
+        model.addFlashAttribute("activeTab", "platform-details");
         return "redirect:/user/cpanel";  
     }
 
@@ -314,7 +299,7 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/delete_platform")
-    public String deletePlatforms(@RequestParam String platformIdToDelete, RedirectAttributes model, Principal principal) {
+    public ResponseEntity<?> deletePlatforms(@RequestParam String platformIdToDelete, RedirectAttributes model, Principal principal) {
 
         log.debug("POST request on /user/cpanel/delete_platform for platform with id: " +
                 platformIdToDelete);
@@ -354,22 +339,19 @@ public class Cpanel {
 
                 if (!ownsPlatform) {
                     log.debug("You do not own the platform you tried to delete");
-                    model.addFlashAttribute("platformDeleteError",
-                            "You do not own the platform you tried to delete");
-                    model.addFlashAttribute("activeTab", "platform_details");
-                    return "redirect:/user/cpanel";
+                    return new ResponseEntity<>("You do not own the platform you tried to delete",
+                            new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
-                model.addFlashAttribute("platformDeleteError",
-                        "Could not get Owned Platform Details from Core AAM");
-                model.addFlashAttribute("activeTab", "platform_details");
-                return "redirect:/user/cpanel";
+                log.debug("AAM unreachable");
+                return new ResponseEntity<>("AAM unreachable",
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            model.addFlashAttribute("platformDeleteError", e.getErrorMessage());
-            model.addFlashAttribute("activeTab", "platform_details");
-            return "redirect:/user/cpanel";
+            log.debug("AAM threw communication exception");
+            return new ResponseEntity<>("AAM threw communication exception",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         // Check with Registry
@@ -380,24 +362,21 @@ public class Cpanel {
             PlatformRegistryResponse registryResponse = rabbitManager.sendPlatformRemovalRequest(registryRequest);
             if (registryResponse != null) {
                 if (registryResponse.getStatus() != HttpStatus.OK.value()) {
-                    model.addFlashAttribute("platformDeleteError",
-                            registryResponse.getMessage());
-                    model.addFlashAttribute("activeTab", "platform_details");
-                    return "redirect:/user/cpanel";
+                    log.debug(registryResponse.getMessage());
+                    return new ResponseEntity<>(registryResponse.getMessage(),
+                            new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
                 }
             } else {
                 log.debug("Registry unreachable!");
                 // Send deletion message to AAM
-                model.addFlashAttribute("platformDeleteError", "Registry unreacheable");
-                model.addFlashAttribute("activeTab", "platform_details");
-                return "redirect:/user/cpanel";
+                return new ResponseEntity<>("Registry unreachable!",
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("Registry threw communication exception");
-            model.addFlashAttribute("platformDeleteError", "Registry unreacheable");
-            model.addFlashAttribute("activeTab", "platform_details");
-            return "redirect:/user/cpanel";
+            return new ResponseEntity<>("Registry threw communication exception",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         // Check with AAM
@@ -410,27 +389,23 @@ public class Cpanel {
                 log.debug("AAM responded with: " + aamResponse.getRegistrationStatus());
 
                 if (aamResponse.getRegistrationStatus() != ManagementStatus.OK) {
-                    model.addFlashAttribute("platformDeleteError", "AAM says that the Platform does not exist!");
-                    model.addFlashAttribute("activeTab", "platform_details");
-                    return "redirect:/user/cpanel";
+                    log.debug("AAM says that the Platform does not exist!");
+                    return new ResponseEntity<>("AAM says that the Platform does not exist!",
+                            new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
                 log.debug("AAM unreachable!");
-                model.addFlashAttribute("platformDeleteError", "AAM unreacheable");
-                model.addFlashAttribute("activeTab", "platform_details");
-                return "redirect:/user/cpanel";
+                return new ResponseEntity<>("AAM unreachable",
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("AAM threw communication exception");
-            model.addFlashAttribute("platformDeleteError", "AAM unreacheable");
-            model.addFlashAttribute("activeTab", "platform_details");
-            return "redirect:/user/cpanel";
+            return new ResponseEntity<>("AAM threw communication exception",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        model.addFlashAttribute("platformDeleted", "The platform was deleted successfully!");
-        model.addFlashAttribute("activeTab", "platform_details");
-        return "redirect:/user/cpanel";
+        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
     }
 
 
