@@ -5,6 +5,8 @@ import java.util.*;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.model.mappers.InformationModelMapper;
+import eu.h2020.symbiote.core.cci.InformationModelRequest;
+import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
@@ -431,67 +433,19 @@ public class Cpanel {
         return "redirect:/user/cpanel";
     }
 
-    @PostMapping("/user/cpanel/register_info_model")
-    public String registerInformationModel(@Valid @ModelAttribute("informationModel") InformationModel informationModel,
-                                           BindingResult bindingResult, RedirectAttributes model, Principal principal) {
-
-        log.debug("POST request on /user/cpanel/register_info_model");
-
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            String errorMessage = "";
-            for (FieldError fieldError : errors) {
-                errorMessage = fieldError.getDefaultMessage();
-                log.debug(fieldError.getField() + ": " + errorMessage);
-                model.addFlashAttribute("error_"+fieldError.getField(), errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
-            }
-
-            model.addFlashAttribute("activeTab", "information_models");
-            return "redirect:/user/cpanel";
-        }
-
-        log.debug(ReflectionToStringBuilder.toString(informationModel));
-
-        // if form is valid, construct the request
-
-        model.addFlashAttribute("activeTab", "information_models");
-        return "redirect:/user/cpanel";
-    }
 
     @PostMapping("/user/cpanel/list_all_info_models")
-    public ResponseEntity<?> listAllInformationModels(@RequestHeader("X-CSRF-TOKEN") String csrf,
-                                                                        Principal principal) {
+    public ResponseEntity<?> listAllInformationModels(Principal principal) {
 
         log.debug("POST request on /user/cpanel/list_all_info_models");
 
         // Get InformationModelList from Registry
-        try {
-            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
-            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                return new ResponseEntity<>(informationModelListResponse.getInformationModels(),
-                        new HttpHeaders(), HttpStatus.OK);
+        return getInformationModels();
 
-            } else {
-                if (informationModelListResponse != null)
-                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                else
-                    return new ResponseEntity<>("Could not retrieve the information models from registry",
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-            }
-        } catch (CommunicationException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("Communication exception while retrieving the information models",
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        }
     }
 
     @PostMapping("/user/cpanel/list_user_info_models")
-    public ResponseEntity<?> listUserInformationModels(@RequestHeader("X-CSRF-TOKEN") String csrf,
-                                                   Principal principal) {
+    public ResponseEntity<?> listUserInformationModels(Principal principal) {
 
         log.debug("POST request on /user/cpanel/list_user_info_models");
 
@@ -500,39 +454,25 @@ public class Cpanel {
         CoreUser user = (CoreUser) token.getPrincipal();
 
         // Get InformationModelList from Registry
-        try {
-            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
-            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                ArrayList<InformationModel> userInfoModels = new ArrayList<>();
-                for (InformationModel informationModel : informationModelListResponse.getInformationModels()) {
-                    if (informationModel.getOwner().equals(user.getUsername()))
-                        userInfoModels.add(informationModel);
-                }
-                return new ResponseEntity<>(userInfoModels, new HttpHeaders(), HttpStatus.OK);
+        ResponseEntity<?> responseEntity = getInformationModels();
+        if (responseEntity.getStatusCode() != HttpStatus.OK)
+            return responseEntity;
+        else {
+            ArrayList<InformationModel> userInfoModels = new ArrayList<>();
 
-            } else {
-                if (informationModelListResponse != null)
-                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                else
-                    return new ResponseEntity<>("Could not retrieve the information models from registry",
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
+            for (InformationModel informationModel : (List<InformationModel>)responseEntity.getBody()) {
+                if (informationModel.getOwner().equals(user.getUsername()))
+                    userInfoModels.add(informationModel);
             }
-        } catch (CommunicationException e) {
-            e.printStackTrace();
-            return new ResponseEntity<>("Communication exception while retrieving the information models",
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
+            return new ResponseEntity<>(userInfoModels, new HttpHeaders(), HttpStatus.OK);
         }
     }
 
-    @PostMapping("/user/cpanel/reg_info_model")
-    public ResponseEntity<InformationModelCustom> registerInformationModel2(@RequestHeader("X-CSRF-TOKEN") String csrf,
-                                                                            @Valid @RequestBody InformationModelCustom informationModel,
-                                                                            BindingResult bindingResult, Principal principal) {
+    @PostMapping("/user/cpanel/register_information_model")
+    public ResponseEntity<InformationModel> registerInformationModel(@Valid @RequestBody InformationModel informationModel,
+                                                                     BindingResult bindingResult, Principal principal) {
 
-        log.debug("POST request on //user/cpanel/reg_info_model");
+        log.debug("POST request on /user/cpanel/register_information_model");
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -553,9 +493,64 @@ public class Cpanel {
         log.debug(ReflectionToStringBuilder.toString(informationModel));
 
         // if form is valid, construct the request
-        InformationModelCustom response = new InformationModelCustom();
+        InformationModel response = new InformationModel();
         response.setId("Works!");
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/user/cpanel/delete_information_model")
+    public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete,
+                                                    Principal principal) {
+
+        log.debug("POST request on /user/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
+
+        // Checking if the user owns the information model
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        // Get InformationModelList from Registry
+        ResponseEntity<?> responseEntity = getInformationModels();
+        if (responseEntity.getStatusCode() != HttpStatus.OK)
+            return responseEntity;
+        else {
+            ArrayList<InformationModel> userInfoModels = new ArrayList<>();
+
+            for (InformationModel informationModel : (List<InformationModel>)responseEntity.getBody()) {
+                log.debug(informationModel.getId() + " " + informationModel.getOwner());
+                if (informationModel.getId().equals(infoModelIdToDelete) &&
+                        informationModel.getOwner().equals(user.getUsername())) {
+
+                    // Ask Registry
+                    try {
+                        InformationModelRequest request = new InformationModelRequest();
+                        request.setInformationModel(informationModel);
+
+                        InformationModelResponse response = rabbitManager.sendDeleteInfoModelRequest(request);
+                        if (response != null) {
+                            if (response.getStatus() != HttpStatus.OK.value()) {
+
+                                return new ResponseEntity<>(response.getMessage(),
+                                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                            }
+                        } else {
+                            log.debug("Registry unreachable!");
+                            return new ResponseEntity<>("Registry unreachable!",
+                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);                        }
+                    } catch (CommunicationException e) {
+                        e.printStackTrace();
+                        log.debug("Registry threw communication exception");
+                        return new ResponseEntity<>("Registry threw communication exception",
+                                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+
+                    return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+                }
+            }
+
+            return new ResponseEntity<>("You do not own the platform you tried to delete",
+                    new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @PostMapping("/user/cpanel/create_federation")
@@ -613,4 +608,27 @@ public class Cpanel {
     @ModelAttribute("informationModel")
     public InformationModel getEmptyInformationModel() { return new InformationModel(); }
 
+    private ResponseEntity<?> getInformationModels() {
+        try {
+            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
+            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
+                return new ResponseEntity<>(informationModelListResponse.getInformationModels(),
+                        new HttpHeaders(), HttpStatus.OK);
+
+            } else {
+                if (informationModelListResponse != null)
+                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
+                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                else
+                    return new ResponseEntity<>("Could not retrieve the information models from registry",
+                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Communication exception while retrieving the information models",
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
+    }
 }

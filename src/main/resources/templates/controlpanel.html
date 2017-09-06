@@ -336,9 +336,19 @@
                     <h3>Information Models</h3>
 
                     <!-- Display errors -->
-                    <div class="alert alert-danger alert-dismissable information-model-list-error" id="information-model-list-error" style="display: none;">
+                    <div class="alert alert-danger alert-dismissable information-model-list-error"
+                         id="information-model-list-error" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong></div>
+                    <div class="alert alert-danger alert-dismissable"
+                         id="delete-information-model-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+
+                    <div class="alert alert-success alert-dismissable" id="info-model-successful-deletion" style="display: none">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The information model was deleted successfully!</p></div>
 
                     <!-- Register new Information Model by triggering the button-->
                     <!-- Trigger the modal with a button -->
@@ -448,12 +458,12 @@
                         <div class="panel-body" style="display: none;">INFORMATION_MODEL_OWNER</div>
                         <div class="panel-footer platform-info-footer">
 
-                            <!-- Trigger the modal with a button -->
+                            <!-- Trigger the information model delete modal with a button -->
                             <button type="button" class="btn btn-default btn-warning btn-warning-delete"
-                                    data-toggle="modal" data-target="#INFO-MODEL-MODAL">Delete</button>
+                                    data-toggle="modal" data-target="#INFO-MODEL-DEL-MODAL">Delete</button>
 
-                            <!-- Modal -->
-                            <div id="INFO-MODEL-MODAL" class="modal fade" role="dialog">
+                            <!-- Information Model Delete Modal -->
+                            <div id="INFO-MODEL-DEL-MODAL" class="modal fade" role="dialog">
                                 <div class="modal-dialog">
 
                                     <!-- Modal content-->
@@ -464,8 +474,7 @@
                                                 <strong>INFORMATION MODEL NAME</strong>?</h4>
                                         </div>
                                         <div class="modal-footer">
-                                            <input type="hidden" name="platformIdToDelete" value="CHANGE THIS"/>
-                                            <button type="submit" class="btn btn-default btn-danger">Verify Deletion</button>
+                                            <button type="submit" class="btn btn-default btn-danger del-info-model-btn">Verify Deletion</button>
                                             <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                                         </div>
                                     </div>

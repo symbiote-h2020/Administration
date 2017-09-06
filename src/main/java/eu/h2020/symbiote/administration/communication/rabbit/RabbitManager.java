@@ -8,6 +8,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.QueueingConsumer;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.core.cci.InformationModelRequest;
+import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
@@ -93,6 +95,8 @@ public class RabbitManager {
 
     @Value("${rabbit.routingKey.platform.model.allInformationModelsRequested}")
     private String informationModelsRequestedRoutingKey;
+    @Value("${rabbit.routingKey.platform.model.removed}")
+    private String informationModelRemovedRoutingKey;
 
     // ------------ Core AAM communication ----------------
 
@@ -265,7 +269,8 @@ public class RabbitManager {
      * @param platform     platform to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public PlatformRegistryResponse sendRegistryPlatformMessage(String exchangeName, String routingKey, Platform platform) throws CommunicationException {
+    public PlatformRegistryResponse sendRegistryPlatformMessage(String exchangeName, String routingKey,
+                                                                Platform platform) throws CommunicationException {
 
         log.debug("sendRegistryPlatformMessage");
 
@@ -348,6 +353,45 @@ public class RabbitManager {
                 InformationModelListResponse response = mapper.readValue(responseMsg,
                         InformationModelListResponse.class);
                 log.info("Received information model details response from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in information model details response response from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc information model request message.", e);
+        }
+        return null;
+    }
+
+    /**
+     * Method used request the removal of an information model
+     * @param request contains the information model to be deleted
+     * @return response from registry
+     */
+    public InformationModelResponse sendDeleteInfoModelRequest(InformationModelRequest request)
+            throws CommunicationException {
+
+        log.debug("sendDeleteInfoModelRequest");
+
+        try {
+
+            String message = mapper.writeValueAsString(request);
+
+            // The message is false to indicate that we do not need the rdf of Information Models
+            String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
+                    this.informationModelRemovedRoutingKey, message);
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                InformationModelResponse response = mapper.readValue(responseMsg,
+                        InformationModelResponse.class);
+                log.info("Received information model response from Registry.");
                 return response;
 
             } catch (Exception e){
