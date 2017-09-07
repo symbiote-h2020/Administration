@@ -1,3 +1,4 @@
+// Store useful html elements
 var $platformPanelEntry = null;
 var $infoModelPanelEntry = null;
 var $platformSuccessfulDeletion = null;
@@ -6,9 +7,17 @@ var $deletePlatformError = null;
 var $infoModelSuccessfulDeletion = null;
 var $deleteInformationModelError = null;
 var $listUserInfoModelError = null;
+var $initialPlatformModalContent = null;
+
+// Store csrf token
 var csrfToken = null;
 var csrfHeader = null;
 
+// Class definitions
+function InterworkingService(url, informationModelId) {
+    this.url = url;
+    this.informationModelId = informationModelId;
+}
 
 function Platform(id, name, description, labels, comments, interworkingServices, isEnabler) {
     this.id = id;
@@ -29,6 +38,7 @@ function InformationModel(id, uri, name, owner, rdf, rdfFormat) {
     this.rdfFormat = rdfFormat;
 }
 
+// Event handlers
 $(document).on('click', '.panel div.clickable', function () {
     var $this = $(this);
     if (!$this.hasClass('panel-collapsed')) {
@@ -53,14 +63,14 @@ $(document).on('click', '.del-platform-btn', function (e) {
         type: "POST",
         data: {platformIdToDelete : platformIdToDelete},
         success: function(data) {
-            $('#platform-details').find('h3').eq(0).after($platformSuccessfulDeletion.clone().show());
+            $('#platform-details').prepend($platformSuccessfulDeletion.clone().show());
             $modal.modal('hide');
 
         },
         error : function(xhr) {
             var message = document.createElement('p');
             message.innerHTML = xhr.responseText;
-            $('#platform-details').find('h3').eq(0).after($deletePlatformError.clone().append(message).show());
+            $('#platform-details').prepend($deletePlatformError.clone().append(message).show());
             $modal.modal('hide');
         }
     });
@@ -77,28 +87,21 @@ $(document).on('click', '.del-info-model-btn', function (e) {
         type: "POST",
         data: {infoModelIdToDelete : infoModelIdToDelete},
         success: function(data) {
-            $('#information-models').find('h3').eq(0).after($infoModelSuccessfulDeletion.clone().show());
+            $('#information-models').prepend($infoModelSuccessfulDeletion.clone().show());
             $modal.modal('hide');
 
         },
         error : function(xhr) {
             var message = document.createElement('p');
             message.innerHTML = xhr.responseText;
-            $('#information-models').find('h3').eq(0).after($deleteInformationModelError.clone().append(message).show());
+            $('#information-models').prepend($deleteInformationModelError.clone().append(message).show());
             $modal.modal('hide');
         }
     });
 });
 
-$(document).ready(function () {
-    if (document.getElementById("platformRegistrationError") !== null) {
-        $('#platformRegistrationModal').modal('show');
-    }
-});
-
-function buildPlatformPanels() {
-    var $platformTab = $('#platform-details');
-
+// Setting up ajax queries
+function setupAjax() {
     if (csrfToken === null || csrfHeader === null) {
         csrfToken = $("meta[name='_csrf']").attr("content");
         csrfHeader = $("meta[name='_csrf_header']").attr("content");
@@ -109,6 +112,38 @@ function buildPlatformPanels() {
             }
         });
     }
+}
+
+function buildPlatformRegistrationForm() {
+    var $form = $('#platform-registration-form');
+
+    $.ajax({
+        url: "/user/cpanel/list_all_info_models",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        success: function(data) {
+            $.each(data, function (i, item) {
+                $('#platform-registration-info-model-id').append($('<option>', {
+                    value: item.id,
+                    text : item.name
+                }));
+            });
+
+            $('#platform-registration-info-model-id').selectpicker('refresh');
+
+        },
+        error : function(xhr) {
+            var message = document.createElement('p');
+            message.innerHTML = xhr.responseText;
+            $('#list-all-info-model-error').append(message).show();
+        }
+    });
+}
+
+// Construct Platform Panels
+function buildPlatformPanels() {
+    var $platformTab = $('#platform-details');
 
     if ($platformPanelEntry === null) {
         $platformPanelEntry = $('#platform-entry').clone();
@@ -142,7 +177,7 @@ function buildPlatformPanels() {
         error : function(xhr) {
             var message = document.createElement('p');
             message.innerHTML = xhr.responseText;
-            $('#platform-details').find('h3').eq(0).after($listOwnedPlatformsError.clone().append(message).show());
+            $('#platform-details').prepend($listOwnedPlatformsError.clone().append(message).show());
         }
     });
 }
@@ -160,6 +195,7 @@ function platformPanel(ownedPlatform) {
     return $platform;
 }
 
+// Construct information panels
 function buildInfoModelsPanels() {
     var $infoModelTab = $('#information-models');
 
@@ -207,7 +243,7 @@ function buildInfoModelsPanels() {
         error : function(xhr) {
             var message = document.createElement('p');
             message.innerHTML = xhr.responseText;
-            $('#information-models').find('h3').eq(0).after($listUserInfoModelError.clone().append(message).show());
+            $('#information-models').prepend($listUserInfoModelError.clone().append(message).show());
         }
     });
 }
@@ -259,3 +295,100 @@ function registerInfoModel() {
         }
     });
 }
+
+// On ready function
+$(document).ready(function () {
+    if (document.getElementById("platformRegistrationError") !== null) {
+        $('#platform-registration-modal').modal('show');
+    }
+
+    $('#registration-platform-btn').click(function (e) {
+        e.preventDefault();
+
+
+        var platformId = $('#platform-registration-id').val();
+        var platformName = $('#platform-registration-name').val();
+        var platformDescription = $('#platform-registration-description').val();
+        var labels = $.map($('.registration-labels'), function (elem) { return elem.value; });
+        var comments = $.map($('.registration-comments'), function (elem) { return elem.value; });
+        var isEnabler = $('#isEnabler').val();
+
+        var interworkingServicesUrls = $.map($('.interworking-service-url'), function (elem) { return elem.value; });
+        var interworkingServicesModels = $.map($('.info-model-select'), function (elem) { return elem.value });
+        var interworkingServices = [];
+        for (var i = 0; i < interworkingServicesUrls.length; i++) {
+            interworkingServices.push(new InterworkingService(interworkingServicesUrls[i], interworkingServicesModels[i]));
+        }
+
+        var newPlatform = new Platform(platformId, platformName, platformDescription, labels, comments, interworkingServices, isEnabler);
+
+        $.ajax({
+            type : "POST",
+            url : "/user/cpanel/register_platform",
+            dataType: "json",
+            contentType: "application/json",
+            data : JSON.stringify(newPlatform),
+            success : function (data) {
+
+                $('#platform-registration-modal').modal('hide');
+                $('#platform-details').prepend($('#platform-registration-successful').clone().removeAttr("id").show());
+
+                // Resetting the the form
+                $('#platform-registration-form')[0].reset();
+                $('#platform-registration-form').find('select').selectpicker("render");
+
+                // Resetting the validation
+                $('#platform-registration-form').validator('destroy').validator();
+            },
+            error : function(xhr) {
+                $('#platform-registration-row').find('.alert-danger').hide();
+                var message = JSON.parse(xhr.responseText);
+
+                var platformRegistrationError = document.createElement('p');
+                platformRegistrationError.innerHTML = message.platformRegistrationError;
+                $('#platform-registration-modal-body').prepend($('#platform-registration-error').clone().append(platformRegistrationError).removeAttr("id").show());
+
+                if (typeof message.pl_reg_error_id !== 'undefined')
+                    $('#pl-reg-error-id').html(message.pl_reg_error_id).show();
+
+                if (typeof message.pl_reg_error_name !== 'undefined')
+                    $('#pl-reg-error-name').html(message.pl_reg_error_name).show();
+
+                if (typeof message.pl_reg_error_description !== 'undefined')
+                    $('#pl-reg-error-description').html(message.pl_reg_error_description).show();
+
+                if (typeof message.pl_reg_error_labels_label !== 'undefined') {
+                    for(var i = 0; i < message.pl_reg_error_labels_label.length; i++)
+                        if(message.pl_reg_error_labels_label[i] != null)
+                            $('.pl-reg-error-label').eq(i).html(message.pl_reg_error_labels_label[i]).show();
+                }
+
+                if (typeof message.pl_reg_error_comments_comment !== 'undefined') {
+                    for(var i = 0; i < message.pl_reg_error_comments_comment.length; i++)
+                        if(message.pl_reg_error_comments_comment[i] != null)
+                            $('.pl-reg-error-comment').eq(i).html(message.pl_reg_error_comments_comment[i]).show();
+                }
+
+                if (typeof message.pl_reg_error_interworkingServices_url !== 'undefined') {
+                    for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
+                        if(message.pl_reg_error_interworkingServices_url[i] != null)
+                            $('.pl-reg-error-interworkingServices-url').eq(i).html(message.pl_reg_error_interworkingServices_url[i]).show();
+                }
+
+                if (typeof message.pl_reg_error_interworkingServices_informationModelId !== 'undefined') {
+                    for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
+                        if(message.pl_reg_error_interworkingServices_informationModelId[i] != null)
+                            $('.pl-reg-error-interworkingServices-informationModelId').eq(i).html(message.pl_reg_error_interworkingServices_informationModelId[i]).show();
+                }
+
+                if (typeof message.pl_reg_error_isEnabler !== 'undefined')
+                    $('#pl-reg-error-isEnabler').html(message.pl_reg_error_isEnabler).show();
+
+            }
+        });
+
+    });
+
+    $initialPlatformModalContent = $('#platform-registration-modal').clone(true, true);
+
+});

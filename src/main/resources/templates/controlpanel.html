@@ -19,6 +19,7 @@
 </head>
 <body>
 
+<script>setupAjax();</script>
 <div class="header shadow">
     <div class="container">
         <img class="logo" th:src="@{/images/logo-1.1.png}" src="static/images/logo-1.1.png"></img>
@@ -49,18 +50,12 @@
                 <ul class="nav nav-pills nav-stacked sidebar panel-primary shadow">
                     <!--<ul class="nav nav-stacked sidebar panel-primary shadow">-->
 
-                    <li th:classappend="${activeTab}?:active">
-                        <a href="#user_details" data-toggle="tab">User Details</a>
-                    </li>
-                    <li th:classappend="${activeTab == 'clients_details'}?active">
-                        <a href="#clients_details" data-toggle="tab">Client Details</a>
-                    </li>
-                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}"
-                        th:classappend="${activeTab == 'platform-details'}?active">
+                    <li class="active"><a href="#user_details" data-toggle="tab">User Details</a></li>
+                    <li><a href="#clients_details" data-toggle="tab">Client Details</a></li>
+                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
                         <a href="#platform-details" data-toggle="tab">Platform Details</a>
                     </li>
-                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}"
-                        th:classappend="${activeTab == 'information-models'}?active">
+                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
                         <a href="#information-models" data-toggle="tab">Information Models</a>
                     </li>
                 </ul>
@@ -69,36 +64,31 @@
             <div class="tab-content clearfix col-md-9">
 
                 <!-- User Details Tab-->
-                <div class="tab-pane" id="user_details" th:classappend="${activeTab}?:active">
+                <div class="tab-pane active" id="user_details">
                     <h3>User Details</h3>
                 </div>
 
                 <!-- Client Details Tab-->
-                <div class="tab-pane" id="clients_details" th:classappend="${activeTab == 'clients_details'}?active">
+                <div class="tab-pane" id="clients_details">
                     <h3>Client Details</h3>
                 </div>
 
                 <!-- Platform Details Tab-->
-                <div class="tab-pane" id="platform-details" th:classappend="${activeTab == 'platform-details'}?active">
-                    <h3>Platform Details</h3>
+                <div class="tab-pane" id="platform-details">
 
                     <!-- Display errors -->
-                    <div class="alert alert-danger alert-dismissable" id="list-owned-platforms-error">
+                    <div class="alert alert-danger alert-dismissable" id="list-owned-platforms-error" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong></div>
-                    <div class="alert alert-danger alert-dismissable" th:if="${communicationException}">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <strong>Error!</strong>
-                        <p th:text="${communicationException}"></p></div>
                     <div class="alert alert-danger alert-dismissable" id="delete-platform-error" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong></div>
 
                     <!-- Display success message -->
-                    <div class="alert alert-success alert-dismissable" th:if="${platformRegistrationSuccessful}">
+                    <div class="alert alert-success alert-dismissable" id="platform-registration-successful" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Success!</strong>
-                        <p th:text="${platformRegistrationSuccessful}"></p></div>
+                        <p></p>The platform was registered successfully!</div>
                     <div class="alert alert-success alert-dismissable" id="platform-successful-deletion" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Success!</strong>
@@ -106,99 +96,81 @@
 
                     <!-- Register new Platform by triggering the button-->
                     <!-- Trigger the modal with a button -->
-                    <button type="button" class="btn btn-info btn-default registrationBtn" data-toggle="modal"
-                            data-target="#platformRegistrationModal">Register New Platform</button>
-
-                    <!-- If there is an error during platform registration use this input field to notify the javascript
-                    to keep the modal open -->
-                    <input type="hidden" id="platformRegistrationError" th:if="${platformRegistrationError}" />
+                    <button type="button" id="registration-btn" class="btn btn-info btn-default registration-btn" data-toggle="modal"
+                            data-target="#platform-registration-modal">Register New Platform</button>
 
                     <!-- Modal -->
-                    <div id="platformRegistrationModal" class="modal fade" role="dialog">
+                    <div id="platform-registration-modal" class="modal fade" role="dialog">
                         <div class="modal-dialog">
 
                             <!-- Modal content-->
                             <div class="modal-content">
-                                <form id="platformRegFrom" th:action="@{/user/cpanel/register_platform}"
-                                      th:object="${platformDetails}" role="form" method="post"
+                                <form id="platform-registration-form" role="form" method="" action=""
                                       data-toggle="validator">
 
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
                                         <h3 class="modal-title">Platform Registration</h3></div>
 
-                                    <div class="modal-body">
+                                    <div class="modal-body" id="platform-registration-modal-body">
 
                                         <!-- Display errors -->
-                                        <div class="alert alert-danger alert-dismissable" th:if="${infoModelListError}">
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="list-all-info-model-error" style="display: none">
                                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                            <strong>Error!</strong>
-                                            <p th:text="${infoModelListError}"></p></div>
-                                        <div class="alert alert-danger alert-dismissable" th:if="${aamPlatformRegistrationError}">
+                                            <strong>Error!</strong></div>
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="platform-registration-error" style="display: none">
                                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                            <strong>Error!</strong>
-                                            <p th:text="${aamPlatformRegistrationError}"></p></div>
-                                        <div class="alert alert-danger alert-dismissable" th:if="${registryPlatformRegistrationError}">
-                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                            <strong>Error!</strong>
-                                            <p th:text="${registryPlatformRegistrationError}"></p></div>
+                                            <strong>Error!</strong></div>
 
                                         <!-- Registration Form -->
-                                        <div class="row">
+                                        <div class="row" id="platform-registration-row">
                                             <div class="col-sm-12">
                                                 <div class="row">
                                                     <div class="col-sm-6 form-group has-feedback">
                                                         <label>Platform Id</label>
                                                         <input type="text" class="form-control platformRegField" maxlength="30"
-                                                               id="id" name="id" placeholder="Enter the preferred platform id"
+                                                               id="platform-registration-id" name="id" placeholder="Enter preferred platform id"
                                                                pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
-                                                               Include only letters, digits, '-' and '_'. You can leave it empty for autogeneration"
-                                                               th:value="${insertedPlatformDetails == null or insertedPlatformDetails.id == null}?'':${insertedPlatformDetails.id}"/>
+                                                               Include only letters, digits, '-' and '_'. You can leave it empty for autogeneration"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it
                                                             empty for autogeneration</div>
-                                                        <div class="alert alert-danger" th:if="${pl_reg_error_id}">
+                                                        <div class="alert alert-danger" id="pl-reg-error-id" style="display: none">
                                                             Up to 30 characters. Only letters, digits, '-' and '_' are permitted. Or leave it
                                                             empty for autogeneration</div>
                                                     </div>
                                                     <div class="col-sm-6 form-group has-feedback">
                                                         <label>Platform Name</label>
                                                         <input type="text"  class="form-control platformRegField"
-                                                               id="name" name="name" placeholder="Enter the platform name"
-                                                               th:value="${insertedPlatformDetails == null or insertedPlatformDetails.name == null}?'':${insertedPlatformDetails.name}"
+                                                               id="platform-registration-name" name="name" placeholder="Enter the platform name"
                                                                minlength="3" maxlength="30" required="required"
                                                                data-required-error="Platform name is required"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">From 3 to 30 characters</div>
-                                                        <div class="alert alert-danger" th:if="${pl_reg_error_name}"
-                                                             th:text="${pl_reg_error_name}">Invalid name!</div>
+                                                        <div class="alert alert-danger" id="pl-reg-error-name" style="display: none">Invalid name!</div>
                                                     </div>
                                                 </div>
                                                 <div class="form-group has-feedback">
                                                     <label>Platform Description</label>
                                                     <textarea  class="form-control platformRegField"
-                                                               id="description" name="description" placeholder="Enter the platform description"
-                                                               th:inline="text" rows="3" minlength="3"
-                                                               maxlength="300" required="required"
-                                                               data-required-error="Platform description is required">[[${insertedPlatformDetails == null or insertedPlatformDetails.description == null}?'':${insertedPlatformDetails.description}]]</textarea>
+                                                               id="platform-registration-description" name="description" placeholder="Enter the platform description"
+                                                               rows="3" minlength="3" maxlength="300" required="required"
+                                                               data-required-error="Platform description is required"></textarea>
                                                     <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                     <div class="help-block with-errors">From 4 to 30 characters</div>
-                                                    <div class="alert alert-danger" th:if="${pl_reg_error_description}"
-                                                         th:text="${pl_reg_error_description}">Invalid Description!</div>
+                                                    <div class="alert alert-danger" id="pl-reg-error-description" style="display: none">Invalid Description!</div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Labels (Optional)</label>
                                                     <div class="row">
                                                         <div class="col-sm-4 form-group has-feedback">
-                                                            <input type="text" class="form-control platformRegField"
-                                                                   id="labels[0].label" name="labels[0].label" placeholder="Label"
-                                                                   th:value="${insertedPlatformDetails == null or insertedPlatformDetails.labels == null or
-                                                                   insertedPlatformDetails.labels[0].label == null}?'':${insertedPlatformDetails.labels[0].label}"
-                                                                   minlength="3" maxlength="30"/>
+                                                            <input type="text" class="form-control platformRegField registration-labels"
+                                                                   placeholder="Label" minlength="3" maxlength="30"/>
                                                             <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
                                                             <div class="help-block with-errors">From 3 to 30 characters</div>
-                                                            <div class="alert alert-danger" th:if="${pl_reg_error_labels_0_label}"
-                                                                 th:text="${pl_reg_error_labels_0_label}">Invalid Label!</div>
+                                                            <div class="alert alert-danger pl-reg-error-label" style="display: none">Invalid Label!</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -206,50 +178,38 @@
                                                     <label>Comments (Optional)</label>
                                                     <div class="row">
                                                         <div class="col-sm-12 form-group has-feedback">
-                                                            <textarea class="form-control platformRegField"
-                                                                      id="comments[0].comment" name="comments[0].comment"
-                                                                      placeholder="Enter a comment" rows="1" th:inline="text"
-                                                                      minlength="3" maxlength="300">[[${insertedPlatformDetails == null or insertedPlatformDetails.comments == null or
-                                                                      insertedPlatformDetails.comments[0].comment == null}?'':${insertedPlatformDetails.comments[0].comment}]]</textarea>
+                                                            <textarea class="form-control platformRegField registration-comments"
+                                                                      placeholder="Enter a comment" rows="1"
+                                                                      minlength="3" maxlength="300"></textarea>
                                                             <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
                                                             <div class="help-block with-errors">From 4 to 30 characters</div>
-                                                            <div class="alert alert-danger" th:if="${pl_reg_error_comments_0_comment}"
-                                                                 th:text="${pl_reg_error_comments_0_comment}">Invalid Comment!</div>
+                                                            <div class="alert alert-danger pl-reg-error-comment" style="display: none">Invalid Comment!</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label>Interworking Service</label>
-                                                    <div class="row">
+                                                    <div class="row interworking-service">
                                                         <div class="col-sm-8 form-group has-feedback">
-                                                            <input type="url" class="form-control platformRegField"
-                                                                   id="interworkingServices[0].url" name= "interworkingServices[0].url" placeholder="Enter a valid https url"
-                                                                   th:value="${insertedPlatformDetails == null or insertedPlatformDetails.interworkingServices == null or
-                                                                   insertedPlatformDetails.interworkingServices[0].url == null}?'':${insertedPlatformDetails.interworkingServices[0].url}"
-                                                                   pattern="^https.*" data-pattern-error="Please enter a valid https url"
-                                                                   data-error="Not valid url" required="required" data-required-error="A valid https url is required"/>
+                                                            <input type="url" class="form-control platformRegField interworking-service-url"
+                                                                   placeholder="Enter a valid https url" pattern="^https.*"
+                                                                   data-pattern-error="Please enter a valid https url" data-error="Not valid url"
+                                                                   required="required" data-required-error="A valid https url is required"/>
                                                             <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
                                                             <div class="help-block with-errors"></div>
-                                                            <div class="alert alert-danger" th:if="${pl_reg_error_interworkingServices_0_url}"
-                                                                 th:text="${pl_reg_error_interworkingServices_0_url}">Invalid information url!</div>
+                                                            <div class="alert alert-danger pl-reg-error-interworkingServices-url" style="display: none">Invalid information url!</div>
                                                         </div>
                                                         <div class="col-sm-4 form-group">
                                                             <div class="platformRegField">
-                                                                <select class="selectpicker form-control platformRegField"
-                                                                        id="interworkingServices[0].informationModelId"
-                                                                        name="interworkingServices[0].informationModelId"
-                                                                        data-live-search="true" title="Information Model" required="required"
+                                                                <select class="selectpicker form-control platformRegField info-model-select"
+                                                                        id="platform-registration-info-model-id" required="required"
+                                                                        data-live-search="true" title="Information Model"
                                                                         data-required-error="Information model is required">
-                                                                    <option th:each="model : ${infoModels}"
-                                                                            th:value="${model.id}"
-                                                                            th:text="${model.name}"
-                                                                            th:selected="${insertedPlatformDetails == null or insertedPlatformDetails.interworkingServices == null or
-                                                                            insertedPlatformDetails.interworkingServices[0].informationModelId == null}?false:${model.isSelected(insertedPlatformDetails.interworkingServices[0].informationModelId)}"></option>
                                                                 </select>
                                                                 <div class="help-block with-errors"></div>
                                                             </div>
-                                                            <div class="alert alert-danger" th:if="${pl_reg_error_interworkingServices_0_informationModelId}"
-                                                                 th:text="${pl_reg_error_interworkingServices_0_informationModelId}">Invalid information Model!</div>
+                                                            <div class="alert alert-danger pl-reg-error-interworkingServices-informationModelId"
+                                                                 style="display: none">Invalid information Model!</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -259,25 +219,27 @@
                                                         <select class="selectpicker form-control platformRegField"
                                                                 id="isEnabler" name="isEnabler" required="required"
                                                                 data-required-error="Type is required">
-                                                            <option th:value="false" th:selected="${insertedPlatformDetails == null or
-                                                        insertedPlatformDetails.isEnabler == null || insertedPlatformDetails.isEnabler == false}?true:false">Platform</option>
-                                                            <option th:value="true" th:selected="${insertedPlatformDetails == null or
-                                                        insertedPlatformDetails.isEnabler == null || insertedPlatformDetails.isEnabler == false}?false:true">Enabler</option>
+                                                            <option value="false">Platform</option>
+                                                            <option value="true">Enabler</option>
                                                         </select>
                                                         <div class="help-block with-errors"></div>
+                                                        <div class="alert alert-danger" id="pl-reg-error-isEnabler"
+                                                             style="display: none">Invalid information Model!</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="submit" name="regPlatformBtn" class="btn btn-default btn-info">Submit</button>
+                                        <button type="submit" id="registration-platform-btn" name="registration-platform-btn"
+                                                class="btn btn-default btn-info">Submit</button>
                                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                                     </div>
                                 </form>
                             </div>
                         </div>
                     </div>
+                    <script>buildPlatformRegistrationForm();</script>
 
                     <!-- Platform Panel Entry -->
                     <div class="panel panel-primary panelEntry" id="platform-entry" style="display: none">
@@ -326,8 +288,7 @@
                 </div>
 
                 <!-- Information Model Tab-->
-                <div class="tab-pane" id="information-models" th:classappend="${activeTab == 'information-models'}?active">
-                    <h3>Information Models</h3>
+                <div class="tab-pane" id="information-models">
 
                     <!-- Display errors -->
                     <div class="alert alert-danger alert-dismissable list-user-info-model-error"
@@ -346,7 +307,7 @@
 
                     <!-- Register new Information Model by triggering the button-->
                     <!-- Trigger the modal with a button -->
-                    <button type="button" class="btn btn-info btn-default registrationBtn" data-toggle="modal"
+                    <button type="button" class="btn btn-info btn-default registration-btn" data-toggle="modal"
                             data-target="#infoModelRegModal">Register New Information Model</button>
 
                     <!-- Modal -->
@@ -414,33 +375,6 @@
                                     <button type="button" name="infoModelRegBtn" class="btn btn-default btn-info" onclick="registerInfoModel()">Submit</button>
                                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                                 </div>
-                                <!--<form th:action="@{/user/cpanel/register_info_model}" th:object="${informationModel}" role="form" method="post">-->
-
-                                    <!--<div class="modal-header">-->
-                                        <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
-                                        <!--<h3 class="modal-title">Platform Registration</h3>-->
-                                    <!--</div>-->
-                                    <!--<div class="modal-body">-->
-                                        <!--<div class="row">-->
-                                            <!--<div class="col-sm-12">-->
-                                                <!--<div class="row">-->
-                                                    <!--<div class="col-sm-6 form-group">-->
-                                                        <!--<label>Name</label>-->
-                                                        <!--<input type="text" class="form-control" th:field="*{name}" placeholder="Enter name of the information model" />-->
-                                                    <!--</div>-->
-                                                    <!--<div class="col-sm-6 form-group">-->
-                                                        <!--<label>Owner</label>-->
-                                                        <!--<input type="text"  class="form-control" th:field="*{owner}" placeholder="Enter the owner of the information model" />-->
-                                                    <!--</div>-->
-                                                <!--</div>-->
-                                            <!--</div>-->
-                                        <!--</div>-->
-                                    <!--</div>-->
-                                    <!--<div class="modal-footer">-->
-                                        <!--<button type="submit" name="infoModelRegBtn" class="btn btn-default btn-info">Submit</button>-->
-                                        <!--<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>-->
-                                    <!--</div>-->
-                                <!--</form>-->
                             </div>
                         </div>
                     </div>

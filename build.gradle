@@ -1,7 +1,8 @@
 // initial extensions to gradle
 buildscript {
     ext {
-        springBootVersion = '1.5.3.RELEASE'
+        springBootVersion = '1.5.4.RELEASE'
+        springCloudVersion = 'Dalston.SR3'
     }
     repositories {
         mavenCentral()
@@ -45,7 +46,7 @@ repositories {
 // Spring related configs
 dependencyManagement {
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
 }
 
@@ -74,23 +75,22 @@ dependencies {
     */
     compile('com.github.symbiote-h2020:SymbIoTeLibraries:develop-SNAPSHOT') { changing = true }
     // compile('com.github.symbiote-h2020:SymbIoTeLibraries:0.2.0')
-    compile('com.github.symbiote-h2020:SymbIoTeSecurity:19.+'){ changing = true }
-
+    compile('com.github.symbiote-h2020:SymbIoTeSecurity:19.7.2+'){ changing = true }
 
     // Spring
-    compile('org.springframework.cloud:spring-cloud-starter')
+//    compile('org.springframework.cloud:spring-cloud-starter')
     compile('org.springframework.cloud:spring-cloud-starter-config')
     compile('org.springframework.cloud:spring-cloud-starter-eureka')
     compile('org.springframework.cloud:spring-cloud-starter-zipkin')
-    compile('org.springframework.cloud:spring-cloud-starter-stream-rabbit')
-    compile('com.google.code.gson:gson:2.7')
+    compile('org.springframework.boot:spring-boot-starter-amqp')
+//    compile('com.google.code.gson:gson:2.7')
 
     // gui page
     // compile('net.lingala.zip4j:zip4j:1.3.2')
     // compile('commons-io:commons-io:2.5')
     compile('org.springframework.boot:spring-boot-starter-thymeleaf')
     compile("org.springframework.boot:spring-boot-starter-security")
-    compile("org.springframework:spring-context:4.3.4.RELEASE")
+//    compile("org.springframework:spring-context:4.3.4.RELEASE")
     compile('org.webjars:jquery:3.1.1-1')
     compile('org.webjars:bootstrap:3.3.7-1')
 

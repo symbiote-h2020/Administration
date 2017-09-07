@@ -57,8 +57,6 @@ public class Cpanel {
     @Autowired
     private RabbitManager rabbitManager;
 
-    private List<String> validInfoModelIds = new ArrayList<>();
-
     /**
      * Gets the default view. If the user is a platform owner, tries to fetch their details.
      * Registry is first polled and, if the platform isn't activated there, AAM is polled for them.
@@ -122,10 +120,13 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/register_platform")
-    public String registerPlatform(@Valid @ModelAttribute("platformDetails") PlatformDetails platformDetails,
+    public ResponseEntity<?> registerPlatform(@Valid @RequestBody PlatformDetails platformDetails,
                                    BindingResult bindingResult, RedirectAttributes model, Principal principal) {
 
         log.debug("POST request on /user/cpanel/register_platform");
+        boolean invalidInfoModel = false;
+        List<String> validInfoModelIds = new ArrayList<>();
+        Map<String, Object> responseBody = new HashMap<>();
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -134,13 +135,23 @@ public class Cpanel {
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
         log.debug(platformDetails.toString());
 
-        boolean invalidInfoModel = false;
+
+
+        ResponseEntity<?> listOfInformationModels = getInformationModels();
+
+        if (listOfInformationModels.getStatusCode() != HttpStatus.OK) {
+            log.debug("Could not get information models from Registry");
+            return new ResponseEntity<>(listOfInformationModels.getBody(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } else {
+            for (InformationModel informationModel: (List<InformationModel>) listOfInformationModels.getBody()) {
+                validInfoModelIds.add(informationModel.getId());
+            }
+        }
 
         int counter = 0;
         for (InterworkingService service : platformDetails.getInterworkingServices()) {
             if (!validInfoModelIds.contains(service.getInformationModelId())) {
-                model.addFlashAttribute("pl_reg_error_interworkingServices_" + counter + "_informationModelId",
-                        "Choose a valid information model");
+                log.debug("The information model id is not valid");
                 invalidInfoModel = true;
             }
             counter++;
@@ -152,24 +163,43 @@ public class Cpanel {
             for (FieldError fieldError : errors) {
                 String errorField = "";
                 String errorMessage = fieldError.getDefaultMessage();
-                String[] parts = fieldError.getField().split("\\.");
+                String[] parts = fieldError.getField().split("\\[");
 
                 if (parts.length > 1){
-                    errorField = "pl_reg_error_" + parts[0].replace("[", "_").replace("]", "_") +
-                    parts[1];
-                }
-                else
-                    errorField = "pl_reg_error_" + fieldError.getField();
+                    log.debug(parts[0]);
+                    log.debug(parts[1]);
+                    log.debug(parts[1].split("]")[0]);
+                    int errorFieldIndex = Integer.parseInt(parts[1].split("]")[0]);
+                    log.debug("errorFieldIndex = " + errorFieldIndex);
+                    errorField = "pl_reg_error_" + parts[0] + parts[1].replace(".", "_").split("]")[1];
+                    ArrayList<String> errorList;
 
+                    if (responseBody.get(errorField) == null) {
+                        errorList = new ArrayList<>();
+                        for (int i = 0; i < errorFieldIndex; i++)
+                            errorList.add(null);
+                        errorList.add(errorMessage);
+                    } else {
+                        errorList = (ArrayList<String>) responseBody.get(errorField);
+                        for (int i = errorList.size(); i < errorFieldIndex; i++)
+                            errorList.add(null);
+                        errorList.add(errorMessage);
+                    }
+
+                    responseBody.put(errorField, errorList);
+                    log.debug(responseBody);
+                }
+                else {
+                    errorField = "pl_reg_error_" + fieldError.getField();
+                    responseBody.put(errorField, errorMessage);
+                }
                 log.debug(errorField + ": " + errorMessage);
-                model.addFlashAttribute(errorField,
-                        errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
+
             }
 
-            model.addFlashAttribute("platformRegistrationError", "Error in binding");
-            model.addFlashAttribute("activeTab", "platform-details");
-            model.addFlashAttribute("insertedPlatformDetails", platformDetails);
-            return "redirect:/user/cpanel";  
+            responseBody.put("platformRegistrationError", "Invalid Arguments");
+
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
 
@@ -210,9 +240,9 @@ public class Cpanel {
                         if (registryResponse != null) {
                             if (registryResponse.getStatus() == HttpStatus.OK.value()) {
                                 // Platform registered successfully
-                                model.addFlashAttribute("platformRegistrationSuccessful",
-                                        "The Platform Registration was successful!");
-                                model.addFlashAttribute("activeTab", "platform-details");
+                                log.debug("Platform registered successfully!");
+                                responseBody.put("platform-registration-success", "Successful Registration!");
+                                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
 
                             } else {
                                 log.debug("Registration Failed: " + registryResponse.getMessage());
@@ -231,51 +261,72 @@ public class Cpanel {
                                 } else {
                                     log.debug("AAM unreachable during platform deletion request");
                                 }
-
-                                model.addFlashAttribute("platformRegistrationError", registryResponse.getMessage());
-                                model.addFlashAttribute("registryPlatformRegistrationError", registryResponse.getMessage());
-                                model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                                responseBody.put("platformRegistrationError", registryResponse.getMessage());
+                                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
                             }
                         } else {
                             log.debug("Registry unreachable!");
+
                             // Send deletion message to AAM
-                            model.addFlashAttribute("platformRegistrationError", "Registry unreacheable");
-                            model.addFlashAttribute("registryPlatformRegistrationError", "Registry unreacheable");
-                            model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                            aamRequest.setOperationType(OperationType.DELETE);
+                            aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+
+                            // Todo: Check what happens when platform deletion request is not successful at this stage
+                            if (aamResponse != null) {
+                                if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
+                                    log.debug("Platform was removed from AAM");
+                                } else {
+                                    log.debug("Platform was NOT removed from AAM");
+                                }
+                            } else {
+                                log.debug("AAM unreachable during platform deletion request");
+                            }
+                            responseBody.put("platformRegistrationError", "Registry unreachable!");
+                            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                         }
                     } catch (CommunicationException e) {
                         e.printStackTrace();
                         log.debug("Registry threw communication exception");
-                        model.addFlashAttribute("platformRegistrationError", "Registry unreacheable");
-                        model.addFlashAttribute("registryPlatformRegistrationError", "Registry unreacheable");
-                        model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+
+                        // Send deletion message to AAM
+                        aamRequest.setOperationType(OperationType.DELETE);
+                        aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+
+                        // Todo: Check what happens when platform deletion request is not successful at this stage
+                        if (aamResponse != null) {
+                            if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
+                                log.debug("Platform was removed from AAM");
+                            } else {
+                                log.debug("Platform was NOT removed from AAM");
+                            }
+                        } else {
+                            log.debug("AAM unreachable during platform deletion request");
+                        }
+                        responseBody.put("platformRegistrationError", "Registry threw communication exception");
+                        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
 
                 } else if (aamResponse.getRegistrationStatus() == ManagementStatus.PLATFORM_EXISTS) {
-                    model.addFlashAttribute("platformRegistrationError", "AAM says that the Platform exists!");
-                    model.addFlashAttribute("aamPlatformRegistrationError", "AAM says that the Platform exists!");
-                    model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                    log.debug("AAM says that the Platform exists!");
+                    responseBody.put("platformRegistrationError", "AAM says that the Platform exists!");
+                    return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 } else {
-                    model.addFlashAttribute("platformRegistrationError", "AAM says that there was an ERROR");
-                    model.addFlashAttribute("aamPlatformRegistrationError", "AAM says that there was an ERROR");
-                    model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                    log.debug("AAM says that there was an ERROR");
+                    responseBody.put("platformRegistrationError", "AAM says that there was an ERROR");
+                    return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
                 log.debug("AAM unreachable!");
-                model.addFlashAttribute("platformRegistrationError", "AAM unreacheable");
-                model.addFlashAttribute("aamPlatformRegistrationError", "AAM unreacheable");
-                model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+                responseBody.put("platformRegistrationError", "AAM unreachable!");
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("AAM threw communication exception");
-            model.addFlashAttribute("platformRegistrationError", "AAM unreacheable");
-            model.addFlashAttribute("aamPlatformRegistrationError", "AAM unreacheable");
-            model.addFlashAttribute("insertedPlatformDetails", platformDetails);
+            responseBody.put("platformRegistrationError", "AAM threw communication exception");
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        model.addFlashAttribute("activeTab", "platform-details");
-        return "redirect:/user/cpanel";  
     }
 
     @PostMapping("/user/cpanel/modify_platform")
