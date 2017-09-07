@@ -208,7 +208,12 @@ a.clickable:hover { text-decoration:none; }
     float: right;
 }
 
-.panelEntry {
+.platform-panel-entry {
+    clear:both;
+    margin-bottom:0.3em;
+}
+
+.info-model-panel-entry {
     clear:both;
     margin-bottom:0.3em;
 }

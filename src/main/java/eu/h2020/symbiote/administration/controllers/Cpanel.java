@@ -77,12 +77,15 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/list_user_platforms")
-    public ResponseEntity<?> listUserPlatforms(Model model, Principal principal) {
+    public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Model model, Principal principal) {
 
         log.debug("POST request on /user/cpanel/list_user_platforms");
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
+        ArrayList<String> unavailablePlatforms = new ArrayList<>();
+        ArrayList<Platform> availablePlatforms = new ArrayList<>();
+        ListUserPlatformsResponse response = new ListUserPlatformsResponse();
 
         UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
@@ -103,17 +106,68 @@ public class Cpanel {
             Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
                     rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
             if (ownedPlatformDetailsSet != null) {
-                for (OwnedPlatformDetails detail : ownedPlatformDetailsSet) {
-                    log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(detail));
+                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
+                    log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(platformDetails));
+
+                    // Send Platform Modification message to Registry to get back the full details
+                    try {
+                        Platform platform = new Platform();
+                        platform.setId(platformDetails.getPlatformInstanceId());
+
+                        PlatformRegistryResponse registryResponse = rabbitManager.sendPlatformModificationRequest(platform);
+                        if (registryResponse != null) {
+                            if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                                log.debug(registryResponse.getMessage());
+                                unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
+                            } else {
+                                availablePlatforms.add(registryResponse.getPlatform());
+                            }
+                        } else {
+                            log.debug("Registry unreachable!");
+                            response.setMessage("Registry unreachable!");
+                            return new ResponseEntity<>(response,
+                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                        }
+                    } catch (CommunicationException e) {
+                        e.printStackTrace();
+                        log.debug("Registry threw communication exception");
+                        response.setMessage("Registry threw communication exception");
+                        return new ResponseEntity<>(response,
+                                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
                 }
-                return new ResponseEntity<>(ownedPlatformDetailsSet, new HttpHeaders(), HttpStatus.OK);
+
+                ArrayList<PlatformDetails> availablePlatformDetails = new ArrayList<>();
+                for (Platform platform : availablePlatforms) {
+                    PlatformDetails platformDetails = new PlatformDetails(platform);
+                    availablePlatformDetails.add(platformDetails);
+                }
+                response.setAvailablePlatforms(availablePlatformDetails);
+
+                if (unavailablePlatforms.size() == 0) {
+                    response.setMessage("All the owned platform details were successfully received");
+                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
+                }
+                else {
+                    String message = "Could NOT retrieve information from Registry for the following platform that you own:";
+
+                    for (String unavailablePlatform : unavailablePlatforms)
+                        message += " " + unavailablePlatform + ",";
+                    message = message.substring(0, message.length() - 1);
+                    response.setMessage(message);
+                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
+                }
             } else {
-                return new ResponseEntity<>("AAM responded with null",
+                log.debug("AAM responded with null");
+                response.setMessage("AAM responded with null");
+                return new ResponseEntity<>(response,
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            return new ResponseEntity<>("Communication exception when tried to get the owned platform details",
+            log.debug("AAM threw CommunicationException");
+            response.setMessage("AAM threw CommunicationException");
+            return new ResponseEntity<>(response,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
         }

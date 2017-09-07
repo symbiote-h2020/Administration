@@ -6,8 +6,10 @@ import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
 import eu.h2020.symbiote.core.model.InterworkingService;
+import eu.h2020.symbiote.core.model.Platform;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -67,6 +69,31 @@ public class PlatformDetails {
         this.comments = comments;
         this.interworkingServices = interworkingServices;
         this.isEnabler = isEnabler;
+    }
+
+    /**
+     *
+     * @param platform the platform details sent by registry
+     */
+    public PlatformDetails(Platform platform) {
+        this.id = platform.getId();
+        this.name = platform.getLabels().get(0);
+        this.description = platform.getComments().get(0);
+        this.isEnabler = platform.isEnabler();
+        this.interworkingServices = new ArrayList<>(platform.getInterworkingServices());
+
+        ArrayList<Label> labels = new ArrayList<>();
+        for(String label : platform.getLabels())
+            labels.add(new Label(label));
+        labels.remove(0);
+
+        ArrayList<Comment> comments = new ArrayList<>();
+        for(String comment : platform.getComments())
+            comments.add(new Comment(comment));
+        comments.remove(0);
+
+        this.labels = labels;
+        this.comments = comments;
     }
 
     public String getId() { return id; }

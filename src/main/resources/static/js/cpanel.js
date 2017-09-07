@@ -8,6 +8,8 @@ var $infoModelSuccessfulDeletion = null;
 var $deleteInformationModelError = null;
 var $listUserInfoModelError = null;
 var $initialPlatformModalContent = null;
+var $platformRegistrationSuccessful = null;
+var $platformRegistrationError = null;
 
 // Store csrf token
 var csrfToken = null;
@@ -128,10 +130,17 @@ function buildPlatformRegistrationForm() {
                     value: item.id,
                     text : item.name
                 }));
+
+                $('.update-info-model-select').append($('<option>', {
+                    value: item.id,
+                    text : item.name
+                }));
             });
 
             $('#platform-registration-info-model-id').selectpicker('refresh');
+            $('#platform-update-info-model-id').selectpicker('refresh');
 
+            buildPlatformPanels();
         },
         error : function(xhr) {
             var message = document.createElement('p');
@@ -146,7 +155,8 @@ function buildPlatformPanels() {
     var $platformTab = $('#platform-details');
 
     if ($platformPanelEntry === null) {
-        $platformPanelEntry = $('#platform-entry').clone();
+        // Deep clone
+        $platformPanelEntry = $('#platform-entry').clone(true, true);
         $('#platform-entry').remove();
     }
 
@@ -164,14 +174,34 @@ function buildPlatformPanels() {
         $listOwnedPlatformsError = $('#list-owned-platforms-error').clone().removeAttr("id");
         $('#list-owned-platforms-error').remove();
     }
+
+    if ($platformRegistrationSuccessful === null) {
+        $platformRegistrationSuccessful = $('#platform-registration-successful').clone().removeAttr("id");
+        $('#platform-registration-successful').remove();
+    }
+
+    if ($platformRegistrationError === null) {
+        $platformRegistrationError = $('#platform-registration-error').clone().removeAttr("id");
+        $('#platform-registration-error').remove();
+    }
+
     $.ajax({
         url: "/user/cpanel/list_user_platforms",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
-        success: function(data) {
-            for (var i = 0; i < data.length; i++) {
-                $platformTab.append(platformPanel(data[i]));
+        success: function(data, textStatus, jqXHR) {
+
+            for (var i = 0; i < data.availablePlatforms.length; i++)
+                $platformTab.append(platformPanel(data.availablePlatforms[i]));
+
+            // Refresh the selectpickers
+            $platformTab.find(".platform-panel-entry .selectpicker").selectpicker("refresh");
+
+            if (jqXHR.status === 206) {
+                var message = document.createElement('p');
+                message.innerHTML = data.message;
+                $('#platform-details').prepend($listOwnedPlatformsError.clone().append(message).show());
             }
         },
         error : function(xhr) {
@@ -183,16 +213,42 @@ function buildPlatformPanels() {
 }
 
 function platformPanel(ownedPlatform) {
-    var $platform = $platformPanelEntry.clone();
 
-    var deleteplatformlId = "del-platform-modal-" + ownedPlatform.platformInstanceId;
-    $platform.find('.panel-title').text(ownedPlatform.platformInstanceFriendlyName);
-    $platform.find('.panel-body').text(ownedPlatform.platformInstanceId);
+    // Deep clone
+    var $platform = $platformPanelEntry.clone(true, true);
+
+    // Configuration of the platform panel
+    var deleteplatformlId = "del-platform-modal-" + ownedPlatform.id;
+    $platform.find('.panel-title').text(ownedPlatform.name);
     $platform.find('.btn-warning-delete').attr("data-target", "#" + deleteplatformlId);
     $platform.find('#PLATFORM-DEL-MODAL').attr("id", deleteplatformlId);
-    $platform.find('.modal-title').find('strong').text(ownedPlatform.platformInstanceFriendlyName);
+    $platform.find('.modal-title').find('strong').text(ownedPlatform.name);
+
+    // Setting the platform details
+    $platform.find('.platform-update-id').val(ownedPlatform.id);
+    $platform.find('.platform-update-name').val(ownedPlatform.name);
+    $platform.find('.platform-update-description').val(ownedPlatform.description);
+    $platform.find('.update-isEnabler ').val(ownedPlatform.isEnabler);
+
+
+    for (var iter = 0; iter < ownedPlatform.labels.length; iter++)
+        $platform.find(".platform-update-labels").eq(iter).val(ownedPlatform.labels[iter].label);
+
+    for (var iter = 0; iter < ownedPlatform.comments.length; iter++)
+        $platform.find(".platform-update-comments").eq(iter).val(ownedPlatform.comments[iter].comment);
+
+    for (var iter = 0; iter < ownedPlatform.interworkingServices.length; iter++) {
+        $platform.find(".platform-update-interworking-service-url").eq(iter).val(ownedPlatform.interworkingServices[iter].url);
+        $platform.find(".update-info-model-select").eq(iter).val(ownedPlatform.interworkingServices[iter].informationModelId);
+    }
+
     $platform.show();
     return $platform;
+}
+
+function deletePlatformPanels() {
+    $(".platform-panel-entry").remove();
+
 }
 
 // Construct information panels
@@ -261,8 +317,8 @@ function infoModelPanel(infoModel) {
     return $infoModelPanel;
 }
 
-function deleteInfoModelsPanel() {
-    $(".panelEntry").remove();
+function deleteInfoModelsPanels() {
+    $(".info-model-panel-entry").remove();
 }
 
 function registerInfoModel() {
@@ -298,9 +354,6 @@ function registerInfoModel() {
 
 // On ready function
 $(document).ready(function () {
-    if (document.getElementById("platformRegistrationError") !== null) {
-        $('#platform-registration-modal').modal('show');
-    }
 
     $('#registration-platform-btn').click(function (e) {
         e.preventDefault();
@@ -331,7 +384,7 @@ $(document).ready(function () {
             success : function (data) {
 
                 $('#platform-registration-modal').modal('hide');
-                $('#platform-details').prepend($('#platform-registration-successful').clone().removeAttr("id").show());
+                $('#platform-details').prepend($platformRegistrationSuccessful.clone().show());
 
                 // Resetting the the form
                 $('#platform-registration-form')[0].reset();
@@ -339,6 +392,9 @@ $(document).ready(function () {
 
                 // Resetting the validation
                 $('#platform-registration-form').validator('destroy').validator();
+
+                deletePlatformPanels();
+                buildPlatformPanels();
             },
             error : function(xhr) {
                 $('#platform-registration-row').find('.alert-danger').hide();
@@ -346,7 +402,7 @@ $(document).ready(function () {
 
                 var platformRegistrationError = document.createElement('p');
                 platformRegistrationError.innerHTML = message.platformRegistrationError;
-                $('#platform-registration-modal-body').prepend($('#platform-registration-error').clone().append(platformRegistrationError).removeAttr("id").show());
+                $('#platform-registration-modal-body').prepend($platformRegistrationError.clone().append(platformRegistrationError).removeAttr("id").show());
 
                 if (typeof message.pl_reg_error_id !== 'undefined')
                     $('#pl-reg-error-id').html(message.pl_reg_error_id).show();

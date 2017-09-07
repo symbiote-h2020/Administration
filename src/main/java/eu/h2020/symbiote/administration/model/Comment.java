@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
  */
 public class Comment {
 
-    @Size(min=3, max=300)
+    @Size(min=4, max=300)
     private String comment;
 
     public Comment() {

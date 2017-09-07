@@ -99,7 +99,7 @@
                     <button type="button" id="registration-btn" class="btn btn-info btn-default registration-btn" data-toggle="modal"
                             data-target="#platform-registration-modal">Register New Platform</button>
 
-                    <!-- Modal -->
+                    <!-- Platform Registration Modal -->
                     <div id="platform-registration-modal" class="modal fade" role="dialog">
                         <div class="modal-dialog">
 
@@ -188,7 +188,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
-                                                    <label>Interworking Service</label>
+                                                    <label>Interworking Services</label>
                                                     <div class="row interworking-service">
                                                         <div class="col-sm-8 form-group has-feedback">
                                                             <input type="url" class="form-control platformRegField interworking-service-url"
@@ -224,7 +224,7 @@
                                                         </select>
                                                         <div class="help-block with-errors"></div>
                                                         <div class="alert alert-danger" id="pl-reg-error-isEnabler"
-                                                             style="display: none">Invalid information Model!</div>
+                                                             style="display: none">Invalid Type!</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -239,18 +239,121 @@
                             </div>
                         </div>
                     </div>
-                    <script>buildPlatformRegistrationForm();</script>
 
                     <!-- Platform Panel Entry -->
-                    <div class="panel panel-primary panelEntry" id="platform-entry" style="display: none">
+                    <div class="panel panel-primary platform-panel-entry" id="platform-entry" style="display: none">
                         <div class="panel-heading clickable">
                             <h3 class="panel-title">
                                 PLATFORM NAME
                             </h3>
                             <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
                         </div>
+
                         <div class="panel-body" style="display: none;">
-                            PLATFORM ID
+                            <div class="row" id="platform-update-row">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Platform Id</label>
+                                            <input type="text" class="form-control platformRegField platform-update-id" maxlength="30"
+                                                   placeholder="Enter preferred platform id"
+                                                   pattern="^[\w-][\w-][\w-][\w-]+" disabled="disabled" data-pattern-error="From 4 to 30 characters.
+                                                               Include only letters, digits, '-' and '_'. You can leave it empty for autogeneration"/>
+                                            <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                            <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it
+                                                empty for autogeneration</div>
+                                            <!--<div class="alert alert-danger" id="pl-update-error-id" style="display: none">-->
+                                                <!--Up to 30 characters. Only letters, digits, '-' and '_' are permitted. Or leave it-->
+                                                <!--empty for autogeneration</div>-->
+                                        </div>
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Platform Name</label>
+                                            <input type="text"  class="form-control platformRegField platform-update-name"
+                                                   name="name" placeholder="Enter the platform name"
+                                                   minlength="3" maxlength="30" required="required" disabled="disabled"
+                                                   data-required-error="Platform name is required"/>
+                                            <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                            <!--<div class="help-block with-errors">From 3 to 30 characters</div>-->
+                                            <div class="alert alert-danger" id="pl-update-error-name" style="display: none">Invalid name!</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group has-feedback">
+                                        <label>Platform Description</label>
+                                        <textarea  class="form-control platformRegField platform-update-description"
+                                                   name="description" placeholder="Enter the platform description"
+                                                   rows="3" minlength="3" maxlength="300" required="required" disabled="disabled"
+                                                   data-required-error="Platform description is required"></textarea>
+                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                        <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
+                                        <div class="alert alert-danger" id="pl-update-error-description" style="display: none">Invalid Description!</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Labels (Optional)</label>
+                                        <div class="row">
+                                            <div class="col-sm-4 form-group has-feedback">
+                                                <input type="text" class="form-control platformRegField platform-update-labels"
+                                                       placeholder="Label" minlength="3" maxlength="30" disabled="disabled"/>
+                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                <!--<div class="help-block with-errors">From 3 to 30 characters</div>-->
+                                                <div class="alert alert-danger pl-update-error-label" style="display: none">Invalid Label!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Comments (Optional)</label>
+                                        <div class="row">
+                                            <div class="col-sm-12 form-group has-feedback">
+                                                            <textarea class="form-control platformRegField platform-update-comments"
+                                                                      placeholder="Enter a comment" rows="1"
+                                                                      minlength="3" maxlength="300" disabled="disabled"></textarea>
+                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
+                                                <div class="alert alert-danger pl-update-error-comment" style="display: none">Invalid Comment!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Interworking Services</label>
+                                        <div class="row interworking-service">
+                                            <div class="col-sm-8 form-group has-feedback">
+                                                <input type="url" class="form-control platformRegField platform-update-interworking-service-url"
+                                                       placeholder="Enter a valid https url" pattern="^https.*" disabled="disabled"
+                                                       data-pattern-error="Please enter a valid https url" data-error="Not valid url"
+                                                       required="required" data-required-error="A valid https url is required"/>
+                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                <div class="help-block with-errors"></div>
+                                                <div class="alert alert-danger pl-update-error-interworkingServices-url" style="display: none">Invalid information url!</div>
+                                            </div>
+                                            <div class="col-sm-4 form-group">
+                                                <div class="platformRegField">
+                                                    <select class="selectpicker form-control platformRegField update-info-model-select"
+                                                            required="required" disabled="disabled"
+                                                            data-live-search="true" data-required-error="Information model is required" >
+                                                    </select>
+                                                    <div class="help-block with-errors"></div>
+                                                </div>
+                                                <div class="alert alert-danger pl-update-error-interworkingServices-informationModelId"
+                                                     style="display: none">Invalid information Model!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row form-group">
+                                        <div class="col-sm-4 form-group">
+                                            <label>Type</label>
+                                            <select class="selectpicker form-control platformRegField update-isEnabler"
+                                                    name="update-isEnabler" required="required" disabled="disabled"
+                                                    data-required-error="Type is required">
+                                                <option value="false">Platform</option>
+                                                <option value="true">Enabler</option>
+                                            </select>
+                                            <div class="help-block with-errors"></div>
+                                            <div class="alert alert-danger" id="pl-update-error-isEnabler"
+                                                 style="display: none">Invalid Type!</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="panel-footer platform-info-footer">
 
@@ -283,8 +386,10 @@
                         </div>
                     </div>
 
+                    <script>buildPlatformRegistrationForm();</script>
+
                     <!-- Show Platform Details -->
-                    <script>buildPlatformPanels();</script>
+                    <!--<script>buildPlatformPanels();</script>-->
                 </div>
 
                 <!-- Information Model Tab-->
@@ -380,7 +485,7 @@
                     </div>
 
                     <!-- Information Model Panel Entry -->
-                    <div class="panel panel-primary panelEntry" id="info-model-entry" style="display: none">
+                    <div class="panel panel-primary info-model-panel-entry" id="info-model-entry" style="display: none">
                         <div class="panel-heading clickable">
                             <h3 class="panel-title">INFORMATION_MODEL_NAME</h3>
                             <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span></div>
