@@ -146,7 +146,7 @@ public class Cpanel {
 
                 if (unavailablePlatforms.size() == 0) {
                     response.setMessage("All the owned platform details were successfully received");
-                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
+                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
                 }
                 else {
                     String message = "Could NOT retrieve information from Registry for the following platform that you own:";
