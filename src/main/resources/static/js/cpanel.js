@@ -402,7 +402,7 @@ $(document).ready(function () {
 
                 var platformRegistrationError = document.createElement('p');
                 platformRegistrationError.innerHTML = message.platformRegistrationError;
-                $('#platform-registration-modal-body').prepend($platformRegistrationError.clone().append(platformRegistrationError).removeAttr("id").show());
+                $('#platform-registration-modal-body').prepend($platformRegistrationError.clone().append(platformRegistrationError).show());
 
                 if (typeof message.pl_reg_error_id !== 'undefined')
                     $('#pl-reg-error-id').html(message.pl_reg_error_id).show();
