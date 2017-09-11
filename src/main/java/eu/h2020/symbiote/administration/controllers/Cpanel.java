@@ -30,6 +30,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.validation.Valid;
@@ -549,8 +550,8 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/register_information_model")
-    public ResponseEntity<InformationModel> registerInformationModel(@Valid @RequestBody InformationModel informationModel,
-                                                                     BindingResult bindingResult, Principal principal) {
+    public ResponseEntity<InformationModel> registerInformationModel(@RequestParam("info-model-rdf") MultipartFile rdfFile,
+                                                                     Principal principal) {
 
         log.debug("POST request on /user/cpanel/register_information_model");
 
@@ -559,24 +560,39 @@ public class Cpanel {
 
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
 
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            String errorMessage = "";
-            for (FieldError fieldError : errors) {
-                errorMessage = fieldError.getDefaultMessage();
-                log.debug(fieldError.getField() + ": " + errorMessage);
-            }
-
-        }
-
-        log.debug(ReflectionToStringBuilder.toString(informationModel));
-
         // if form is valid, construct the request
-        InformationModel response = new InformationModel();
-        response.setId("Works!");
-        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.CREATED);
+        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
     }
+
+//    @PostMapping("/user/cpanel/register_information_model")
+//    public ResponseEntity<InformationModel> registerInformationModel(@Valid @RequestBody InformationModel informationModel,
+//                                                                     BindingResult bindingResult, Principal principal) {
+//
+//        log.debug("POST request on /user/cpanel/register_information_model");
+//
+//        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+//        CoreUser user = (CoreUser) token.getPrincipal();
+//
+//        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
+//
+//        if (bindingResult.hasErrors()) {
+//
+//            List<FieldError> errors = bindingResult.getFieldErrors();
+//            String errorMessage = "";
+//            for (FieldError fieldError : errors) {
+//                errorMessage = fieldError.getDefaultMessage();
+//                log.debug(fieldError.getField() + ": " + errorMessage);
+//            }
+//
+//        }
+//
+//        log.debug(ReflectionToStringBuilder.toString(informationModel));
+//
+//        // if form is valid, construct the request
+//        InformationModel response = new InformationModel();
+//        response.setId("Works!");
+//        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.CREATED);
+//    }
 
     @PostMapping("/user/cpanel/delete_information_model")
     public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete,

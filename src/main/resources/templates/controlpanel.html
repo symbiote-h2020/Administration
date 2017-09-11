@@ -9,12 +9,14 @@
     <link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
     <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
     <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
+    <link rel="stylesheet" th:href="@{/css/fileinput.min.css}" href="css/fileinput.min.css" />
 
     <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
     <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
     <script type="text/javascript" th:src="@{/js/cpanel.js}" src="js/cpanel.js"></script>
     <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
     <script type="text/javascript" th:src="@{/js/validator.js}" src="js/validator.js"></script>
+    <script type="text/javascript" th:src="@{/js/fileinput.min.js}" src="js/fileinput.min.js"></script>
 
 </head>
 <body>
@@ -327,7 +329,7 @@
                                             <div class="col-sm-4 form-group">
                                                 <div class="platformRegField">
                                                     <select class="selectpicker form-control platformRegField update-info-model-select"
-                                                            required="required" disabled="disabled"
+                                                            id="update-info-model" required="required" disabled="disabled"
                                                             data-live-search="true" data-required-error="Information model is required" >
                                                     </select>
                                                     <div class="help-block with-errors"></div>
@@ -341,7 +343,7 @@
                                         <div class="col-sm-4 form-group">
                                             <label>Type</label>
                                             <select class="selectpicker form-control platformRegField update-isEnabler"
-                                                    name="update-isEnabler" required="required" disabled="disabled"
+                                                    id="update-isEnabler" name="update-isEnabler" required="required" disabled="disabled"
                                                     data-required-error="Type is required">
                                                 <option value="false">Platform</option>
                                                 <option value="true">Enabler</option>
@@ -419,68 +421,48 @@
                     <div id="infoModelRegModal" class="modal fade" role="dialog">
                         <div class="modal-dialog">
 
-                            <!-- Modal content-->
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                    <h3 class="modal-title">Platform Registration</h3>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="row">
-                                                <div class="col-sm-6 form-group">
-                                                    <label>Id</label>
-                                                    <input type="text" class="form-control" id="infoModelId"
-                                                           name="infoModelId" placeholder="Enter the id of the information model" />
-                                                </div>
-                                                <div class="col-sm-6 form-group">
-                                                    <label>Uri</label>
-                                                    <input type="text"  class="form-control" id="infoModelUri"
-                                                           name="infoModelUri" placeholder="Enter the uri of the information model" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="row">
-                                                <div class="col-sm-6 form-group">
-                                                    <label>Name</label>
-                                                    <input type="text" class="form-control" id="infoModelName"
-                                                           name="infoModelName" placeholder="Enter name of the information model" />
-                                                </div>
-                                                <div class="col-sm-6 form-group">
-                                                    <label>Owner</label>
-                                                    <input type="text"  class="form-control" id="infoModelOwner"
-                                                           name="infoModelOwner" placeholder="Enter the owner of the information model" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-sm-12">
-                                            <div class="row">
-                                                <div class="col-sm-6 form-group">
-                                                    <label>Rdf</label>
-                                                    <input type="text" class="form-control" id="infoModelRdf"
-                                                           name="infoModelRdf" placeholder="Enter rdf of the information model" />
-                                                </div>
-                                                <div class="col-sm-6 form-group">
-                                                    <label>RdfFormat</label>
-                                                    <input type="text"  class="form-control" id="infoModelRdfFormat"
-                                                           name="infoModelRdfFormat" placeholder="Enter the rdfFormat of the information model" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            <form id="info-model-registration-form" role="form" method="" action="">
 
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h3 class="modal-title">Platform Registration</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group">
+                                                        <label>Name</label>
+                                                        <input type="text" class="form-control" id="infoModelName"
+                                                               name="infoModelName" placeholder="Enter name of the information model" />
+                                                    </div>
+                                                    <div class="col-sm-6 form-group">
+                                                        <label>Uri</label>
+                                                        <input type="text"  class="form-control" id="infoModelUri"
+                                                               name="infoModelUri" placeholder="Enter the uri of the information model" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <label>Rdf file</label>
+                                                <div class="file-loading">
+                                                    <input class="file-loading" id="info-model-rdf" name="info-model-rdf" type="file" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" id="infoModelRegBtn" name="infoModelRegBtn"
+                                                class="btn btn-default btn-info" onclick="registerInfoModel()">Submit</button>
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" name="infoModelRegBtn" class="btn btn-default btn-info" onclick="registerInfoModel()">Submit</button>
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
 

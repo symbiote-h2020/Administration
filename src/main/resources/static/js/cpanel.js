@@ -138,7 +138,7 @@ function buildPlatformRegistrationForm() {
             });
 
             $('#platform-registration-info-model-id').selectpicker('refresh');
-            $('#platform-update-info-model-id').selectpicker('refresh');
+            $('#update-info-model').selectpicker('refresh');
 
             buildPlatformPanels();
         },
@@ -192,11 +192,18 @@ function buildPlatformPanels() {
         contentType: "application/json",
         success: function(data, textStatus, jqXHR) {
 
-            for (var i = 0; i < data.availablePlatforms.length; i++)
+            for (var i = 0; i < data.availablePlatforms.length; i++) {
                 $platformTab.append(platformPanel(data.availablePlatforms[i]));
 
-            // Refresh the selectpickers
-            $platformTab.find(".platform-panel-entry .selectpicker").selectpicker("refresh");
+                // Refresh the selectpickers
+                $platformTab.find("#update-info-model").selectpicker("refresh");
+                $platformTab.find("#update-info-model").nextAll("option").remove();
+                $platformTab.find("#update-info-model").removeAttr("id");
+                $platformTab.find("#update-isEnabler").selectpicker("refresh");
+                $platformTab.find("#update-isEnabler").nextAll("option").remove();
+                $platformTab.find("#update-isEnabler").removeAttr("id");
+            }
+
 
             if (jqXHR.status === 206) {
                 var message = document.createElement('p');
@@ -321,36 +328,36 @@ function deleteInfoModelsPanels() {
     $(".info-model-panel-entry").remove();
 }
 
-function registerInfoModel() {
-    var informationModel = new InformationModel(
-        $('#infoModelId').val(),
-        $('#infoModelUri').val(),
-        $('#infoModelName').val(),
-        $('#infoModelOwner').val(),
-        $('#infoModelRdf').val(),
-        $('#infoModelRdfFormat').val());
-
-    $.ajax({
-        url: "/user/cpanel/register_information_model",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        data: JSON.stringify(informationModel),
-        success: function(data) {
-            $('#infoModelRegModal').modal('hide');
-            $('#infoModelId').val('');
-            $('#infoModelUri').val('');
-            $('#infoModelName').val('');
-            $('#infoModelOwner').val('');
-            $('#infoModelRdf').val('');
-            $('#infoModelRdfFormat').val('');
-
-        },
-        error : function() {
-            alert("There was an error!");
-        }
-    });
-}
+// function registerInfoModel() {
+//     var informationModel = new InformationModel(
+//         $('#infoModelId').val(),
+//         $('#infoModelUri').val(),
+//         $('#infoModelName').val(),
+//         $('#infoModelOwner').val(),
+//         $('#infoModelRdf').val(),
+//         $('#infoModelRdfFormat').val());
+//
+//     $.ajax({
+//         url: "/user/cpanel/register_information_model",
+//         type: "POST",
+//         dataType: "json",
+//         contentType: "application/json",
+//         data: JSON.stringify(informationModel),
+//         success: function(data) {
+//             $('#infoModelRegModal').modal('hide');
+//             $('#infoModelId').val('');
+//             $('#infoModelUri').val('');
+//             $('#infoModelName').val('');
+//             $('#infoModelOwner').val('');
+//             $('#infoModelRdf').val('');
+//             $('#infoModelRdfFormat').val('');
+//
+//         },
+//         error : function() {
+//             alert("There was an error!");
+//         }
+//     });
+// }
 
 // On ready function
 $(document).ready(function () {
@@ -446,5 +453,47 @@ $(document).ready(function () {
     });
 
     $initialPlatformModalContent = $('#platform-registration-modal').clone(true, true);
+
+    $("#info-model-rdf").fileinput({
+        allowedFileExtensions: ["ttl", "nt", "rdf", "n3", "jsonld"],
+        maxFilePreviewSize: 10240
+    });
+
+    $("#infoModelRegBtn").click(function (e) {
+
+        e.preventDefault();
+
+        // Get form
+        var form = $('#info-model-registration-form')[0];
+
+        var data = new FormData(form);
+
+        data.append("CustomField", "This is some extra data, testing");
+
+        $("#infoModelRegBtn").prop("disabled", true);
+
+        $.ajax({
+            type: "POST",
+            enctype: 'multipart/form-data',
+            url: "/user/cpanel/register_information_model",
+            data: data,
+            //http://api.jquery.com/jQuery.ajax/
+            //https://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects
+            processData: false, //prevent jQuery from automatically transforming the data into a query string
+            contentType: false,
+            cache: false,
+            timeout: 600000,
+            success: function (data) {
+                alert("SUCCESS!");
+                $("#infoModelRegBtn").prop("disabled", false);
+
+            },
+            error: function (e) {
+                alert("ERROR : " + e.responseText);
+                $("#infoModelRegBtn").prop("disabled", false);
+            }
+        });
+    });
+
 
 });
