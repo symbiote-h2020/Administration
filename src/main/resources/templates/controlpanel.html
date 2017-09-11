@@ -332,8 +332,8 @@
                                             <div class="col-sm-4 form-group">
                                                 <div class="platformRegField">
                                                     <select class="selectpicker form-control platformRegField update-info-model-select"
-                                                            id="update-info-model" required="required" disabled="disabled"
-                                                            data-live-search="true" data-required-error="Information model is required" >
+                                                            required="required" disabled="disabled" data-live-search="true"
+                                                            data-required-error="Information model is required" >
                                                     </select>
                                                     <div class="help-block with-errors"></div>
                                                 </div>
@@ -346,7 +346,7 @@
                                         <div class="col-sm-4 form-group">
                                             <label>Type</label>
                                             <select class="selectpicker form-control platformRegField update-isEnabler"
-                                                    id="update-isEnabler" name="update-isEnabler" required="required" disabled="disabled"
+                                                    name="update-isEnabler" required="required" disabled="disabled"
                                                     data-required-error="Type is required">
                                                 <option value="false">Platform</option>
                                                 <option value="true">Enabler</option>
@@ -391,7 +391,10 @@
                         </div>
                     </div>
 
-                    <script>buildPlatformRegistrationForm();</script>
+                    <script>
+                        storeNecessaryPlatformElements();
+                        buildPlatformRegistrationForm();
+                    </script>
 
                     <!-- Show Platform Details -->
                     <!--<script>buildPlatformPanels();</script>-->
@@ -495,7 +498,7 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="submit" id="infoModelRegBtn" name="infoModelRegBtn"
+                                        <button type="submit" id="info-model-reg-btn" name="info-model-reg-btn"
                                                 class="btn btn-default btn-info">Submit</button>
                                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                                     </div>
@@ -538,7 +541,10 @@
                     </div>
 
                     <!-- Show Information Model Details -->
-                    <script>buildInfoModelsPanels();</script>
+                    <script>
+                        storeNecessaryInfoModelElements();
+                        buildInfoModelsPanels();
+                    </script>
 
                 </div>
             </div>

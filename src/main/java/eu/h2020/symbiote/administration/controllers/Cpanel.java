@@ -569,14 +569,16 @@ public class Cpanel {
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
 
         if (name.length() < 2 || name.length() > 30)
-            response.put("info-model-reg-error-name", "The name should have from 2 to 30 characters");
+            response.put("info_model_reg_error_name", "The name should have from 2 to 30 characters");
         if (!urlValidator.isValid(uri))
-            response.put("info-model-reg-error-uri", "The uri is invalid");
+            response.put("info_model_reg_error_uri", "The uri is invalid");
         if (!rdfFile.getOriginalFilename().matches("^[\\w]+\\.(ttl|nt|rdf|xml|n3|jsonld)$"))
-            response.put("info-model-reg-error-rdf", "This format is not supported");
+            response.put("info_model_reg_error_rdf", "This format is not supported");
 
-        if (response.size() > 0)
+        if (response.size() > 0) {
+            response.put("error", "Invalid Arguments");
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
 
 
         try {
@@ -625,35 +627,6 @@ public class Cpanel {
         return new ResponseEntity<>(new HttpHeaders(), HttpStatus.CREATED);
     }
 
-//    @PostMapping("/user/cpanel/register_information_model")
-//    public ResponseEntity<InformationModel> registerInformationModel(@Valid @RequestBody InformationModel informationModel,
-//                                                                     BindingResult bindingResult, Principal principal) {
-//
-//        log.debug("POST request on /user/cpanel/register_information_model");
-//
-//        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-//        CoreUser user = (CoreUser) token.getPrincipal();
-//
-//        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
-//
-//        if (bindingResult.hasErrors()) {
-//
-//            List<FieldError> errors = bindingResult.getFieldErrors();
-//            String errorMessage = "";
-//            for (FieldError fieldError : errors) {
-//                errorMessage = fieldError.getDefaultMessage();
-//                log.debug(fieldError.getField() + ": " + errorMessage);
-//            }
-//
-//        }
-//
-//        log.debug(ReflectionToStringBuilder.toString(informationModel));
-//
-//        // if form is valid, construct the request
-//        InformationModel response = new InformationModel();
-//        response.setId("Works!");
-//        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.CREATED);
-//    }
 
     @PostMapping("/user/cpanel/delete_information_model")
     public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete,

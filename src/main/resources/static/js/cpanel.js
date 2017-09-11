@@ -74,7 +74,10 @@ $(document).on('click', '.del-platform-btn', function (e) {
         data: {platformIdToDelete : platformIdToDelete},
         success: function(data) {
             $('#platform-details').prepend($platformSuccessfulDeletion.clone().show());
-            $modal.modal('hide');
+            $modal.removeClass('fade').modal('hide');
+
+            deletePlatformPanels();
+            buildPlatformPanels();
 
         },
         error : function(xhr) {
@@ -97,9 +100,19 @@ $(document).on('click', '.del-info-model-btn', function (e) {
         type: "POST",
         data: {infoModelIdToDelete : infoModelIdToDelete},
         success: function(data) {
-            $('#information-models').prepend($infoModelSuccessfulDeletion.clone().show());
-            $modal.modal('hide');
 
+            $('#information-models').prepend($infoModelSuccessfulDeletion.clone().show());
+            $modal.removeClass('fade').modal('hide');
+
+            // Refresh Information Models
+            deleteInfoModelsPanels();
+            buildInfoModelsPanels();
+
+            // Delete old platform panels, because they are re-created in buildPlatformRegistrationForm
+            deletePlatformPanels();
+
+            // Refresh Registration form
+            buildPlatformRegistrationForm();
         },
         error : function(xhr) {
             var message = document.createElement('p');
@@ -124,47 +137,7 @@ function setupAjax() {
     }
 }
 
-function buildPlatformRegistrationForm() {
-    var $form = $('#platform-registration-form');
-
-    $.ajax({
-        url: "/user/cpanel/list_all_info_models",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json",
-        success: function(data) {
-            $('#platform-registration-info-model-id').find("option").remove();
-            $('.update-info-model-select').find("option").remove();
-
-            $.each(data, function (i, item) {
-                $('#platform-registration-info-model-id').append($('<option>', {
-                    value: item.id,
-                    text : item.name
-                }));
-
-                $('.update-info-model-select').append($('<option>', {
-                    value: item.id,
-                    text : item.name
-                }));
-            });
-
-            $('#platform-registration-info-model-id').selectpicker('refresh');
-            $('#update-info-model').selectpicker('refresh');
-
-            buildPlatformPanels();
-        },
-        error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
-            $('#list-all-info-model-error').append(message).show();
-        }
-    });
-}
-
-// Construct Platform Panels
-function buildPlatformPanels() {
-    var $platformTab = $('#platform-details');
-
+function storeNecessaryPlatformElements() {
     if ($platformPanelEntry === null) {
         // Deep clone
         $platformPanelEntry = $('#platform-entry').clone(true, true);
@@ -195,6 +168,48 @@ function buildPlatformPanels() {
         $platformRegistrationError = $('#platform-registration-error').clone().removeAttr("id");
         $('#platform-registration-error').remove();
     }
+}
+
+function buildPlatformRegistrationForm() {
+    var $form = $('#platform-registration-form');
+
+    $.ajax({
+        url: "/user/cpanel/list_all_info_models",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        success: function(data) {
+            $('#platform-registration-info-model-id').find("option").remove();
+            $platformPanelEntry.find('.selectpicker.update-info-model-select').find("option").remove();
+
+            $.each(data, function (i, item) {
+                $('#platform-registration-info-model-id').append($('<option>', {
+                    value: item.id,
+                    text : item.name
+                }));
+
+                $platformPanelEntry.find('.selectpicker.update-info-model-select').append($('<option>', {
+                    value: item.id,
+                    text : item.name
+                }));
+            });
+
+            $('#platform-registration-info-model-id').selectpicker('refresh');
+
+            buildPlatformPanels();
+        },
+        error : function(xhr) {
+            var message = document.createElement('p');
+            message.innerHTML = xhr.responseText;
+            $('#list-all-info-model-error').append(message).show();
+        }
+    });
+}
+
+// Construct Platform Panels
+function buildPlatformPanels() {
+    var $platformTab = $('#platform-details');
+
 
     $.ajax({
         url: "/user/cpanel/list_user_platforms",
@@ -203,17 +218,16 @@ function buildPlatformPanels() {
         contentType: "application/json",
         success: function(data, textStatus, jqXHR) {
 
+
             for (var i = 0; i < data.availablePlatforms.length; i++) {
                 $platformTab.append(platformPanel(data.availablePlatforms[i]));
-
-                // Refresh the selectpickers
-                $platformTab.find("#update-info-model").selectpicker("refresh");
-                $platformTab.find("#update-info-model").nextAll("option").remove();
-                $platformTab.find("#update-info-model").removeAttr("id");
-                $platformTab.find("#update-isEnabler").selectpicker("refresh");
-                $platformTab.find("#update-isEnabler").nextAll("option").remove();
-                $platformTab.find("#update-isEnabler").removeAttr("id");
             }
+
+            // Refresh the selectpickers
+            $platformTab.find(".selectpicker.update-info-model-select").selectpicker("refresh");
+            $platformTab.find(".selectpicker.update-info-model-select").nextAll("option").remove();
+            $platformTab.find(".selectpicker.update-isEnabler").selectpicker("refresh");
+            $platformTab.find(".selectpicker.update-isEnabler").nextAll("option").remove();
 
 
             if (jqXHR.status === 206) {
@@ -233,7 +247,7 @@ function buildPlatformPanels() {
 function platformPanel(ownedPlatform) {
 
     // Deep clone
-    var $platform = $platformPanelEntry.clone(true, true);
+    var $platform = $platformPanelEntry.clone(true);
 
     // Configuration of the platform panel
     var deleteplatformlId = "del-platform-modal-" + ownedPlatform.id;
@@ -246,7 +260,7 @@ function platformPanel(ownedPlatform) {
     $platform.find('.platform-update-id').val(ownedPlatform.id);
     $platform.find('.platform-update-name').val(ownedPlatform.name);
     $platform.find('.platform-update-description').val(ownedPlatform.description);
-    $platform.find('.update-isEnabler ').val(ownedPlatform.isEnabler);
+    $platform.find('.selectpicker.update-isEnabler').val(ownedPlatform.isEnabler.toString());
 
 
     for (var iter = 0; iter < ownedPlatform.labels.length; iter++)
@@ -257,7 +271,7 @@ function platformPanel(ownedPlatform) {
 
     for (var iter = 0; iter < ownedPlatform.interworkingServices.length; iter++) {
         $platform.find(".platform-update-interworking-service-url").eq(iter).val(ownedPlatform.interworkingServices[iter].url);
-        $platform.find(".update-info-model-select").eq(iter).val(ownedPlatform.interworkingServices[iter].informationModelId);
+        $platform.find(".selectpicker.update-info-model-select").eq(iter).val(ownedPlatform.interworkingServices[iter].informationModelId);
     }
 
     $platform.show();
@@ -269,10 +283,7 @@ function deletePlatformPanels() {
 
 }
 
-// Construct information panels
-function buildInfoModelsPanels() {
-    var $infoModelTab = $('#information-models');
-
+function storeNecessaryInfoModelElements() {
 
     if ($infoModelPanelEntry === null) {
         $infoModelPanelEntry = $('#info-model-entry').clone();
@@ -303,7 +314,11 @@ function buildInfoModelsPanels() {
         $infoModelRegistrationError = $('#info-model-registration-error').clone().removeAttr("id");
         $('#info-model-registration-error').remove();
     }
+}
 
+// Construct information panels
+function buildInfoModelsPanels() {
+    var $infoModelTab = $('#information-models');
 
     $.ajax({
         url: "/user/cpanel/list_user_info_models",
@@ -386,7 +401,7 @@ $(document).ready(function () {
                 buildPlatformPanels();
             },
             error : function(xhr) {
-                $('#platform-registration-modal-body').find('.alert-danger').remove();
+                $('#platform-registration-modal-body').find('.alert-danger').hide();
                 var message = JSON.parse(xhr.responseText);
 
                 var platformRegistrationError = document.createElement('p');
@@ -437,7 +452,7 @@ $(document).ready(function () {
     $initialPlatformModalContent = $('#platform-registration-modal').clone(true, true);
 
 
-    $("#infoModelRegBtn").click(function (e) {
+    $("#info-model-reg-btn").click(function (e) {
 
         e.preventDefault();
 
@@ -451,7 +466,7 @@ $(document).ready(function () {
 
         data.append("CustomField", "This is some extra data, testing");
 
-        $("#infoModelRegBtn").prop("disabled", true);
+        $("#info-model-reg-btn").prop("disabled", true);
         $('.msg').text('Uploading in progress...');
 
         $.ajax({
@@ -478,7 +493,8 @@ $(document).ready(function () {
                 return xhr;
             },
             success: function (data) {
-                $("#infoModelRegBtn").prop("disabled", false);
+                $("#info-model-reg-btn").prop("disabled", false);
+                $('.myprogress').css('width', '0%');
                 $('.msg').text('');
 
                 $('#info-model-reg-modal').modal('hide');
@@ -493,21 +509,39 @@ $(document).ready(function () {
                 // Resetting the validation
                 $('#info-model-registration-form').validator('destroy').validator();
 
+                // Refresh Information Models
                 deleteInfoModelsPanels();
                 buildInfoModelsPanels();
 
+                // Delete old platform panels, because they are re-created in buildPlatformRegistrationForm
+                deletePlatformPanels();
+
+                // Refresh Registration form
+                buildPlatformRegistrationForm();
+
             },
             error: function (xhr) {
-                $("#infoModelRegBtn").prop("disabled", false);
-                $('#info-model-registration-modal-body').find('.alert-danger').remove();
+                $("#info-model-reg-btn").prop("disabled", false);
+                $('.myprogress').css('width', '0%');
+                $('.msg').text('');
+
+                $('#info-model-registration-modal-body').find('.alert-danger').hide();
                 var message = JSON.parse(xhr.responseText);
 
                 var infoModelRegistrationError = document.createElement('p');
                 infoModelRegistrationError.innerHTML = message.error;
                 $('#info-model-registration-modal-body').prepend($infoModelRegistrationError.clone().append(infoModelRegistrationError).show());
+
+                if (typeof message.info_model_reg_error_name !== 'undefined')
+                    $('#info-model-reg-error-name').html(message.info_model_reg_error_name).show();
+
+                if (typeof message.info_model_reg_error_uri !== 'undefined')
+                    $('#info-model-reg-error-uri').html(message.info_model_reg_error_uri).show();
+
+                if (typeof message.info_model_reg_error_rdf !== 'undefined')
+                    $('#info-model-reg-error-rdf').html(message.info_model_reg_error_rdf).show();
             }
         });
     });
-
 
 });
