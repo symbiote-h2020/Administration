@@ -95,8 +95,10 @@ public class RabbitManager {
 
     @Value("${rabbit.routingKey.platform.model.allInformationModelsRequested}")
     private String informationModelsRequestedRoutingKey;
-    @Value("${rabbit.routingKey.platform.model.removed}")
-    private String informationModelRemovedRoutingKey;
+    @Value("${rabbit.routingKey.platform.model.removalRequested}")
+    private String informationModelRemovalRequestedRoutingKey;
+    @Value("${rabbit.routingKey.platform.model.creationRequested}")
+    private String informationModelCreationRequestedRoutingKey;
 
     // ------------ Core AAM communication ----------------
 
@@ -372,6 +374,45 @@ public class RabbitManager {
      * @param request contains the information model to be deleted
      * @return response from registry
      */
+    public InformationModelResponse sendRegisterInfoModelRequest(InformationModelRequest request)
+            throws CommunicationException {
+
+        log.debug("sendRegisterInfoModelRequest");
+
+        try {
+
+            String message = mapper.writeValueAsString(request);
+
+            // The message is false to indicate that we do not need the rdf of Information Models
+            String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
+                    this.informationModelCreationRequestedRoutingKey, message);
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                InformationModelResponse response = mapper.readValue(responseMsg,
+                        InformationModelResponse.class);
+                log.info("Received information model response from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in information model details response response from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc information model request message.", e);
+        }
+        return null;
+    }
+
+    /**
+     * Method used request the removal of an information model
+     * @param request contains the information model to be deleted
+     * @return response from registry
+     */
     public InformationModelResponse sendDeleteInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
 
@@ -383,7 +424,7 @@ public class RabbitManager {
 
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelRemovedRoutingKey, message);
+                    this.informationModelRemovalRequestedRoutingKey, message);
 
             if (responseMsg == null)
                 return null;

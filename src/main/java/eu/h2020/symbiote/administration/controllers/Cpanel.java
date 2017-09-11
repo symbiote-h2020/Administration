@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration.controllers;
 
+import java.io.IOException;
 import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
@@ -11,6 +12,7 @@ import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
 import eu.h2020.symbiote.core.model.InterworkingService;
 import eu.h2020.symbiote.core.model.Platform;
+import eu.h2020.symbiote.core.model.RDFFormat;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -20,6 +22,7 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -317,7 +320,7 @@ public class Cpanel {
                                     log.debug("AAM unreachable during platform deletion request");
                                 }
                                 responseBody.put("platformRegistrationError", registryResponse.getMessage());
-                                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+                                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
                             }
                         } else {
                             log.debug("Registry unreachable!");
@@ -550,18 +553,76 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/register_information_model")
-    public ResponseEntity<InformationModel> registerInformationModel(@RequestParam("info-model-rdf") MultipartFile rdfFile,
-                                                                     Principal principal) {
+    public ResponseEntity<?> registerInformationModel(@RequestParam("info-model-name") String name,
+                                                      @RequestParam("info-model-uri") String uri,
+                                                      @RequestParam("info-model-rdf") MultipartFile rdfFile,
+                                                      Principal principal) {
 
         log.debug("POST request on /user/cpanel/register_information_model");
 
+        UrlValidator urlValidator = new UrlValidator();
+
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
+        Map<String, String> response = new HashMap<>();
 
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
 
-        // if form is valid, construct the request
-        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+        if (name.length() < 2 || name.length() > 30)
+            response.put("info-model-reg-error-name", "The name should have from 2 to 30 characters");
+        if (!urlValidator.isValid(uri))
+            response.put("info-model-reg-error-uri", "The uri is invalid");
+        if (!rdfFile.getOriginalFilename().matches("^[\\w]+\\.(ttl|nt|rdf|xml|n3|jsonld)$"))
+            response.put("info-model-reg-error-rdf", "This format is not supported");
+
+        if (response.size() > 0)
+            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+
+
+        try {
+            InformationModel informationModel = new InformationModel();
+            informationModel.setName(name);
+            informationModel.setOwner(user.getUsername());
+            informationModel.setUri(uri);
+            informationModel.setRdf(new String(rdfFile.getBytes(), "UTF-8"));
+
+            String[] parts = rdfFile.getOriginalFilename().split("\\.");
+            informationModel.setRdfFormat(RDFFormat.fromFilenameExtension(parts[parts.length-1]));
+
+
+            InformationModelRequest request = new InformationModelRequest();
+            request.setInformationModel(informationModel);
+
+            InformationModelResponse registryResponse = rabbitManager.sendRegisterInfoModelRequest(request);
+            if (registryResponse != null) {
+                if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                    log.debug("Registry responded with: " + registryResponse.getStatus());
+                    response.put("error", registryResponse.getMessage());
+                    return new ResponseEntity<>(response,
+                            new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
+                }
+            } else {
+                log.debug("Registry unreachable!");
+                response.put("error", "Registry unreachable!");
+                return new ResponseEntity<>(response,
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            log.debug("Registry threw communication exception");
+            response.put("error", "Registry threw communication exception");
+            return new ResponseEntity<>(response,
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.debug("Could not read the rdfFile");
+            response.put("error", "Could not read the rdfFile");
+
+            return new ResponseEntity<>(response,
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.CREATED);
     }
 
 //    @PostMapping("/user/cpanel/register_information_model")
@@ -626,7 +687,7 @@ public class Cpanel {
                             if (response.getStatus() != HttpStatus.OK.value()) {
 
                                 return new ResponseEntity<>(response.getMessage(),
-                                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                                        new HttpHeaders(), HttpStatus.valueOf(response.getStatus()));
                             }
                         } else {
                             log.debug("Registry unreachable!");
@@ -714,7 +775,7 @@ public class Cpanel {
             } else {
                 if (informationModelListResponse != null)
                     return new ResponseEntity<>(informationModelListResponse.getMessage(),
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                            new HttpHeaders(), HttpStatus.valueOf(informationModelListResponse.getStatus()));
                 else
                     return new ResponseEntity<>("Could not retrieve the information models from registry",
                             new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);

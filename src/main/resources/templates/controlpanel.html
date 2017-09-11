@@ -9,19 +9,21 @@
     <link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
     <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
     <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
-    <link rel="stylesheet" th:href="@{/css/fileinput.min.css}" href="css/fileinput.min.css" />
 
     <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
     <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
     <script type="text/javascript" th:src="@{/js/cpanel.js}" src="js/cpanel.js"></script>
     <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
     <script type="text/javascript" th:src="@{/js/validator.js}" src="js/validator.js"></script>
-    <script type="text/javascript" th:src="@{/js/fileinput.min.js}" src="js/fileinput.min.js"></script>
 
 </head>
 <body>
 
-<script>setupAjax();</script>
+<script>
+    setupAjax();
+    cloneNecessaryHtml();
+</script>
+
 <div class="header shadow">
     <div class="container">
         <img class="logo" th:src="@{/images/logo-1.1.png}" src="static/images/logo-1.1.png"></img>
@@ -90,7 +92,7 @@
                     <div class="alert alert-success alert-dismissable" id="platform-registration-successful" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Success!</strong>
-                        <p></p>The platform was registered successfully!</div>
+                        <p>The platform was registered successfully!</p></div>
                     <div class="alert alert-success alert-dismissable" id="platform-successful-deletion" style="display: none;">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Success!</strong>
@@ -319,7 +321,8 @@
                                         <div class="row interworking-service">
                                             <div class="col-sm-8 form-group has-feedback">
                                                 <input type="url" class="form-control platformRegField platform-update-interworking-service-url"
-                                                       placeholder="Enter a valid https url" pattern="^https.*" disabled="disabled"
+                                                       placeholder="Enter a valid https url" disabled="disabled"
+                                                       pattern="^(https:\/\/www\.|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
                                                        data-pattern-error="Please enter a valid https url" data-error="Not valid url"
                                                        required="required" data-required-error="A valid https url is required"/>
                                                 <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
@@ -407,6 +410,11 @@
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Error!</strong></div>
 
+                    <!-- Display success message -->
+                    <div class="alert alert-success alert-dismissable" id="info-model-registration-successful" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The information model was registered successfully!</p></div>
                     <div class="alert alert-success alert-dismissable" id="info-model-successful-deletion" style="display: none">
                         <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
                         <strong>Success!</strong>
@@ -415,50 +423,80 @@
                     <!-- Register new Information Model by triggering the button-->
                     <!-- Trigger the modal with a button -->
                     <button type="button" class="btn btn-info btn-default registration-btn" data-toggle="modal"
-                            data-target="#infoModelRegModal">Register New Information Model</button>
+                            data-target="#info-model-reg-modal">Register New Information Model</button>
 
                     <!-- Modal -->
-                    <div id="infoModelRegModal" class="modal fade" role="dialog">
+                    <div id="info-model-reg-modal" class="modal fade" role="dialog">
                         <div class="modal-dialog">
 
-                            <form id="info-model-registration-form" role="form" method="" action="">
+                            <form id="info-model-registration-form" role="form" action="" data-toggle="validator">
 
                                 <!-- Modal content-->
                                 <div class="modal-content">
                                     <div class="modal-header">
                                         <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h3 class="modal-title">Platform Registration</h3>
+                                        <h3 class="modal-title">Information Model Registration</h3>
                                     </div>
-                                    <div class="modal-body">
+                                    <div class="modal-body" id="info-model-registration-modal-body">
+
+                                        <!-- Display errors -->
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="info-model-registration-error" style="display: none">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong></div>
+
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="row">
-                                                    <div class="col-sm-6 form-group">
+                                                    <div class="col-sm-6 form-group has-feedback">
                                                         <label>Name</label>
-                                                        <input type="text" class="form-control" id="infoModelName"
-                                                               name="infoModelName" placeholder="Enter name of the information model" />
+                                                        <input type="text" class="form-control" id="info-model-name"
+                                                               minlength="2" maxlength="30" required="required"
+                                                               data-required-error="A valid name is required"
+                                                               name="info-model-name" placeholder="Enter name of the information model" />
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 2 to 30 characters</div>
+                                                        <div class="alert alert-danger" id="info-model-reg-error-name" style="display: none">
+                                                            Invalid name!</div>
                                                     </div>
-                                                    <div class="col-sm-6 form-group">
+                                                    <div class="col-sm-6 form-group has-feedback">
                                                         <label>Uri</label>
-                                                        <input type="text"  class="form-control" id="infoModelUri"
-                                                               name="infoModelUri" placeholder="Enter the uri of the information model" />
+                                                        <input type="url"  class="form-control" id="info-model-uri"
+                                                               name="info-model-uri" placeholder="Enter the uri of the information model"
+                                                               pattern="^((ftp|http|https):\/\/)?(\S+(:\S*)?@)?((([1-9]\d?|1\d\d|2[01]\d|22[0-3])(\.(1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.([0-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|((www\.)?)?(([a-z\x{00a1}-\x{ffff}0-9]+-?-?_?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.([a-z\x{00a1}-\x{ffff}]{2,}))?)|localhost)(:(\d{1,5}))?((\/|\?|#)[^\s]*)?$"
+                                                               data-error="Not valid url" required="required"
+                                                               data-required-error="A valid uri is required"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors"></div>
+                                                        <div class="alert alert-danger" id="info-model-reg-error-uri" style="display: none">
+                                                            Invalid name!</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-sm-12">
+                                            <div class="col-sm-12 form-group">
                                                 <label>Rdf file</label>
-                                                <div class="file-loading">
-                                                    <input class="file-loading" id="info-model-rdf" name="info-model-rdf" type="file" />
-                                                </div>
+                                                <input id="info-model-rdf" name="info-model-rdf" type="file"
+                                                       accept=".ttl, .nt, .rdf, .xml, .n3, .jsonld" required="required"/>
+                                                <div class="help-block with-errors">Supported format: .ttl, .nt, .rdf, .xml, .n3, .jsonld</div>
+                                                <div class="alert alert-danger" id="info-model-reg-error-rdf" style="display: none">
+                                                    Invalid name!</div>
                                             </div>
                                         </div>
+                                        <div class="row">
+                                            <div class="col-sm-12 form-group">
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-success myprogress" role="progressbar" style="width:0%">0%</div>
+                                                </div>
 
+                                                <div class="msg"></div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="modal-footer">
-                                        <button type="button" id="infoModelRegBtn" name="infoModelRegBtn"
-                                                class="btn btn-default btn-info" onclick="registerInfoModel()">Submit</button>
+                                        <button type="submit" id="infoModelRegBtn" name="infoModelRegBtn"
+                                                class="btn btn-default btn-info">Submit</button>
                                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                                     </div>
                                 </div>

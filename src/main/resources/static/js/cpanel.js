@@ -1,15 +1,23 @@
 // Store useful html elements
+var $initialPlatformModalContent = null;
+
 var $platformPanelEntry = null;
 var $infoModelPanelEntry = null;
+
+var $platformRegistrationSuccessful = null;
 var $platformSuccessfulDeletion = null;
-var $listOwnedPlatformsError = null;
+var $platformRegistrationError = null;
 var $deletePlatformError = null;
+
+var $infoModelRegistrationSuccessful = null;
+var $infoModelRegistrationError = null;
 var $infoModelSuccessfulDeletion = null;
 var $deleteInformationModelError = null;
+
+var $listOwnedPlatformsError = null;
 var $listUserInfoModelError = null;
-var $initialPlatformModalContent = null;
-var $platformRegistrationSuccessful = null;
-var $platformRegistrationError = null;
+
+
 
 // Store csrf token
 var csrfToken = null;
@@ -125,6 +133,9 @@ function buildPlatformRegistrationForm() {
         dataType: "json",
         contentType: "application/json",
         success: function(data) {
+            $('#platform-registration-info-model-id').find("option").remove();
+            $('.update-info-model-select').find("option").remove();
+
             $.each(data, function (i, item) {
                 $('#platform-registration-info-model-id').append($('<option>', {
                     value: item.id,
@@ -262,16 +273,6 @@ function deletePlatformPanels() {
 function buildInfoModelsPanels() {
     var $infoModelTab = $('#information-models');
 
-    if (csrfToken === null || csrfHeader === null) {
-        csrfToken = $("meta[name='_csrf']").attr("content");
-        csrfHeader = $("meta[name='_csrf_header']").attr("content");
-
-        $.ajaxSetup({
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader(csrfHeader, csrfToken);
-            }
-        });
-    }
 
     if ($infoModelPanelEntry === null) {
         $infoModelPanelEntry = $('#info-model-entry').clone();
@@ -292,6 +293,17 @@ function buildInfoModelsPanels() {
         $listUserInfoModelError = $('#list-user-info-model-error').clone().removeAttr("id");
         $('#list-user-info-model-error').remove();
     }
+
+    if ($infoModelRegistrationSuccessful === null) {
+        $infoModelRegistrationSuccessful = $('#info-model-registration-successful').clone().removeAttr("id");
+        $('#info-model-registration-successful').remove();
+    }
+
+    if ($infoModelRegistrationError === null) {
+        $infoModelRegistrationError = $('#info-model-registration-error').clone().removeAttr("id");
+        $('#info-model-registration-error').remove();
+    }
+
 
     $.ajax({
         url: "/user/cpanel/list_user_info_models",
@@ -328,37 +340,6 @@ function deleteInfoModelsPanels() {
     $(".info-model-panel-entry").remove();
 }
 
-// function registerInfoModel() {
-//     var informationModel = new InformationModel(
-//         $('#infoModelId').val(),
-//         $('#infoModelUri').val(),
-//         $('#infoModelName').val(),
-//         $('#infoModelOwner').val(),
-//         $('#infoModelRdf').val(),
-//         $('#infoModelRdfFormat').val());
-//
-//     $.ajax({
-//         url: "/user/cpanel/register_information_model",
-//         type: "POST",
-//         dataType: "json",
-//         contentType: "application/json",
-//         data: JSON.stringify(informationModel),
-//         success: function(data) {
-//             $('#infoModelRegModal').modal('hide');
-//             $('#infoModelId').val('');
-//             $('#infoModelUri').val('');
-//             $('#infoModelName').val('');
-//             $('#infoModelOwner').val('');
-//             $('#infoModelRdf').val('');
-//             $('#infoModelRdfFormat').val('');
-//
-//         },
-//         error : function() {
-//             alert("There was an error!");
-//         }
-//     });
-// }
-
 // On ready function
 $(document).ready(function () {
 
@@ -391,6 +372,7 @@ $(document).ready(function () {
             success : function (data) {
 
                 $('#platform-registration-modal').modal('hide');
+                $('#platform-registration-modal-body').find('.alert-danger').remove();
                 $('#platform-details').prepend($platformRegistrationSuccessful.clone().show());
 
                 // Resetting the the form
@@ -404,7 +386,7 @@ $(document).ready(function () {
                 buildPlatformPanels();
             },
             error : function(xhr) {
-                $('#platform-registration-row').find('.alert-danger').hide();
+                $('#platform-registration-modal-body').find('.alert-danger').remove();
                 var message = JSON.parse(xhr.responseText);
 
                 var platformRegistrationError = document.createElement('p');
@@ -454,14 +436,13 @@ $(document).ready(function () {
 
     $initialPlatformModalContent = $('#platform-registration-modal').clone(true, true);
 
-    $("#info-model-rdf").fileinput({
-        allowedFileExtensions: ["ttl", "nt", "rdf", "n3", "jsonld"],
-        maxFilePreviewSize: 10240
-    });
 
     $("#infoModelRegBtn").click(function (e) {
 
         e.preventDefault();
+
+        $('.myprogress').css('width', '0');
+        $('.msg').text('');
 
         // Get form
         var form = $('#info-model-registration-form')[0];
@@ -471,6 +452,7 @@ $(document).ready(function () {
         data.append("CustomField", "This is some extra data, testing");
 
         $("#infoModelRegBtn").prop("disabled", true);
+        $('.msg').text('Uploading in progress...');
 
         $.ajax({
             type: "POST",
@@ -483,14 +465,46 @@ $(document).ready(function () {
             contentType: false,
             cache: false,
             timeout: 600000,
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = evt.loaded / evt.total;
+                        percentComplete = parseInt(percentComplete * 100);
+                        $('.myprogress').text(percentComplete + '%');
+                        $('.myprogress').css('width', percentComplete + '%');
+                    }
+                }, false);
+                return xhr;
+            },
             success: function (data) {
-                alert("SUCCESS!");
                 $("#infoModelRegBtn").prop("disabled", false);
+                $('.msg').text('');
+
+                $('#info-model-reg-modal').modal('hide');
+                $('#info-model-registration-modal-body').find('.alert-danger').remove();
+                $('#information-models').prepend($infoModelRegistrationSuccessful.clone().show());
+
+                // Resetting the the form
+                $('#info-model-name').val("");
+                $('#info-model-uri').val("");
+                $('#info-model-rdf').val("");
+
+                // Resetting the validation
+                $('#info-model-registration-form').validator('destroy').validator();
+
+                deleteInfoModelsPanels();
+                buildInfoModelsPanels();
 
             },
-            error: function (e) {
-                alert("ERROR : " + e.responseText);
+            error: function (xhr) {
                 $("#infoModelRegBtn").prop("disabled", false);
+                $('#info-model-registration-modal-body').find('.alert-danger').remove();
+                var message = JSON.parse(xhr.responseText);
+
+                var infoModelRegistrationError = document.createElement('p');
+                infoModelRegistrationError.innerHTML = message.error;
+                $('#info-model-registration-modal-body').prepend($infoModelRegistrationError.clone().append(infoModelRegistrationError).show());
             }
         });
     });

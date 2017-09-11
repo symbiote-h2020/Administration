@@ -94,6 +94,9 @@ dependencies {
     compile('org.webjars:jquery:3.1.1-1')
     compile('org.webjars:bootstrap:3.3.7-1')
 
+    // other
+    compile('commons-validator:commons-validator:1.6')
+
     // tests only
     testCompile('junit:junit:4.+')
     testCompile('org.springframework.boot:spring-boot-starter-test')
