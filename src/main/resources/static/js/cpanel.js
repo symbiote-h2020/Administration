@@ -502,7 +502,7 @@ $(document).ready(function () {
             },
             success: function (data) {
                 $("#info-model-reg-btn").prop("disabled", false);
-                $('.myprogress').css('width', '0%');
+                $('.myprogress').css('width', '0%').text('');
                 $('.msg').text('');
 
                 $('#info-model-reg-modal').modal('hide');
@@ -530,7 +530,7 @@ $(document).ready(function () {
             },
             error: function (xhr) {
                 $("#info-model-reg-btn").prop("disabled", false);
-                $('.myprogress').css('width', '0%');
+                $('.myprogress').css('width', '0%').text('');
                 $('.msg').text('');
 
                 $('#info-model-registration-modal-body').find('.alert-danger').hide();
