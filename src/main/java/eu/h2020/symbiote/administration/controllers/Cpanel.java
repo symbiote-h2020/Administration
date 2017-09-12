@@ -135,7 +135,7 @@ public class Cpanel {
                     } catch (CommunicationException e) {
                         e.printStackTrace();
                         log.debug("Registry threw communication exception");
-                        response.setMessage("Registry threw communication exception");
+                        response.setMessage("Registry threw communication exception: " + e.getMessage());
                         return new ResponseEntity<>(response,
                                 new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
@@ -149,6 +149,7 @@ public class Cpanel {
                 response.setAvailablePlatforms(availablePlatformDetails);
 
                 if (unavailablePlatforms.size() == 0) {
+                    log.debug("All the owned platform details were successfully received");
                     response.setMessage("All the owned platform details were successfully received");
                     return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
                 }
@@ -158,6 +159,7 @@ public class Cpanel {
                     for (String unavailablePlatform : unavailablePlatforms)
                         message += " " + unavailablePlatform + ",";
                     message = message.substring(0, message.length() - 1);
+                    log.debug(message);
                     response.setMessage(message);
                     return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
                 }
@@ -170,7 +172,7 @@ public class Cpanel {
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("AAM threw CommunicationException");
-            response.setMessage("AAM threw CommunicationException");
+            response.setMessage("AAM threw CommunicationException: " + e.getMessage());
             return new ResponseEntity<>(response,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -272,7 +274,7 @@ public class Cpanel {
                 if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
                     // If AAM responds with OK construct the Platform registration request and send it to registry
                     Platform registryRequest = new Platform();
-                    registryRequest.setId(platformDetails.getId());
+                    registryRequest.setId(aamResponse.getPlatformId()); // To take into account the empty id
                     registryRequest.setInterworkingServices(platformDetails.getInterworkingServices());
                     registryRequest.setEnabler(platformDetails.getIsEnabler());
 
@@ -290,7 +292,6 @@ public class Cpanel {
                         comments.add(comment.getComment());
                     registryRequest.setComments(comments);
 
-                    // Todo: Change to PlatformRegistryRequest?
                     try {
                         PlatformRegistryResponse registryResponse = rabbitManager.sendPlatformCreationRequest(registryRequest);
                         if (registryResponse != null) {
@@ -342,7 +343,7 @@ public class Cpanel {
                         }
                     } catch (CommunicationException e) {
                         e.printStackTrace();
-                        log.debug("Registry threw communication exception");
+                        log.debug("Registry threw communication exception: " + e.getMessage());
 
                         // Send deletion message to AAM
                         aamRequest.setOperationType(OperationType.DELETE);
@@ -378,8 +379,9 @@ public class Cpanel {
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            log.debug("AAM threw communication exception");
-            responseBody.put("platformRegistrationError", "AAM threw communication exception");
+            String message = "AAM threw communication exception: " + e.getMessage();
+            log.debug(message);
+            responseBody.put("platformRegistrationError", message);
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -438,7 +440,7 @@ public class Cpanel {
                 for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
                     log.debug(platformDetails);
                     if (platformDetails.getPlatformInstanceId().equals(platformIdToDelete)) {
-                        log.debug("The user owns the platform with " + platformIdToDelete + " which tried to delete.");
+                        log.debug("The user owns the platform with id " + platformIdToDelete + " which tried to delete.");
                         ownsPlatform = true;
                         break;
                     }
@@ -457,7 +459,7 @@ public class Cpanel {
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("AAM threw communication exception");
-            return new ResponseEntity<>("AAM threw communication exception",
+            return new ResponseEntity<>("AAM threw communication exception: " + e.getMessage(),
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -482,7 +484,7 @@ public class Cpanel {
         } catch (CommunicationException e) {
             e.printStackTrace();
             log.debug("Registry threw communication exception");
-            return new ResponseEntity<>("Registry threw communication exception",
+            return new ResponseEntity<>("Registry threw communication exception: " + e.getMessage(),
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -507,8 +509,9 @@ public class Cpanel {
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            log.debug("AAM threw communication exception");
-            return new ResponseEntity<>("AAM threw communication exception",
+            String message = "AAM threw communication exception: " + e.getMessage();
+            log.debug(message);
+            return new ResponseEntity<>(message,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -609,8 +612,9 @@ public class Cpanel {
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            log.debug("Registry threw communication exception");
-            response.put("error", "Registry threw communication exception");
+            String message = "Registry threw communication exception: " + e.getMessage();
+            log.debug(message);
+            response.put("error", message);
             return new ResponseEntity<>(response,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
@@ -666,9 +670,9 @@ public class Cpanel {
                                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);                        }
                     } catch (CommunicationException e) {
                         e.printStackTrace();
-                        log.debug("Registry threw communication exception");
-                        return new ResponseEntity<>("Registry threw communication exception",
-                                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                        String message = "Registry threw communication exception: " + e.getMessage();
+                        log.debug(message);
+                        return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
 
                     return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
@@ -754,8 +758,8 @@ public class Cpanel {
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            return new ResponseEntity<>("Communication exception while retrieving the information models",
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Communication exception while retrieving the information models: " +
+                    e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
     }
