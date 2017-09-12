@@ -253,7 +253,7 @@ function platformPanel(ownedPlatform) {
     var deleteplatformlId = "del-platform-modal-" + ownedPlatform.id;
     $platform.find('.panel-title').text(ownedPlatform.name);
     $platform.find('.btn-warning-delete').attr("data-target", "#" + deleteplatformlId);
-    $platform.find('#PLATFORM-DEL-MODAL').attr("id", deleteplatformlId);
+    $platform.find('#platform-del-modal').attr("id", deleteplatformlId);
     $platform.find('.modal-title').find('strong').text(ownedPlatform.name);
 
     // Setting the platform details
@@ -286,7 +286,7 @@ function deletePlatformPanels() {
 function storeNecessaryInfoModelElements() {
 
     if ($infoModelPanelEntry === null) {
-        $infoModelPanelEntry = $('#info-model-entry').clone();
+        $infoModelPanelEntry = $('#info-model-entry').clone(true, true);
         $('#info-model-entry').remove();
     }
 
@@ -339,14 +339,22 @@ function buildInfoModelsPanels() {
 }
 
 function infoModelPanel(infoModel) {
-    var $infoModelPanel = $infoModelPanelEntry.clone();
+    // Deep clone
+    var $infoModelPanel = $infoModelPanelEntry.clone(true, true);
 
+    // Configuration of the informatin model panel
     var deleteInfoModalId = "del-info-model-modal-" + infoModel.id;
     $infoModelPanel.find('.panel-title').text(infoModel.name);
-    $infoModelPanel.find('.panel-body').text(infoModel.owner);
     $infoModelPanel.find('.btn-warning-delete').attr("data-target", "#" + deleteInfoModalId);
-    $infoModelPanel.find('#INFO-MODEL-DEL-MODAL').attr("id", deleteInfoModalId);
+    $infoModelPanel.find('#info-model-del-modal').attr("id", deleteInfoModalId);
     $infoModelPanel.find('.text-danger').find('strong').text(infoModel.name);
+
+    // Setting the platform details
+    $infoModelPanel.find('.update-info-model-name').val(infoModel.name);
+    $infoModelPanel.find('.update-info-model-id').val(infoModel.id);
+    $infoModelPanel.find('.update-info-model-uri').val(infoModel.uri);
+    $infoModelPanel.find('.update-info-model-rdfformat').val(infoModel.rdfFormat);
+
     $infoModelPanel.show();
     return $infoModelPanel;
 }

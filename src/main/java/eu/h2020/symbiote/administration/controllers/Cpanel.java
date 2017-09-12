@@ -124,7 +124,7 @@ public class Cpanel {
                                 log.debug(registryResponse.getMessage());
                                 unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
                             } else {
-                                availablePlatforms.add(registryResponse.getPlatform());
+                                availablePlatforms.add(registryResponse.getBody());
                             }
                         } else {
                             log.debug("Registry unreachable!");
@@ -224,9 +224,7 @@ public class Cpanel {
                 String[] parts = fieldError.getField().split("\\[");
 
                 if (parts.length > 1){
-                    log.debug(parts[0]);
-                    log.debug(parts[1]);
-                    log.debug(parts[1].split("]")[0]);
+
                     int errorFieldIndex = Integer.parseInt(parts[1].split("]")[0]);
                     log.debug("errorFieldIndex = " + errorFieldIndex);
                     errorField = "pl_reg_error_" + parts[0] + parts[1].replace(".", "_").split("]")[1];
@@ -593,7 +591,7 @@ public class Cpanel {
 
 
             InformationModelRequest request = new InformationModelRequest();
-            request.setInformationModel(informationModel);
+            request.setBody(informationModel);
 
             InformationModelResponse registryResponse = rabbitManager.sendRegisterInfoModelRequest(request);
             if (registryResponse != null) {
@@ -653,7 +651,7 @@ public class Cpanel {
                     // Ask Registry
                     try {
                         InformationModelRequest request = new InformationModelRequest();
-                        request.setInformationModel(informationModel);
+                        request.setBody(informationModel);
 
                         InformationModelResponse response = rabbitManager.sendDeleteInfoModelRequest(request);
                         if (response != null) {
@@ -742,7 +740,7 @@ public class Cpanel {
         try {
             InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
             if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                return new ResponseEntity<>(informationModelListResponse.getInformationModels(),
+                return new ResponseEntity<>(informationModelListResponse.getBody(),
                         new HttpHeaders(), HttpStatus.OK);
 
             } else {
