@@ -3,6 +3,7 @@ var $initialPlatformModalContent = null;
 
 var $platformPanelEntry = null;
 var $infoModelPanelEntry = null;
+var $federationPanelEntry = null;
 
 var $platformRegistrationSuccessful = null;
 var $platformSuccessfulDeletion = null;
@@ -19,6 +20,7 @@ var $federationRegistrationError = null;
 
 var $listOwnedPlatformsError = null;
 var $listUserInfoModelError = null;
+var $listFederationsError = null
 
 
 
@@ -351,14 +353,14 @@ function infoModelPanel(infoModel) {
     // Deep clone
     var $infoModelPanel = $infoModelPanelEntry.clone(true, true);
 
-    // Configuration of the informatin model panel
+    // Configuration of the information model panel
     var deleteInfoModalId = "del-info-model-modal-" + infoModel.id;
     $infoModelPanel.find('.panel-title').text(infoModel.name);
     $infoModelPanel.find('.btn-warning-delete').attr("data-target", "#" + deleteInfoModalId);
     $infoModelPanel.find('#info-model-del-modal').attr("id", deleteInfoModalId);
     $infoModelPanel.find('.text-danger').find('strong').text(infoModel.name);
 
-    // Setting the platform details
+    // Setting the information model details
     $infoModelPanel.find('.update-info-model-name').val(infoModel.name);
     $infoModelPanel.find('.update-info-model-id').val(infoModel.id);
     $infoModelPanel.find('.update-info-model-uri').val(infoModel.uri);
@@ -374,6 +376,11 @@ function deleteInfoModelsPanels() {
 
 function storeNecessaryFederationElements() {
 
+    if ($federationPanelEntry === null) {
+        $federationPanelEntry = $('#federation-panel-entry').clone(true, true);
+        $('#federation-panel-entry').remove();
+    }
+
     if ($federationRegistrationSuccessful === null) {
         $federationRegistrationSuccessful = $('#federation-registration-successful').clone().removeAttr("id");
         $('#federation-registration-successful').remove();
@@ -383,6 +390,63 @@ function storeNecessaryFederationElements() {
         $federationRegistrationError = $('#federation-registration-error').clone().removeAttr("id");
         $('#federation-registration-error').remove();
     }
+
+    if ($listFederationsError === null) {
+        $listFederationsError = $('#list-federations-error').clone().removeAttr("id");
+        $('#list-federations-error').remove();
+    }
+}
+
+// Construct federation panels
+function buildFederationPanels() {
+    var $federationListTab = $('#federation_list');
+
+    $.ajax({
+        url: "/user/cpanel/list_federations",
+        type: "POST",
+        dataType: "json",
+        contentType: "application/json",
+        success: function(data) {
+            for (var i = 0; i < data.length; i++) {
+                $federationListTab.append(federationPanel(data[i]));
+            }
+        },
+        error : function(xhr) {
+            var message = document.createElement('p');
+            message.innerHTML = xhr.responseText;
+            $federationListTab.prepend($listFederationsError.clone().append(message).show());
+        }
+    });
+}
+
+function federationPanel(federation) {
+
+    // Deep clone
+    var $federationPanel = $federationPanelEntry.clone(true, true);
+
+    // Configuration of the federation panel
+    var deleteInfoModalId = "del-federation-modal-" + federation.id;
+    $federationPanel.find('.panel-title').text(federation.id);
+    $federationPanel.find('.btn-warning-delete').attr("data-target", "#" + deleteInfoModalId);
+    $federationPanel.find('#info-model-del-modal').attr("id", deleteInfoModalId);
+    $federationPanel.find('.text-danger').find('strong').text(federation.id);
+
+    // Setting the federation details
+    $federationPanel.find('.federation-ID').val(infoModel.id);
+
+    for (var i = 0; i < federation.platformIds.length; i++) {
+        var platform = document.createElement('li');
+        platform.innerHTML = federation.platformIds[i];
+        platform.addClass("list-group-item");
+        $federationPanel.find('.federated-platforms').append(platform);
+    }
+
+    $federationPanel.show();
+    return $federationPanel;
+}
+
+function deleteFederationPanels() {
+    $(".federation-panel-entry").remove();
 }
 
 // On ready function
@@ -602,8 +666,8 @@ $(document).ready(function () {
                 // Resetting the validation
                 $('#federation-registration-form').validator('destroy').validator();
 
-                // deleteFederationPanels();
-                // buildFederationPanels();
+                deleteFederationPanels();
+                buildFederationPanels();
             },
             error : function(xhr) {
                 $('#federation-registration-modal-body').find('.alert-danger').hide();

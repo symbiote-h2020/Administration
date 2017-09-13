@@ -763,6 +763,50 @@ public class Cpanel {
 
     }
 
+    @PostMapping("/user/cpanel/list_federations")
+    public ResponseEntity<?> listFederations(Principal principal) {
+
+        log.debug("POST request on /user/cpanel/list_federations");
+
+        String username = principal.getName(); //get logged in username
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
+        CoreUser user = (CoreUser)token.getPrincipal();
+        Map<String, Object> responseBody = new HashMap<>();
+
+        Set<String> platformIds = new HashSet<>();
+
+        FederationRuleManagementRequest request = new FederationRuleManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                "",
+                platformIds,
+                FederationRuleManagementRequest.OperationType.READ
+        );
+
+        try {
+            Map<String, FederationRule> aamResponse =
+                    rabbitManager.sendFederationRuleManagementRequest(request);
+
+            if (aamResponse != null) {
+                return new ResponseEntity<>(aamResponse, new HttpHeaders(), HttpStatus.OK);
+
+            } else {
+                String message = "AAM unreachable during ListFederationRequest";
+                log.debug(message);
+                responseBody.put("error", message);
+                return new ResponseEntity<>(responseBody,
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            String message = "AAM threw communication exception during ListFederationRequest: " + e.getMessage();
+            log.debug(message);
+            responseBody.put("error", message);
+            return new ResponseEntity<>(responseBody,
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
     // ADMIN
 
     @RequestMapping("/admin/cpanel")
