@@ -7,14 +7,21 @@
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
     <link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
-    <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
-    <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
+    <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="../static/css/cpanel.css" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="../static/css/bootstrap-select.min.css" />
 
-    <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
+    <script type="text/javascript" src="/webjars/jquery/3.2.1/jquery.min.js"></script>
     <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
-    <script type="text/javascript" th:src="@{/js/cpanel.js}" src="js/cpanel.js"></script>
-    <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
-    <script type="text/javascript" th:src="@{/js/validator.js}" src="js/validator.js"></script>
+    <script type="text/javascript" th:src="@{/js/cpanel.js}" src="../static/js/cpanel.js"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="../static/js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/validator.js}" src="../static/js/validator.js"></script>
+
+
+    <!--<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'/>-->
+
+    <!--<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
+    <!--<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+
 
 </head>
 <body>
@@ -26,7 +33,7 @@
 
 <div class="header shadow">
     <div class="container">
-        <img class="logo" th:src="@{/images/logo-1.1.png}" src="static/images/logo-1.1.png"></img>
+        <img class="logo" th:src="@{/images/logo-1.1.png}" src="../static/images/logo-1.1.png"></img>
         <span class="title">User Dashboard</span>
         <div class="btn-group logout">
 
@@ -61,6 +68,14 @@
                     </li>
                     <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
                         <a href="#information-models" data-toggle="tab">Information Models</a>
+                    </li>
+                    <li class="dropdown dropdown-submenu" th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                        <a class="dropdown-toggle" href="#federation-panels" data-toggle="dropdown">Federations</a>
+                        <ul id="federation-panels" class="dropdown-menu nav nav-pills nav-stacked sidebar panel-primary shadow">
+                            <li><a href="#create_federation" data-toggle="tab">Create Federation</a></li>
+                            <li><a href="#federation_requests" data-toggle="tab">Federation Requests</a></li>
+                            <li><a href="#federation_list" data-toggle="tab">Federation List</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
@@ -590,6 +605,22 @@
                     </script>
 
                 </div>
+
+                <!-- Create Federation Tab-->
+                <div class="tab-pane" id="create_federation">
+                    <h3>Create Federation</h3>
+                </div>
+
+                <!-- Federation Requests Tab-->
+                <div class="tab-pane" id="federation_requests">
+                    <h3>Federation Requests</h3>
+                </div>
+
+                <!-- Federation List Tab-->
+                <div class="tab-pane" id="federation_list">
+                    <h3>Federation List</h3>
+                </div>
+
             </div>
         </div>
     </div>
