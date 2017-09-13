@@ -14,6 +14,9 @@ var $infoModelRegistrationError = null;
 var $infoModelSuccessfulDeletion = null;
 var $deleteInformationModelError = null;
 
+var $federationRegistrationSuccessful = null;
+var $federationRegistrationError = null;
+
 var $listOwnedPlatformsError = null;
 var $listUserInfoModelError = null;
 
@@ -46,6 +49,12 @@ function InformationModel(id, uri, name, owner, rdf, rdfFormat) {
     this.owner = owner;
     this.rdf = rdf;
     this.rdfFormat = rdfFormat;
+}
+
+function CreateFederationRequest(id, platform1Id, platform2Id) {
+    this.id = id;
+    this.platform1Id = platform1Id;
+    this.platform2Id = platform2Id;
 }
 
 // Event handlers
@@ -363,6 +372,19 @@ function deleteInfoModelsPanels() {
     $(".info-model-panel-entry").remove();
 }
 
+function storeNecessaryFederationElements() {
+
+    if ($federationRegistrationSuccessful === null) {
+        $federationRegistrationSuccessful = $('#federation-registration-successful').clone().removeAttr("id");
+        $('#federation-registration-successful').remove();
+    }
+
+    if ($federationRegistrationError === null) {
+        $federationRegistrationError = $('#federation-registration-error').clone().removeAttr("id");
+        $('#federation-registration-error').remove();
+    }
+}
+
 // On ready function
 $(document).ready(function () {
 
@@ -395,7 +417,7 @@ $(document).ready(function () {
             success : function (data) {
 
                 $('#platform-registration-modal').modal('hide');
-                $('#platform-registration-modal-body').find('.alert-danger').remove();
+                $('#platform-registration-modal-body').find('.alert-danger').hide();
                 $('#platform-details').prepend($platformRegistrationSuccessful.clone().show());
 
                 // Resetting the the form
@@ -506,7 +528,7 @@ $(document).ready(function () {
                 $('.msg').text('');
 
                 $('#info-model-reg-modal').modal('hide');
-                $('#info-model-registration-modal-body').find('.alert-danger').remove();
+                $('#info-model-registration-modal-body').find('.alert-danger').hide();
                 $('#information-models').prepend($infoModelRegistrationSuccessful.clone().show());
 
                 // Resetting the the form
@@ -550,6 +572,60 @@ $(document).ready(function () {
                     $('#info-model-reg-error-rdf').html(message.info_model_reg_error_rdf).show();
             }
         });
+    });
+
+    $('#federation-reg-btn').click(function (e) {
+        e.preventDefault();
+
+
+        var federationId = $('#federation-registration-id').val();
+        var platform1 = $('#federated-platform-id-1').val();
+        var platform2 = $('#federated-platform-id-2').val();
+
+        var newFederation = new CreateFederationRequest(federationId, platform1, platform2);
+
+        $.ajax({
+            type : "POST",
+            url : "/user/cpanel/create_federation",
+            dataType: "json",
+            contentType: "application/json",
+            data : JSON.stringify(newFederation),
+            success : function (data) {
+
+                $('#federation-reg-modal').modal('hide');
+                $('#federation-registration-modal-body').find('.alert-danger').hide();
+                $('#federation_list').prepend($federationRegistrationSuccessful.clone().show());
+
+                // Resetting the the form
+                $('#federation-registration-form')[0].reset();
+
+                // Resetting the validation
+                $('#federation-registration-form').validator('destroy').validator();
+
+                // deleteFederationPanels();
+                // buildFederationPanels();
+            },
+            error : function(xhr) {
+                $('#federation-registration-modal-body').find('.alert-danger').hide();
+                var message = JSON.parse(xhr.responseText);
+
+                var federationRegistrationError = document.createElement('p');
+                federationRegistrationError.innerHTML = message.error;
+                $('#federation-registration-modal-body').prepend($federationRegistrationError.clone().append(federationRegistrationError).show());
+
+                if (typeof message.federation_reg_error_id !== 'undefined')
+                    $('#federation-reg-error-id').html(message.federation_reg_error_id).show();
+
+                if (typeof message.federation_reg_error_platform1Id !== 'undefined')
+                    $('#federation-reg-error-platform1-id').html(message.federation_reg_error_platform1Id).show();
+
+                if (typeof message.federation_reg_error_platform2Id !== 'undefined')
+                    $('#federation-reg-error-platform2-id').html(message.federation_reg_error_platform2Id).show();
+
+
+            }
+        });
+
     });
 
 });

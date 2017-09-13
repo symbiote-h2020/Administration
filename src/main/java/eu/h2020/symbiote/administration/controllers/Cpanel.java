@@ -686,34 +686,81 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/create_federation")
-    public String createFederation(RedirectAttributes model, Principal principal) {
+    public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
+                                   BindingResult bindingResult, Principal principal) {
 
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
         CoreUser user = (CoreUser)token.getPrincipal();
+        Map<String, Object> responseBody = new HashMap<>();
 
-        // Create a Federation object and send it to the Federation Manager
+        if (bindingResult.hasErrors()) {
 
-        Federation federation = new Federation();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorField = "";
+                String errorMessage = fieldError.getDefaultMessage();
 
-        // Send update to Federation Manager
-        // try{
-        //     FederationResponse response = rabbitManager.sendFederationRequest(federation);
+                errorField = "federation_reg_error_" + fieldError.getField();
+                responseBody.put(errorField, errorMessage);
 
-        //     if(response != null && response.getStatus() == 200 ){
+                log.debug(errorField + ": " + errorMessage);
 
-        //         user.setFederation(federation);
+            }
 
-        //     } else {
-        //         model.addFlashAttribute("error","Authorization Manager is unreachable!");
-        //     }
-        
-        // } catch(CommunicationException e){
+            responseBody.put("error", "Invalid Arguments");
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
 
-        //         model.addFlashAttribute("error",e.getMessage());
-        // }
+        Set<String> platformIds = new HashSet<>();
+        platformIds.add(createFederationRequest.getPlatform1Id());
+        platformIds.add(createFederationRequest.getPlatform2Id());
+        FederationRuleManagementRequest request = new FederationRuleManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                createFederationRequest.getId(),
+                platformIds,
+                FederationRuleManagementRequest.OperationType.CREATE
+        );
 
-        return "redirect:/user/cpanel";  
+        try {
+            Map<String, FederationRule> aamResponse =
+                    rabbitManager.sendFederationRuleManagementRequest(request);
+
+            if (aamResponse != null) {
+                if(aamResponse.size() == 1) {
+                    Map.Entry<String, FederationRule> entry = aamResponse.entrySet().iterator().next();
+
+                    if (entry.getValue().containPlatform(createFederationRequest.getPlatform1Id()) &&
+                            entry.getValue().containPlatform(createFederationRequest.getPlatform2Id())) {
+                        responseBody.put("message", "Federation Registration was successful1");
+                        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
+
+                    } else {
+                        responseBody.put("error", "Not both platforms ids present in AAM response");
+                        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+                    }
+                } else {
+                    String message = "Contains more than 1 Federation rule";
+                    log.debug(message);
+                    responseBody.put("error", message);
+                    return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                String message = "AAM unreachable";
+                log.debug(message);
+                responseBody.put("error", message);
+                return new ResponseEntity<>(responseBody,
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            String message = "AAM threw communication exception: " + e.getMessage();
+            log.debug(message);
+            responseBody.put("error", message);
+            return new ResponseEntity<>(responseBody,
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     // ADMIN

@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
@@ -123,6 +124,9 @@ public class RabbitManager {
     private String getUserDetailsRoutingKey;
     @Value("${rabbit.routingKey.ownedplatformdetails.request}")
     private String getOwnedPlatformDetailsRoutingKey;
+
+    @Value("${rabbit.routingKey.manage.federation.rule}")
+    private String manageFederationRuleRoutingKey;
 
     // ----------------------------------------------------
 
@@ -652,49 +656,40 @@ public class RabbitManager {
     }
 
 
-    // /**
-    //  * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with Federation Manager
-    //  *
-    //  * @param exchangeName name of the exchange to send message to
-    //  * @param routingKey   routing key to send message to
-    //  * @param token  token to be sent
-    //  * @return response from the consumer or null if timeout occurs
-    //  */
-    // public FererationResponse sendFederationMessage(String exchangeName, String routingKey, Federation federation) throws CommunicationException {
-    //     try {
-    //         String message = mapper.writeValueAsString(federation);
+    /**
+     * Method used to send RPC request or federation rule management.
+     *
+     * @param request  request for federation rule management
+     */
+    public Map<String, FederationRule> sendFederationRuleManagementRequest(FederationRuleManagementRequest request)
+            throws CommunicationException {
 
-    //         String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+        log.debug("sendFederationRuleManagementRequest");
 
-    //         if (responseMsg == null)
-    //             return null;
+        try {
+            String message = mapper.writeValueAsString(request);
 
-    //         try {
-    //             FererationResponse response = mapper.readValue(responseMsg, FererationResponse.class);
-    //             log.info("Received platform owner details response from AAM.");
-    //             return response;
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.manageFederationRuleRoutingKey, message);
 
-    //         } catch (Exception e){
+            if (responseMsg == null)
+                return null;
 
-    //             log.error("Error in owner details response from AAM.", e);
-    //             ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
-    //             throw new CommunicationException(error.getErrorMessage());
-    //         }
-    //     } catch (IOException e) {
-    //         log.error("Failed (un)marshalling of rpc resource message.", e);
-    //     }
-    //     return null;
-    // }
+            try {
+                Map<String, FederationRule> response = mapper.readValue(responseMsg,
+                        mapper.getTypeFactory().constructMapType(Map.class, String.class, FederationRule.class));
+                log.info("Received federation rules response from AAM.");
+                return response;
 
+            } catch (Exception e){
 
-    // /**
-    //  * Method used to send RPC request to get a platform owner's platform details.
-    //  *
-    //  * @param token  token of user
-    //  */
-    // public FererationResponse sendFederationRequest(Federation federation) throws CommunicationException  {
-    //     return sendAAMDetailsMessage(this.aamExchangeName, this.detailsRoutingKey, token);
-    // }
-
+                log.error("Error in owner platform details response from AAM.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message.", e);
+        }
+        return null;
+    }
 
 }

@@ -659,29 +659,16 @@
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="row">
-                                                    <div class="col-sm-6 form-group has-feedback">
+                                                    <div class="col-sm-12 form-group has-feedback">
                                                         <label>Federation Id</label>
-                                                        <input type="text" class="form-control" maxlength="30"
+                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
                                                                id="federation-registration-id" name="id" placeholder="Enter preferred federation id"
                                                                pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
-                                                               Include only letters, digits, '-' and '_'. You can leave it empty for autogeneration"/>
+                                                               Include only letters, digits, '-' and '_'"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it
-                                                            empty for autogeneration</div>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
                                                         <div class="alert alert-danger" id="federation-reg-error-id" style="display: none">
-                                                            Up to 30 characters. Only letters, digits, '-' and '_' are permitted. Or leave it
-                                                            empty for autogeneration</div>
-                                                    </div>
-                                                    <div class="col-sm-6 form-group has-feedback">
-                                                        <label>Name</label>
-                                                        <input type="text" class="form-control" id="federation-name"
-                                                               minlength="2" maxlength="30" required="required"
-                                                               data-required-error="A valid name is required"
-                                                               name="name" placeholder="Enter name of the federation" />
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 2 to 30 characters</div>
-                                                        <div class="alert alert-danger" id="federation-reg-error-name" style="display: none">
-                                                            Invalid name!</div>
+                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -689,31 +676,35 @@
                                         <div class="row">
                                             <div class="col-sm-12">
                                                 <div class="row">
-                                                    <div class="col-sm-6 form-group has-feedback">
+                                                    <div class="col-sm-12 form-group has-feedback">
                                                         <label>Federated Platform Id 1</label>
-                                                        <input type="text" class="form-control" maxlength="30"
-                                                               id="federated-platform-id-1" name="platform1"
+                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
+                                                               id="federated-platform-id-1" name="platform1Id"
                                                                placeholder="Enter the id of the platform you want to add to the federation"
                                                                pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
                                                                Include only letters, digits, '-' and '_'."/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it
-                                                            empty for autogeneration</div>
-                                                        <div class="alert alert-danger" id="federation-reg-error-federated-id-1" style="display: none">
-                                                            Up to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
+                                                        <div class="alert alert-danger" id="federation-reg-error-platform1-id" style="display: none">
+                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
                                                     </div>
-                                                    <div class="col-sm-6 form-group has-feedback">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 form-group has-feedback">
                                                         <label>Federated Platform Id 2</label>
-                                                        <input type="text" class="form-control" maxlength="30"
-                                                               id="federated-platform-id-2" name="platform2"
+                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
+                                                               id="federated-platform-id-2" name="platform2Id"
                                                                placeholder="Enter the id of the platform you want to add to the federation"
                                                                pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
                                                                Include only letters, digits, '-' and '_'."/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it
-                                                            empty for autogeneration</div>
-                                                        <div class="alert alert-danger" id="federation-reg-error-federated-id-2" style="display: none">
-                                                            Up to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
+                                                        <div class="alert alert-danger" id="federation-reg-error-platform2-id" style="display: none">
+                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -783,6 +774,11 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Federation Details -->
+                    <script>
+                        storeNecessaryFederationElements();
+                    </script>
                 </div>
 
             </div>
