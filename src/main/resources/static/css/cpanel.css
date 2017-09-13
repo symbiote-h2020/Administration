@@ -218,6 +218,11 @@ a.clickable:hover { text-decoration:none; }
     margin-bottom:0.3em;
 }
 
+.federation-panel-entry {
+    clear:both;
+    margin-bottom:0.3em;
+}
+
 .platformRegField {
     margin-bottom: 0.5em;
 }
@@ -251,9 +256,8 @@ a.clickable:hover { text-decoration:none; }
     overflow: hidden;
 }
 
-.dropdown-menu > li.kopie > a {
-    padding-left:5px;
-}
+
+/*Dropdown menu*/
 
 .dropdown-submenu {
     position:relative;
@@ -288,6 +292,12 @@ a.clickable:hover { text-decoration:none; }
 ul.nav li:hover > ul.dropdown-menu {
     display: block;
 }
+
 #navbar {
     text-align: center;
+}
+
+#federation-panels {
+    margin: 0;
+    padding: 0;
 }

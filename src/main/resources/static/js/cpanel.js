@@ -552,11 +552,4 @@ $(document).ready(function () {
         });
     });
 
-    // $('ul.nav li.dropdown').hover(function() {
-    //     //jQuery(this).find('.dropdown-menu').stop(true, true).show();
-    //     $(this).addClass('open');
-    // }, function() {
-    //     //jQuery(this).find('.dropdown-menu').stop(true, true).hide();
-    //     $(this).removeClass('open');
-    // });
 });
