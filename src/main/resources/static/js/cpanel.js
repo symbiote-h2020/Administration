@@ -542,6 +542,9 @@ $(document).ready(function () {
                 platformRegistrationError.innerHTML = message.platformRegistrationError;
                 $('#platform-registration-modal-body').prepend($platformRegistrationError.clone().append(platformRegistrationError).show());
 
+                $('#platform-registration-modal').animate({ scrollTop: 0 }, 400);
+
+
                 if (typeof message.pl_reg_error_id !== 'undefined')
                     $('#pl-reg-error-id').html(message.pl_reg_error_id).show();
 
@@ -590,6 +593,7 @@ $(document).ready(function () {
 
         e.preventDefault();
 
+        $('.progress').show();
         $('.myprogress').css('width', '0');
         $('.msg').text('');
 
@@ -628,6 +632,7 @@ $(document).ready(function () {
             },
             success: function (data) {
                 $("#info-model-reg-btn").prop("disabled", false);
+                $('.progress').show();
                 $('.myprogress').css('width', '0%').text('');
                 $('.msg').text('');
 
@@ -665,6 +670,8 @@ $(document).ready(function () {
                 var infoModelRegistrationError = document.createElement('p');
                 infoModelRegistrationError.innerHTML = message.error;
                 $('#info-model-registration-modal-body').prepend($infoModelRegistrationError.clone().append(infoModelRegistrationError).show());
+
+                $('#info-model-reg-modal').animate({ scrollTop: 0 }, 400);
 
                 if (typeof message.info_model_reg_error_name !== 'undefined')
                     $('#info-model-reg-error-name').html(message.info_model_reg_error_name).show();

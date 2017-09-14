@@ -144,6 +144,7 @@ public class RabbitManager {
         mapper = new ObjectMapper();
     }
 
+
     /**
      * Method used to initialise RabbitMQ connection and declare all required exchanges.
      * This method should be called once, after bean initialization (so that properties from CoreConfigServer are obtained),
@@ -723,5 +724,8 @@ public class RabbitManager {
         }
         return null;
     }
+
+    // Used in testing
+    public void setMapper(ObjectMapper mapper) { this.mapper = mapper; }
 
 }

@@ -1,14 +1,12 @@
-package eu.h2020.symbiote;
+package eu.h2020.symbiote.administration;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -23,20 +21,13 @@ import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.model.InterworkingService;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 
-import eu.h2020.symbiote.security.commons.Token;
-import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
-import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.UserDetails;
-import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
-import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
-import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.security.commons.Certificate;
+import eu.h2020.symbiote.security.communication.payloads.*;
 
+import eu.h2020.symbiote.administration.model.CoreUser;
 
 
 /**
@@ -65,18 +56,6 @@ public abstract class AdministrationTests {
     protected String description = "This is a test platform.";
     protected String informationModelId = "test_IM_1";
 
-    protected String sampleTokenString =
-         "eyJhbGciOiJFUzI1NiJ9.eyJTWU1CSU9URV9Pd25lZFBsYXRmb3JtIjoidGVzdDFQbGF0IiwiU1lNQklPVEVfUm9sZSI6IlBMQVR"
-        +"GT1JNX09XTkVSIiwidHR5cCI6IkNPUkUiLCJzdWIiOiJUZXN0MSIsImlwayI6Ik1Ga3dFd1lIS29aSXpqMENBUVlJS29aSXpqMER"
-        +"BUWNEUWdBRUFSNnUrZk9DNnJLb1grNmFyaWZDSU01Y3Joa3VlOVFsdDZacDVwZE9HemJuZGFUVzJVRzdhY3BnQ3dlNTJhSktZZ1l"
-        +"ZZmtIa0JpNCtCOHZDRlhneXp3PT0iLCJpc3MiOiJTeW1iaW90ZSBDb3JlIiwiZXhwIjoxNDk1MDI2ODc2LCJpYXQiOjE0OTUwMjM"
-        +"yNzYsImp0aSI6Ii0xNzMwMTg3MTE5Iiwic3BrIjoiTUZrd0V3WUhLb1pJemowQ0FRWUlLb1pJemowREFRY0RRZ0FFb0pNSnpWak1"
-        +"RMVJ1U3dIeHJPMGJmaDlhcnFINlBGdUEzOHVBNy9SdXEwdWF2aXFhdE9HWDI2TVU2aW5RcWZaNmtWSThldEpXRmZhU3M3dEh0S2V"
-        +"BcVE9PSJ9.fMvSeAo-2FIQUD-TAWqWFbcdP8Bc8TL3Duy28GQ__ckNV7kkDWz_Rf4tGCRC13uyI1Wg7kCNckJoxPckcLoUIg";
-
-    protected String certificate = "sampleCertificate";
-    protected String privateKey = "samplePrivateKey";
-
 
     public String serialize(Object o) throws Exception {
 
@@ -84,47 +63,28 @@ public abstract class AdministrationTests {
         return mapper.writeValueAsString(o);
     }
 
-    public Token sampleToken() throws Exception {
-
-        // Map<String, String> claimsAttribute = new HashMap<String, String>();
-        // claimsAttribute.put(CoreAttributes.OWNED_PLATFORM.toString(), platformId);
-
-        // JWTClaims claims = new JWTClaims();
-        // claims.setAtt(claimsAttribute);
-
-        // Claims claims = new Claims();
-        // claims.setId(platformId);
-
-        // Token token = new Token();
-        // token.setClaims(claims);
-
-        // return token; 
-
-        return new Token();
-    }
-
-    public List<GrantedAuthority> sampleAuthorities(){
+    public List<GrantedAuthority> sampleAuthorities() {
 
         List<GrantedAuthority> grantedAuths = new ArrayList<>();
         grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
         return grantedAuths;
     }
 
-    public CoreUser sampleCoreUser() throws Exception {
+    public CoreUser sampleCoreUser(UserRole role) throws Exception {
 
 
-        CoreUser user = new CoreUser(username, password, true, true, true, true, sampleAuthorities(), sampleToken(), platformId);
+        CoreUser user = new CoreUser(username, password, role, true, true, true, true, sampleAuthorities());
         user.setValidUsername(username);
         user.setValidPassword(password);
-        user.setFederatedId(federatedId);
+        user.setRole(role);
         user.setRecoveryMail(mail);
 
         return user;
     }
 
-    public Authentication sampleAuth() throws Exception {
+    public Authentication sampleAuth(UserRole role) throws Exception {
 
-        return new UsernamePasswordAuthenticationToken(sampleCoreUser(), null, sampleAuthorities());
+        return new UsernamePasswordAuthenticationToken(sampleCoreUser(role), null, sampleAuthorities());
     }
 
     public Platform sampleEmptyPlatform(){
@@ -136,7 +96,7 @@ public abstract class AdministrationTests {
         return platform;
     }
 
-    public Platform samplePlatform(){
+    public Platform samplePlatform() {
 
         InterworkingService interworkingService = new InterworkingService();
         interworkingService.setInformationModelId(informationModelId);
@@ -151,42 +111,44 @@ public abstract class AdministrationTests {
         return platform;
     }
 
-    public PlatformRegistryResponse samplePlatformResponseSuccess(){
+    public PlatformRegistryResponse samplePlatformResponseSuccess() {
 
         PlatformRegistryResponse platformResponse = new PlatformRegistryResponse();
         platformResponse.setStatus(200);
         platformResponse.setMessage("Success");
-        platformResponse.setPlatform(samplePlatform());
+        platformResponse.setBody(samplePlatform());
         return platformResponse;
     }
 
-    public PlatformRegistryResponse samplePlatformResponseFail(){
+    public PlatformRegistryResponse samplePlatformResponseFail() {
 
         PlatformRegistryResponse platformResponse = new PlatformRegistryResponse();
         platformResponse.setStatus(400);
         platformResponse.setMessage("Fail");
-        platformResponse.setPlatform(null);
+        platformResponse.setBody(null);
         return platformResponse;
     }
 
     public Credentials sampleCredentials() throws Exception {
 
-        CoreUser user = sampleCoreUser();
+        CoreUser user = sampleCoreUser(UserRole.PLATFORM_OWNER);
         return new Credentials(user.getValidUsername(), user.getValidPassword());
     }
 
-    public UserManagementRequest sampleUserManagementRequest() throws Exception {
+    public UserManagementRequest sampleUserManagementRequest(UserRole role) throws Exception {
 
-        CoreUser user = sampleCoreUser();
+        CoreUser user = sampleCoreUser(role);
 
         UserManagementRequest request = new UserManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
                 new Credentials(username, password),
                 new UserDetails(
-                    new Credentials( username, password),
-                    federatedId,
-                    mail,
-                    UserRole.PLATFORM_OWNER
+                    new Credentials(username, password),
+                        "",
+                        mail,
+                        role,
+                        new HashMap<>(),
+                        new HashMap<>()
                 ),
                 OperationType.CREATE
             );
@@ -194,37 +156,55 @@ public abstract class AdministrationTests {
         return request;
     }
 
-    public PlatformManagementRequest samplePlatformManagementRequest() throws Exception {
-
-        PlatformManagementRequest response = new PlatformManagementRequest(
-                new Credentials(AAMOwnerUsername, AAMOwnerPassword),
-                new Credentials( username, password),
-                url,
-                name,
-                OperationType.CREATE
-            );
-
-        return response;
+    public UserDetailsResponse sampleUserDetailsResponse (HttpStatus status) {
+        return new UserDetailsResponse(status, new UserDetails(
+                new Credentials(username, password),
+                "",
+                mail,
+                UserRole.PLATFORM_OWNER,
+                new HashMap<>(),
+                new HashMap<>()
+        ));
     }
 
-    public PlatformManagementResponse samplePlatformResponse() throws Exception {
+    public PlatformManagementRequest samplePlatformManagementRequest(OperationType operationType) throws Exception {
+
+        PlatformManagementRequest request = new PlatformManagementRequest(
+                new Credentials(AAMOwnerUsername, AAMOwnerPassword),
+                new Credentials(username, password),
+                url,
+                name,
+                operationType
+            );
+
+        return request;
+    }
+
+    public PlatformManagementResponse samplePlatformManagementResponse(ManagementStatus status) throws Exception {
 
         PlatformManagementResponse response = new PlatformManagementResponse(
                 platformId,
-                ManagementStatus.OK
+                status
             );
 
         return response;
     }
 
-    public OwnedPlatformDetails sampleOwnerDetails() {
+    public Set<OwnedPlatformDetails> sampleOwnedPlatformDetails() {
 
         Map<String, Certificate>  componentCerificates = new HashMap<>();
-        return new OwnedPlatformDetails(platformId, url, name, new Certificate(), componentCerificates);
+        Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
+        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, url, name, new Certificate(), componentCerificates));
+        return ownedPlatformDetails;
     }
 
     public ErrorResponseContainer sampleErrorResponse() {
 
         return new ErrorResponseContainer("SAMPLE_ERROR", 400);
+    }
+
+    public CommunicationException sampleCommunicationException() {
+
+        return new CommunicationException("SAMPLE_ERROR");
     }
 }

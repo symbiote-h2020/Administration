@@ -24,14 +24,6 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
  */
 public class CoreUser extends User {
 
-    /* -------- Constants -------- */
-
-    public static final int ERROR = 0;
-    public static final int APP = 1;
-    public static final int PLATFORM_INACTIVE = 2;
-    public static final int PLATFORM_ACTIVE = 3;
-
-
     /* -------- Properties -------- */
     
     @NotNull
@@ -47,10 +39,6 @@ public class CoreUser extends User {
 
     @NotNull
     private UserRole role;
-
-    private int state;
-
-    private Set<OwnedPlatformDetails> ownedPlatformDetails;
 
 
     /* -------- Constructors -------- */
@@ -110,15 +98,6 @@ public class CoreUser extends User {
         this.recoveryMail = recoveryMail;
     }
 
-    public int getState() {
-        return this.state;
-    }
-    public void setState(int state) {
-        this.state = state;
-    }
-
-    public Set<OwnedPlatformDetails> getOwnedPlatformDetails() { return ownedPlatformDetails; }
-    public void setOwnedPlatformDetails(Set<OwnedPlatformDetails> ownedPlatformDetails) { this.ownedPlatformDetails = ownedPlatformDetails; }
 
 
     /* -------- Helper Methods -------- */
