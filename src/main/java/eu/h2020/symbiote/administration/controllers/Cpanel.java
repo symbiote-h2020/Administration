@@ -115,10 +115,8 @@ public class Cpanel {
 
                     // Send Platform Modification message to Registry to get back the full details
                     try {
-                        Platform platform = new Platform();
-                        platform.setId(platformDetails.getPlatformInstanceId());
-
-                        PlatformRegistryResponse registryResponse = rabbitManager.sendPlatformModificationRequest(platform);
+                        PlatformRegistryResponse registryResponse = rabbitManager.sendGetPlatformDetailsMessage(
+                                platformDetails.getPlatformInstanceId());
                         if (registryResponse != null) {
                             if (registryResponse.getStatus() != HttpStatus.OK.value()) {
                                 log.debug(registryResponse.getMessage());

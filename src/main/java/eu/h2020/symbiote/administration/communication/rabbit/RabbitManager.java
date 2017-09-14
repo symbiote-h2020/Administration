@@ -93,6 +93,8 @@ public class RabbitManager {
     private String platformModificationRequestedRoutingKey;
     @Value("${rabbit.routingKey.platform.resourcesRequested}")
     private String platformResourcesRequestedRoutingKey;
+    @Value("${rabbit.routingKey.platform.platformDetailsRequested}")
+    private String platformDetailsRequestedRoutingKey;
 
     @Value("${rabbit.routingKey.platform.model.allInformationModelsRequested}")
     private String informationModelsRequestedRoutingKey;
@@ -216,7 +218,7 @@ public class RabbitManager {
      * @param message      message to be sent
      * @return response from the consumer or null if timeout occurs
      */
-    public String sendRpcMessage(String exchangeName, String routingKey, String message) {
+    public String sendRpcMessage(String exchangeName, String routingKey, String message, String contentType) {
         // Todo: Replace QueueingConsumer
         QueueingConsumer consumer = new QueueingConsumer(channel);
 
@@ -230,7 +232,7 @@ public class RabbitManager {
             AMQP.BasicProperties props = new AMQP.BasicProperties()
                     .builder()
                     .correlationId(correlationId)
-                    .contentType("application/json")
+                    .contentType(contentType)
                     .replyTo(replyQueueName)
                     .build();
 
@@ -284,7 +286,7 @@ public class RabbitManager {
             
             String message = mapper.writeValueAsString(platform);
 
-            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -339,6 +341,36 @@ public class RabbitManager {
 
 
     /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
+     *
+     * @param platformId     id of the platform which want the details
+     * @return response from the consumer or null if timeout occurs
+     */
+    public PlatformRegistryResponse sendGetPlatformDetailsMessage(String platformId) throws CommunicationException {
+
+        log.debug("sendGetPlatformDetailsMessage");
+
+        String responseMsg = this.sendRpcMessage(this.platformExchangeName, this.platformDetailsRequestedRoutingKey,
+                platformId, "text/plain");
+
+        if (responseMsg == null)
+            return null;
+
+        try {
+            PlatformRegistryResponse response = mapper.readValue(responseMsg, PlatformRegistryResponse.class);
+            log.info("Received response from Registry.");
+            return response;
+
+        } catch (Exception e){
+
+            log.error("Error in response from Registry.", e);
+            throw new CommunicationException(e);
+        }
+
+
+    }
+
+    /**
      * Method used to get all the available information models from the Registry
      *
      */
@@ -350,7 +382,7 @@ public class RabbitManager {
         try {
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelsRequestedRoutingKey, "false");
+                    this.informationModelsRequestedRoutingKey, "false", "text/plain");
 
             if (responseMsg == null)
                 return null;
@@ -389,7 +421,7 @@ public class RabbitManager {
 
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelCreationRequestedRoutingKey, message);
+                    this.informationModelCreationRequestedRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -428,7 +460,7 @@ public class RabbitManager {
 
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelRemovalRequestedRoutingKey, message);
+                    this.informationModelRemovalRequestedRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -465,7 +497,7 @@ public class RabbitManager {
         try {
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message);
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -509,7 +541,7 @@ public class RabbitManager {
         try {
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.userManagementRequestRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.userManagementRequestRoutingKey, message, "application/json");
 
             if (responseMsg == null){
 
@@ -548,7 +580,7 @@ public class RabbitManager {
         try {
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.platformManageRequestRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.platformManageRequestRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -596,7 +628,7 @@ public class RabbitManager {
             );
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.getUserDetailsRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.getUserDetailsRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -632,7 +664,7 @@ public class RabbitManager {
         try {
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.getOwnedPlatformDetailsRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.getOwnedPlatformDetailsRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -669,7 +701,7 @@ public class RabbitManager {
         try {
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.manageFederationRuleRoutingKey, message);
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.manageFederationRuleRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;

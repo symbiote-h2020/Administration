@@ -279,7 +279,7 @@ function buildPlatformPanels() {
         },
         error : function(xhr) {
             var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
+            message.innerHTML = JSON.parse(xhr.responseText).message;
             $('#platform-details').prepend($listOwnedPlatformsError.clone().append(message).show());
         }
     });
