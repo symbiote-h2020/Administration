@@ -807,6 +807,46 @@ public class Cpanel {
 
     }
 
+
+    @PostMapping("/user/cpanel/delete_federation")
+    public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete,
+                                              Principal principal) {
+
+        log.debug("POST request on /user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+
+        Map<String, Object> responseBody = new HashMap<>();
+
+        FederationRuleManagementRequest request = new FederationRuleManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                federationIdToDelete,
+                new HashSet<>(),
+                FederationRuleManagementRequest.OperationType.DELETE
+        );
+
+        try {
+            Map<String, FederationRule> aamResponse =
+                    rabbitManager.sendFederationRuleManagementRequest(request);
+
+            if (aamResponse != null) {
+                return new ResponseEntity<>(aamResponse, new HttpHeaders(), HttpStatus.OK);
+
+            } else {
+                String message = "AAM unreachable during DeleteFederationRequest";
+                log.debug(message);
+                responseBody.put("error", message);
+                return new ResponseEntity<>(responseBody,
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
+            String message = "AAM threw communication exception during DeleteFederationRequest: " + e.getMessage();
+            log.debug(message);
+            responseBody.put("error", message);
+            return new ResponseEntity<>(responseBody,
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     // ADMIN
 
     @RequestMapping("/admin/cpanel")

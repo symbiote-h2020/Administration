@@ -17,6 +17,8 @@ var $deleteInformationModelError = null;
 
 var $federationRegistrationSuccessful = null;
 var $federationRegistrationError = null;
+var $federationSuccessfulDeletion = null;
+var $deleteFederationError = null;
 
 var $listOwnedPlatformsError = null;
 var $listUserInfoModelError = null;
@@ -129,6 +131,34 @@ $(document).on('click', '.del-info-model-btn', function (e) {
             var message = document.createElement('p');
             message.innerHTML = xhr.responseText;
             $('#information-models').prepend($deleteInformationModelError.clone().append(message).show());
+            $modal.modal('hide');
+        }
+    });
+});
+
+$(document).on('click', '.del-federation-btn', function (e) {
+    var $deleteButton = $(e.target);
+    var $modal = $deleteButton.closest(".modal");
+    var federationIdToDelete = $modal.attr('id').split('-').pop();
+
+
+    $.ajax({
+        url: "/user/cpanel/delete_federation",
+        type: "POST",
+        data: {federationIdToDelete : federationIdToDelete},
+        success: function() {
+
+            $('#federation_list').prepend($federationSuccessfulDeletion.clone().show());
+            $modal.removeClass('fade').modal('hide');
+
+            // Refresh Information Models
+            deleteFederationPanels();
+            buildFederationPanels();
+        },
+        error : function(xhr) {
+            var message = document.createElement('p');
+            message.innerHTML = JSON.parse(xhr.responseText).error;
+            $('#federation_list').prepend($deleteFederationError.clone().append(message).show());
             $modal.modal('hide');
         }
     });
@@ -395,6 +425,16 @@ function storeNecessaryFederationElements() {
         $listFederationsError = $('#list-federations-error').clone().removeAttr("id");
         $('#list-federations-error').remove();
     }
+
+    if ($federationSuccessfulDeletion === null) {
+        $federationSuccessfulDeletion = $('#leave-federation-successful').clone().removeAttr("id");
+        $('#leave-federation-successful').remove();
+    }
+
+    if ($deleteFederationError === null) {
+        $deleteFederationError = $('#leave-federation-error').clone().removeAttr("id");
+        $('#leave-federation-error').remove();
+    }
 }
 
 // Construct federation panels
@@ -413,7 +453,7 @@ function buildFederationPanels() {
         },
         error : function(xhr) {
             var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
+            message.innerHTML = JSON.parse(xhr.responseText).error;
             $federationListTab.prepend($listFederationsError.clone().append(message).show());
         }
     });
