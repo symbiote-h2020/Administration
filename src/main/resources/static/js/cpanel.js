@@ -377,8 +377,8 @@ function deleteInfoModelsPanels() {
 function storeNecessaryFederationElements() {
 
     if ($federationPanelEntry === null) {
-        $federationPanelEntry = $('#federation-panel-entry').clone(true, true);
-        $('#federation-panel-entry').remove();
+        $federationPanelEntry = $('#federation-entry').clone(true, true);
+        $('#federation-entry').remove();
     }
 
     if ($federationRegistrationSuccessful === null) {
@@ -407,8 +407,8 @@ function buildFederationPanels() {
         dataType: "json",
         contentType: "application/json",
         success: function(data) {
-            for (var i = 0; i < data.length; i++) {
-                $federationListTab.append(federationPanel(data[i]));
+            for (var key in data) {
+                $federationListTab.append(federationPanel(data[key]));
             }
         },
         error : function(xhr) {
@@ -425,19 +425,19 @@ function federationPanel(federation) {
     var $federationPanel = $federationPanelEntry.clone(true, true);
 
     // Configuration of the federation panel
-    var deleteInfoModalId = "del-federation-modal-" + federation.id;
-    $federationPanel.find('.panel-title').text(federation.id);
+    var deleteInfoModalId = "del-federation-modal-" + federation.federationId;
+    $federationPanel.find('.panel-title').text(federation.federationId);
     $federationPanel.find('.btn-warning-delete').attr("data-target", "#" + deleteInfoModalId);
-    $federationPanel.find('#info-model-del-modal').attr("id", deleteInfoModalId);
-    $federationPanel.find('.text-danger').find('strong').text(federation.id);
+    $federationPanel.find('#del-federation-modal').attr("id", deleteInfoModalId);
+    $federationPanel.find('.text-danger').find('strong').text(federation.federationId);
 
     // Setting the federation details
-    $federationPanel.find('.federation-ID').val(infoModel.id);
+    $federationPanel.find('.federation-id').text(federation.federationId);
 
     for (var i = 0; i < federation.platformIds.length; i++) {
         var platform = document.createElement('li');
         platform.innerHTML = federation.platformIds[i];
-        platform.addClass("list-group-item");
+        platform.className += "list-group-item";
         $federationPanel.find('.federated-platforms').append(platform);
     }
 

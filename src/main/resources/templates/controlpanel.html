@@ -636,7 +636,7 @@
                     <button type="button" class="btn btn-info btn-default registration-btn" data-toggle="modal"
                             data-target="#federation-reg-modal">Create New Federation</button>
 
-                    <!-- Modal -->
+                    <!-- Register Federation Modal -->
                     <div id="federation-reg-modal" class="modal fade" role="dialog">
                         <div class="modal-dialog">
 
@@ -721,7 +721,7 @@
                     </div>
 
                     <!-- Federation Panel Entry -->
-                    <div class="panel panel-primary federation-panel-entry" id="federation-entry">
+                    <div class="panel panel-primary federation-panel-entry" id="federation-entry" style="display: none">
                         <div class="panel-heading clickable">
                             <h3 class="panel-title">FEDERATION_NAME</h3>
                             <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span></div>
@@ -732,7 +732,7 @@
                                     <div class="row">
                                         <div class="col-sm-6 form-group">
                                             <label>Id</label>
-                                            <p class="federation-ID">FEDERATION_ID</p>
+                                            <p class="federation-id">FEDERATION_ID</p>
                                         </div>
                                         <div class="col-sm-6 form-group has-feedback">
                                             <label>Federated Platforms</label>
@@ -748,10 +748,10 @@
 
                             <!-- Trigger the federation delete modal with a button -->
                             <button type="button" class="btn btn-default btn-warning btn-warning-delete"
-                                    data-toggle="modal" data-target="#info-model-del-modal">Delete</button>
+                                    data-toggle="modal" data-target="#del-federation-modal">Delete</button>
 
                             <!-- Federation Delete Modal -->
-                            <div id="federation-del-modal" class="modal fade" role="dialog">
+                            <div id="del-federation-modal" class="modal fade" role="dialog">
                                 <div class="modal-dialog">
 
                                     <!-- Modal content-->
@@ -774,6 +774,7 @@
                     <!-- Federation Details -->
                     <script>
                         storeNecessaryFederationElements();
+                        buildFederationPanels();
                     </script>
                 </div>
 
