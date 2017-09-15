@@ -3,6 +3,14 @@ package eu.h2020.symbiote.administration;
 import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.core.cci.InformationModelRequest;
+import eu.h2020.symbiote.core.cci.InformationModelResponse;
+import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
+import eu.h2020.symbiote.core.internal.InformationModelListResponse;
+import eu.h2020.symbiote.core.internal.ResourceListResponse;
+import eu.h2020.symbiote.core.model.InformationModel;
+import eu.h2020.symbiote.core.model.RDFFormat;
+import eu.h2020.symbiote.core.model.resources.Resource;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -47,15 +55,23 @@ public abstract class AdministrationTests {
 
     protected String username = "Test1";
     protected String password = "Test1";
-    protected String federatedId = "test_fed_id";
     protected String mail = "test@mail.com";
 
     protected String platformId = "test1Plat";
     protected String name = "Test Platform 1";
     protected String url = "https://platform.test";
     protected String description = "This is a test platform.";
-    protected String informationModelId = "test_IM_1";
 
+    protected String informationModelId = "model_id";
+    protected String informationModelName = "model_name";
+    protected String informationModelOwner = "model_owner";
+    protected String informationModelUri = "model_uri";
+    protected RDFFormat informationModelFormat = RDFFormat.JSONLD;
+    protected String informationModelRdf = "model_rdf";
+
+    protected String resourcelId = "resource_id";
+
+    protected String federationRuleId = "federation_rule_id";
 
     public String serialize(Object o) throws Exception {
 
@@ -111,6 +127,18 @@ public abstract class AdministrationTests {
         return platform;
     }
 
+    public InformationModel sampleInformationModel() {
+        InformationModel model = new InformationModel();
+        model.setId(informationModelId);
+        model.setUri(informationModelUri);
+        model.setOwner(informationModelOwner);
+        model.setName(informationModelName);
+        model.setRdfFormat(informationModelFormat);
+        model.setRdf(informationModelRdf);
+
+        return model;
+    }
+
     public PlatformRegistryResponse samplePlatformResponseSuccess() {
 
         PlatformRegistryResponse platformResponse = new PlatformRegistryResponse();
@@ -127,6 +155,63 @@ public abstract class AdministrationTests {
         platformResponse.setMessage("Fail");
         platformResponse.setBody(null);
         return platformResponse;
+    }
+
+    public InformationModelListResponse sampleInformationModelListResponseSuccess() {
+        InformationModelListResponse response = new InformationModelListResponse();
+        List<InformationModel> modelList = new ArrayList<>();
+        InformationModel model = sampleInformationModel();
+        modelList.add(model);
+        response.setBody(modelList);
+        response.setStatus(200);
+        return response;
+    }
+
+    public InformationModelListResponse sampleInformationModelListResponseFail() {
+        InformationModelListResponse response = new InformationModelListResponse();
+        response.setBody(null);
+        response.setMessage("Fail");
+        response.setStatus(400);
+        return response;
+    }
+
+    public InformationModelRequest sampleInformationModelRequest() {
+        InformationModelRequest request = new InformationModelRequest();
+        request.setBody(sampleInformationModel());
+        return request;
+    }
+
+    public InformationModelResponse sampleInformationModelResponseSuccess() {
+        InformationModelResponse response = new InformationModelResponse();
+        response.setStatus(200);
+        response.setBody(sampleInformationModel());
+        return response;
+    }
+
+    public InformationModelResponse sampleInformationModelResponseFail() {
+        InformationModelResponse response = new InformationModelResponse();
+        response.setBody(null);
+        response.setMessage("Fail");
+        response.setStatus(400);
+        return response;
+    }
+
+    public CoreResourceRegistryRequest sampleCoreResourceRegistryRequest() {
+        return new CoreResourceRegistryRequest();
+
+    }
+
+    public ResourceListResponse sampleResourceListResponseSuccess() {
+        Resource resource = new Resource();
+        resource.setId(resourcelId);
+        List<Resource> resourceList = new ArrayList<>();
+        resourceList.add(resource);
+
+        return new ResourceListResponse(200, "Success!", resourceList);
+    }
+
+    public ResourceListResponse sampleResourceListResponseFail() {
+        return new ResourceListResponse(400, "Fail!", null);
     }
 
     public Credentials sampleCredentials() throws Exception {
@@ -196,6 +281,25 @@ public abstract class AdministrationTests {
         Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
         ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, url, name, new Certificate(), componentCerificates));
         return ownedPlatformDetails;
+    }
+
+    public FederationRule sampleFederationRule() {
+        Set<String> platformIds = new HashSet<>();
+        platformIds.add(platformId);
+        platformIds.add(platformId);
+        return new FederationRule(federationRuleId, platformIds);
+    }
+
+    public FederationRuleManagementRequest sampleFederationRuleManagementRequest(
+            FederationRuleManagementRequest.OperationType type) throws Exception {
+        return new FederationRuleManagementRequest(sampleCredentials(), federationRuleId, type);
+    }
+
+    public Map<String, FederationRule> sampleFederationRuleManagementResponse() {
+        Map<String, FederationRule> response = new HashMap<>();
+        response.put(federationRuleId, sampleFederationRule());
+
+        return response;
     }
 
     public ErrorResponseContainer sampleErrorResponse() {

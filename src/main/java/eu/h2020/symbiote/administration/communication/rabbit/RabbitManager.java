@@ -271,6 +271,11 @@ public class RabbitManager {
 
 
     /**
+     * Interaction with Registry
+     */
+
+
+    /**
      * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
      *
      * @param exchangeName name of the exchange to send message to
@@ -408,13 +413,13 @@ public class RabbitManager {
 
     /**
      * Method used request the removal of an information model
-     * @param request contains the information model to be deleted
+     * @param request contains the information model
      * @return response from registry
      */
-    public InformationModelResponse sendRegisterInfoModelRequest(InformationModelRequest request)
+    public InformationModelResponse sendInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
 
-        log.debug("sendRegisterInfoModelRequest");
+        log.debug("sendInfoModelRequest");
 
         try {
 
@@ -447,58 +452,40 @@ public class RabbitManager {
 
     /**
      * Method used request the removal of an information model
+     * @param request contains the information model to be registered
+     * @return response from registry
+     */
+    public InformationModelResponse sendRegisterInfoModelRequest(InformationModelRequest request)
+            throws CommunicationException {
+        log.debug("sendRegisterInfoModelRequest");
+        return sendInfoModelRequest(request);
+    }
+
+    /**
+     * Method used request the removal of an information model
      * @param request contains the information model to be deleted
      * @return response from registry
      */
     public InformationModelResponse sendDeleteInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
-
         log.debug("sendDeleteInfoModelRequest");
-
-        try {
-
-            String message = mapper.writeValueAsString(request);
-
-            // The message is false to indicate that we do not need the rdf of Information Models
-            String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelRemovalRequestedRoutingKey, message, "application/json");
-
-            if (responseMsg == null)
-                return null;
-
-            try {
-                InformationModelResponse response = mapper.readValue(responseMsg,
-                        InformationModelResponse.class);
-                log.info("Received information model response from Registry.");
-                return response;
-
-            } catch (Exception e){
-
-                log.error("Error in information model details response response from Registry.", e);
-                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
-                throw new CommunicationException(error.getErrorMessage());
-            }
-        } catch (IOException e) {
-            log.error("Failed (un)marshalling of rpc information model request message.", e);
-        }
-        return null;
+        return sendInfoModelRequest(request);
     }
 
     /**
      * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry for resource list retrieval
      *
-     * @param exchangeName name of the exchange to send message to
-     * @param routingKey   routing key to send message to
      * @param request      request for resources with id set
      * @return response from the consumer or null if timeout occurs
      */
-    public ResourceListResponse sendRegistryResourcesMessage(String exchangeName, String routingKey, CoreResourceRegistryRequest request)
+    public ResourceListResponse sendRegistryResourcesRequest(CoreResourceRegistryRequest request)
             throws CommunicationException {
 
         try {
             String message = mapper.writeValueAsString(request);
 
-            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message, "application/json");
+            String responseMsg = this.sendRpcMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey,
+                    message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -520,16 +507,11 @@ public class RabbitManager {
         return null;
     }
 
-    /**
-     * Method used to retrieve the list of resources of this platform from the Registry.
-     *
-     * @param request request for platform resources list
-     */
-    public ResourceListResponse sendRegistryResourcesRequest(CoreResourceRegistryRequest request) throws CommunicationException  {
-    
-            return sendRegistryResourcesMessage(this.platformExchangeName, this.platformResourcesRequestedRoutingKey, request);
-    }
 
+
+    /**
+     * Interaction with AAM
+     */
 
     /**
      * Method used to send RPC request to register user.
@@ -544,7 +526,7 @@ public class RabbitManager {
 
             String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.userManagementRequestRoutingKey, message, "application/json");
 
-            if (responseMsg == null){
+            if (responseMsg == null) {
 
                 throw new CommunicationException("Communication Problem with AAM");
             }
@@ -557,7 +539,8 @@ public class RabbitManager {
             } catch (Exception e){
 
                 log.error("Error in response from AAM.", e);
-                throw new CommunicationException(e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
             }
 
 
