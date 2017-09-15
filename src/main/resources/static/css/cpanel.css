@@ -89,11 +89,11 @@ a {
 	margin-top: 30px;
 }
 
-.main .container {
+/*.main .container {*/
 
-	display: flex;
-	align-items: flex-start;
-}
+	/*display: flex;*/
+	/*align-items: flex-start;*/
+/*}*/
 
 .main .sidebar {
 
@@ -179,4 +179,125 @@ a {
 .main .content .panel-footer {
 
 	text-align: right;
+}
+
+.clickable {
+	cursor: pointer;
+}
+
+.clickable .glyphicon {
+	background: rgba(0, 0, 0, 0.15);
+	display: inline-block;
+	padding: 6px 12px;
+	border-radius: 4px
+}
+
+.panel-heading span {
+	margin-top: -23px;
+	font-size: 15px;
+	margin-right: -9px;
+}
+
+a.clickable { color: inherit; }
+
+a.clickable:hover { text-decoration:none; }
+
+
+.registration-btn {
+    margin-bottom: 0.3em;
+    float: right;
+}
+
+.platform-panel-entry {
+    clear:both;
+    margin-bottom:0.3em;
+}
+
+.info-model-panel-entry {
+    clear:both;
+    margin-bottom:0.3em;
+}
+
+.federation-panel-entry {
+    clear:both;
+    margin-bottom:0.3em;
+}
+
+.platformRegField {
+    margin-bottom: 0.5em;
+}
+
+.has-feedback .form-control-feedback {
+    top: 25px;
+    right: 15px;
+}
+
+.has-feedback .form-control-feedback.sub-element {
+    top: 0px;
+    right: 15px;
+}
+
+.delPlatformBtn {
+    float: right;
+	margin-left: 0.25em;
+}
+
+.btn-warning-delete {
+    float: right;
+    margin-bottom: 0.25em;
+}
+
+.platform-info-footer {
+    overflow: hidden;
+}
+
+.platformDelForm {
+    clear: both;
+    overflow: hidden;
+}
+
+
+/*Dropdown menu*/
+
+.dropdown-submenu {
+    position:relative;
+}
+.dropdown-submenu > .dropdown-menu {
+    top:0;left:100%;
+    margin-top:-6px;margin-left:-1px;
+    -webkit-border-radius:0 6px 6px 6px;-moz-border-radius:0 6px 6px 6px;border-radius:0 6px 6px 6px;
+}
+
+.dropdown-submenu > a:after {
+    border-color: transparent transparent transparent #333;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    content: " ";
+    display: block;
+    float: right;
+    height: 0;
+    margin-right: -10px;
+    margin-top: 5px;
+    width: 0;
+}
+
+.dropdown-submenu:hover>a:after {
+    border-left-color:#555;
+}
+
+.dropdown-menu > li > a:hover, .dropdown-menu > .active > a:hover {
+    text-decoration: underline;
+}
+
+ul.nav li:hover > ul.dropdown-menu {
+    display: block;
+}
+
+#navbar {
+    text-align: center;
+}
+
+#federation-panels {
+    margin: 0;
+    padding: 0;
 }

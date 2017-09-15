@@ -26,7 +26,8 @@
 						   placeholder="Password"/>
 				</div>
 
-				<div class="alert alert-danger" th:if="${param.error}">Invalid username/password.</div>
+				<div class="alert alert-danger" th:if="${param.error} and ${session.SPRING_SECURITY_LAST_EXCEPTION}"
+					 th:text="${session.SPRING_SECURITY_LAST_EXCEPTION.message}"></div>
 
 				<div class="form-group">
 					<!-- Button -->

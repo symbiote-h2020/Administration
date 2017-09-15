@@ -3,9 +3,22 @@
 	<head>
 		<title>SymbIoTe Core</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
 		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
 		<link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
-	</head>
+        <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
+
+        <script type="text/javascript" src="webjars/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+        <script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
+        <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
+        <script>
+            $(document).ready(function(e) {
+                $('.selectpicker').selectpicker();
+            });
+        </script>
+
+    </head>
 	<body>
 		<div class="header">
 			<img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
@@ -14,21 +27,13 @@
 		</div>
 		<div class="content">
 			<div class="wrapper platform">
-				<div class="title">Platform Management</div>
+				<div class="title">User Management</div>
 				<div class="icon">
 					<img th:src="@{/images/suitcase.png}" src="images/suitcase.png"></img>
 				</div>
 				<a class="login button" href="/user/login">Sign In</a>
-				<a class="register button" href="/platform/register">Register</a>
+				<a class="register button" href="/register">Register</a>
 			</div>
-			<div class="wrapper app">
-				<div class="title">Application Management</div>
-				<div class="icon">
-					<img th:src="@{/images/mobile.png}" src="images/mobile.png"></img>
-				</div>
-				<a class="login button" href="/user/login">Sign In</a>
-				<a class="register button" href="/app/register">Register</a>
-			</div>		
 		</div>
 		<div class="footer">
 			<a class="external symbiote" href="http://www.symbiote-h2020.eu/">
@@ -45,8 +50,6 @@
 			<div class="popup">
 			</div>
 		</div>
-		<script type="text/javascript" src="webjars/jquery/3.1.1-1/jquery.min.js"></script>
-		<script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
-		<script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
+
 	</body>
 </html>

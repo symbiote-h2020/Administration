@@ -12,19 +12,6 @@
 			<div class="popupContent success">
 				<div class="title">Registration Succesful!</div>
 
-				<div class="panel panel-default">
-					<span class="panel-heading">Certificate:</span>
-					<textarea class="panel-body" cols="78" rows="10" readonly="true" th:if="${pcert}" th:inline="text">[[${pcert}]]</textarea>
-				</div>
-				<div class="panel panel-default">
-					<span class="panel-heading">Public Key:</span>
-					<textarea class="panel-body" cols="78" rows="6" readonly="true" th:if="${pkey}" th:inline="text">[[${pkey}]]</textarea>
-				</div>
-				<div class="panel panel-default">
-					<span class="panel-heading">Platform Id:</span>
-					<textarea class="panel-body" cols="78" rows="1" readonly="true" style="scroll:none" th:if="${pid}" th:inline="text">[[${pid}]]</textarea>
-				</div>
-
 				<div class="alert alert-warning">Please login with your new account.</div>
 
 				<div class="form-group">
@@ -32,7 +19,6 @@
 
 					<div class="col-sm-12 controls">
 						<a href="/user/login" class="btn btn-success login">Login</a>
-						<a href="#" class="reminder">Download as .zip</a>
 					</div>
 				</div>
 			</div>

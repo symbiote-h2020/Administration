@@ -6,59 +6,54 @@
 
 		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
 		<link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
-	</head>
+        <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
+
+        <script type="text/javascript" src="webjars/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+        <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
+        <script>
+            $(document).ready(function(e) {
+            $('.selectpicker').selectpicker();
+        });
+        </script>
+
+    </head>
 	<body>
 		<div class="popup">
 			<form th:action="@{${#httpServletRequest.requestURI}}" th:object="${coreUser}" class="login form-horizontal" role="form" method="post">
 
-				<div class="title" th:if="${#httpServletRequest.requestURI == '/platform/register'}">Platform Owner Registration</div>
-				<div class="title" th:if="${#httpServletRequest.requestURI == '/app/register'}">Application Owner Registration</div>
+				<div class="title">Registration</div>
 
+				<!-- In the validation fields the th:errors when present overwrites the text message -->
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-					<input type="text" class="form-control" name="validUsername" value="" placeholder="Username"/>
+					<input type="text" class="form-control" th:field="*{validUsername}" th:value="${usernameSelected}" placeholder="Username"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('validUsername')}" th:errors="*{validUsername}">Invalid Username!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-lock"></i></span>
-					<input type="password" class="form-control" name="validPassword" value="" placeholder="Password"/>
+					<input type="password" class="form-control" th:field="*{validPassword}" value="" placeholder="Password"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('validPassword')}" th:errors="*{validPassword}">Invalid Password!</div>
 
 				<div class="input-group">
 					<span class="input-group-addon"><i class="glyphicon glyphicon-envelope"></i></span>
-					<input type="text" class="form-control" name="recoveryMail" value="" placeholder="Email"/>
+					<input type="text" class="form-control" th:field="*{recoveryMail}" th:value="${emailSelected}" placeholder="Email"/>
 				</div>
 				<div class="alert alert-danger" th:if="${#fields.hasErrors('recoveryMail')}" th:errors="*{recoveryMail}">Invalid Email!</div>
 
-				<div class="input-group">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-magnet"></i></span>
-					<input disabled="true" type="text" class="form-control" name="federatedId" value="" placeholder="Federated id (optional, unused in R2)"/>
-				</div>
-				<div class="alert alert-danger" th:if="${#fields.hasErrors('federatedId')}" th:errors="*{federatedId}">Invalid Id!</div>
+                <div class="input-group">
+                    <select class="selectpicker" th:field="*{role}">
+                        <option th:each="role : ${allRoles}"
+                                th:value="${role.enumValue}"
+                                th:text="${role.enumText}"
+                                th:selected="${role.isSelected(roleSelected)}"></option>
+                    </select>
+                </div>
+                <div class="alert alert-danger" th:if="${error_role}" th:text="${error_role}">Invalid Email!</div>
 
-				<hr />
-
-				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/platform/register'}">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-font"></i></span>
-					<input type="text" class="form-control" name="platformName" value="" placeholder="Platform Name"/>
-				</div>
-				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/platform/register' and #fields.hasErrors('platformName')}" th:errors="*{platformName}">Invalid Platform Name!</div>
-
-				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/platform/register'}">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-globe"></i></span>
-					<input type="url" class="form-control" name="platformUrl" value="" placeholder="Platform Address"/>
-				</div>
-				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/platform/register' and #fields.hasErrors('platformUrl')}" th:errors="*{platformUrl}">Invalid Platform Address!</div>
-
-				<div class="input-group" th:if="${#httpServletRequest.requestURI == '/platform/register'}">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-briefcase"></i></span>
-					<input type="text" class="form-control" name="platformId" value="" placeholder="Preferred platform id"/>
-				</div>
-				<div class="alert alert-danger" th:if="${#httpServletRequest.requestURI == '/platform/register' and #fields.hasErrors('platformId')}" >Invalid Platform Id! (Must be empty or contain only letters, numbers and "-" or "_", 4 up to 30 characters)</div>
-
-				<div class="form-group">
+                <div class="form-group">
 					<!-- Button -->
 
 					<div class="col-sm-12 controls">
@@ -71,5 +66,6 @@
 				<div class="alert alert-danger" th:if="${error}" th:inline="text">[[${error}]]</div>
 			</form>
 		</div>
-	</body>
+
+    </body>
 </html>

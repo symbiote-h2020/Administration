@@ -3,282 +3,785 @@
 <head>
     <title>Control Panel</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
     <link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
-    <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="css/cpanel.css" />
+    <link rel="stylesheet" th:href="@{/css/cpanel.css}" href="../static/css/cpanel.css" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="../static/css/bootstrap-select.min.css" />
+
+    <script type="text/javascript" src="/webjars/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/cpanel.js}" src="../static/js/cpanel.js"></script>
+    <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="../static/js/bootstrap-select.min.js"></script>
+    <script type="text/javascript" th:src="@{/js/validator.js}" src="../static/js/validator.js"></script>
+
+
+    <!--<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css'/>-->
+
+    <!--<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>-->
+    <!--<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>-->
+
+
 </head>
 <body>
 
-    <div class="header shadow">
-        <div class="container">
-            <img class="logo" th:src="@{/images/logo-1.1.png}" src="static/images/logo-1.1.png"></img>
-            <span class="title">User Dashboard</span>
-            <div class="btn-group logout">
-                 
-                <button class="btn top">
-                    testuser
-                </button> 
-                <button data-toggle="dropdown" class="btn dropdown-toggle">
-                    <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-right">
-                    <li class="disabled">
-                        <a href="#">Account Details</a>
+<script>
+    setupAjax();
+    cloneNecessaryHtml();
+</script>
+
+<div class="header shadow">
+    <div class="container">
+        <img class="logo" th:src="@{/images/logo-1.1.png}" src="../static/images/logo-1.1.png"></img>
+        <span class="title">User Dashboard</span>
+        <div class="btn-group logout">
+
+            <button class="btn top" th:inline="text">[[${user.getUsername()}]]</button>
+            <button data-toggle="dropdown" class="btn dropdown-toggle">
+                <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-right">
+                <li class="disabled">
+                    <a href="#">Account Details</a>
+                </li>
+                <li class="divider">
+                </li>
+                <li >
+                    <a href="/user/logout">Sign Out</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="main">
+    <div class="container tabbable">
+        <div class="row">
+            <div class="col-md-3">
+                <ul class="nav nav-pills nav-stacked sidebar panel-primary shadow">
+                    <!--<ul class="nav nav-stacked sidebar panel-primary shadow">-->
+
+                    <li class="active"><a href="#user_details" data-toggle="tab">User Details</a></li>
+                    <li><a href="#clients_details" data-toggle="tab">Client Details</a></li>
+                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                        <a href="#platform-details" data-toggle="tab">Platform Details</a>
                     </li>
-                    <li class="divider">
+                    <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                        <a href="#information-models" data-toggle="tab">Information Models</a>
                     </li>
-                    <li >
-                        <a href="/user/logout">Sign Out</a>
+                    <li class="dropdown dropdown-submenu" th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
+                        <a class="dropdown-toggle" href="#federation-panels" data-toggle="dropdown">Federations</a>
+                        <ul id="federation-panels" class="dropdown-menu nav nav-pills nav-stacked sidebar panel-primary shadow">
+                            <li><a href="#federation_requests" data-toggle="tab">Federation Requests</a></li>
+                            <li><a href="#federation_list" data-toggle="tab">Federation List</a></li>
+                        </ul>
                     </li>
                 </ul>
             </div>
-        </div>
-    </div>
-    <div class="main">
-        <div class="container tabbable">
-            <ul class="nav nav-stacked sidebar panel-primary shadow">
-                <th:block th:if="${user.state!=1}">
-                <li class="panel-heading">
-                    <span>Platform Management</span>
-                </li>
-                <li th:classappend="${page}?:active">
-                    <a href="#platform_details" data-toggle="tab">Platform Details</a>
-                </li>
-                <th:block th:if="${user.state==2}">
-                <li th:classappend="${page=='activate'}?active" >
-                    <a href="#platform_activate" data-toggle="tab">Activate Platform</a>
-                </li>
-                </th:block>
-                <th:block th:if="${user.state==3}">
-                <li th:classappend="${page=='modify'}?active" >
-                    <a href="#platform_modify" data-toggle="tab">Modify Platform</a>
-                </li>
-                <li th:classappend="${page=='disable'}?active" >
-                    <a href="#platform_disable" data-toggle="tab">Disable Platform</a>
-                </li>
-                </th:block>
-                </th:block>
-            </ul>
-            <div class="tabs content shadow">
-                <th:block th:if="${user.state!=1}">
-                <div class="panel panel-default tab" th:classappend="${page}?:active" id="platform_details">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            Platform Details
-                        </h3>
-                    </div>
-                    <div class="panel-body list-group">
-                        <div class="list-group-item">
-                            <h4 class="">
-                                Platform Status:
-                            </h4>
-                            <th:block th:if="${user.state==0}">
-                            <span class="list-group-item-text btn btn-danger">
-                                ERROR
-                            </span>
-                            </th:block>
-                            <th:block th:if="${user.state==2}">
-                            <span class="list-group-item-text btn btn-warning">
-                                INACTIVE
-                            </span>
-                            </th:block>
-                            <th:block th:if="${user.state==3}">
-                            <span class="list-group-item-text btn btn-success">
-                                ACTIVE
-                            </span>
-                            </th:block>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Id:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformId}]]
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Name:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformName}]]
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Address:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformUrl}]]
-                            </div>
-                        </div>
-                        <th:block th:if="${user.state==3}">
-                        <div class="list-group-item description">
-                            <h4 class="list-group-item-heading">
-                                Platform Description:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformDetails.description}]]
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Information Model:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformDetails.informationModelId}]]
-                            </div>
-                        </div>
-                        </th:block>
-                    </div>
+
+            <div class="tab-content clearfix col-md-9">
+
+                <!-- User Details Tab-->
+                <div class="tab-pane active" id="user_details">
+                    <h3>User Details</h3>
                 </div>
-                <th:block th:if="${user.state==2}">
-                <form class="panel panel-default tab" th:classappend="${page=='activate'}?active" id="platform_activate" th:action="@{/user/cpanel/activate}" th:object="${platformDetails}" method="post">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            Activate Platform
-                        </h3>
-                    </div>
-                    <div class="panel-body list-group">
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Id:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformId}]]
+
+                <!-- Client Details Tab-->
+                <div class="tab-pane" id="clients_details">
+                    <h3>Client Details</h3>
+                </div>
+
+                <!-- Platform Details Tab-->
+                <div class="tab-pane" id="platform-details">
+
+                    <!-- Display errors -->
+                    <div class="alert alert-danger alert-dismissable" id="list-owned-platforms-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+                    <div class="alert alert-danger alert-dismissable" id="delete-platform-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+
+                    <!-- Display success message -->
+                    <div class="alert alert-success alert-dismissable" id="platform-registration-successful" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The platform was registered successfully!</p></div>
+                    <div class="alert alert-success alert-dismissable" id="platform-successful-deletion" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The platform was deleted successfully!</p></div>
+
+                    <!-- Register new Platform by triggering the button-->
+                    <!-- Trigger the modal with a button -->
+                    <button type="button" id="registration-btn" class="btn btn-info btn-default registration-btn" data-toggle="modal"
+                            data-target="#platform-registration-modal">Register New Platform</button>
+
+                    <!-- Platform Registration Modal -->
+                    <div id="platform-registration-modal" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+
+                            <!-- Modal content-->
+                            <div class="modal-content">
+                                <form id="platform-registration-form" role="form" method="" action=""
+                                      data-toggle="validator">
+
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h3 class="modal-title">Platform Registration</h3></div>
+
+                                    <div class="modal-body" id="platform-registration-modal-body">
+
+                                        <!-- Display errors -->
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="list-all-info-model-error" style="display: none">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong></div>
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="platform-registration-error" style="display: none">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong></div>
+
+                                        <!-- Registration Form -->
+                                        <div class="row" id="platform-registration-row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Platform Id</label>
+                                                        <input type="text" class="form-control platformRegField" maxlength="30"
+                                                               id="platform-registration-id" name="id" placeholder="Enter preferred platform id"
+                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
+                                                               Include only letters, digits, '-' and '_'. You can leave it empty for autogeneration"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it
+                                                            empty for autogeneration</div>
+                                                        <div class="alert alert-danger" id="pl-reg-error-id" style="display: none">
+                                                            Up to 30 characters. Only letters, digits, '-' and '_' are permitted. Or leave it
+                                                            empty for autogeneration</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Platform Name</label>
+                                                        <input type="text"  class="form-control platformRegField"
+                                                               id="platform-registration-name" name="name" placeholder="Enter the platform name"
+                                                               minlength="3" maxlength="30" required="required"
+                                                               data-required-error="Platform name is required"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 3 to 30 characters</div>
+                                                        <div class="alert alert-danger" id="pl-reg-error-name" style="display: none">Invalid name!</div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group has-feedback">
+                                                    <label>Platform Description</label>
+                                                    <textarea  class="form-control platformRegField"
+                                                               id="platform-registration-description" name="description" placeholder="Enter the platform description"
+                                                               rows="3" minlength="3" maxlength="300" required="required"
+                                                               data-required-error="Platform description is required"></textarea>
+                                                    <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                    <div class="help-block with-errors">From 4 to 30 characters</div>
+                                                    <div class="alert alert-danger" id="pl-reg-error-description" style="display: none">Invalid Description!</div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Labels (Optional)</label>
+                                                    <div class="row">
+                                                        <div class="col-sm-4 form-group has-feedback">
+                                                            <input type="text" class="form-control platformRegField registration-labels"
+                                                                   placeholder="Label" minlength="3" maxlength="30"/>
+                                                            <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                            <div class="help-block with-errors">From 3 to 30 characters</div>
+                                                            <div class="alert alert-danger pl-reg-error-label" style="display: none">Invalid Label!</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Comments (Optional)</label>
+                                                    <div class="row">
+                                                        <div class="col-sm-12 form-group has-feedback">
+                                                            <textarea class="form-control platformRegField registration-comments"
+                                                                      placeholder="Enter a comment" rows="1"
+                                                                      minlength="3" maxlength="300"></textarea>
+                                                            <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                            <div class="help-block with-errors">From 4 to 30 characters</div>
+                                                            <div class="alert alert-danger pl-reg-error-comment" style="display: none">Invalid Comment!</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label>Interworking Services</label>
+                                                    <div class="row interworking-service">
+                                                        <div class="col-sm-8 form-group has-feedback">
+                                                            <input type="url" class="form-control platformRegField interworking-service-url"
+                                                                   placeholder="Enter a valid https url" data-pattern-error="Please enter a valid https url"
+                                                                   data-error="Not valid url" required="required" data-required-error="A valid https url is required"
+                                                                   pattern="^(https:\/\/www\.|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"/>
+                                                            <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                            <div class="help-block with-errors"></div>
+                                                            <div class="alert alert-danger pl-reg-error-interworkingServices-url" style="display: none">Invalid information url!</div>
+                                                        </div>
+                                                        <div class="col-sm-4 form-group">
+                                                            <div class="platformRegField">
+                                                                <select class="selectpicker form-control platformRegField info-model-select"
+                                                                        id="platform-registration-info-model-id" required="required"
+                                                                        data-live-search="true" title="Information Model"
+                                                                        data-required-error="Information model is required">
+                                                                </select>
+                                                                <div class="help-block with-errors"></div>
+                                                            </div>
+                                                            <div class="alert alert-danger pl-reg-error-interworkingServices-informationModelId"
+                                                                 style="display: none">Invalid information Model!</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="row form-group">
+                                                    <div class="col-sm-4 form-group">
+                                                        <label>Type</label>
+                                                        <select class="selectpicker form-control platformRegField"
+                                                                id="isEnabler" name="isEnabler" required="required"
+                                                                data-required-error="Type is required">
+                                                            <option value="false">Platform</option>
+                                                            <option value="true">Enabler</option>
+                                                        </select>
+                                                        <div class="help-block with-errors"></div>
+                                                        <div class="alert alert-danger" id="pl-reg-error-isEnabler"
+                                                             style="display: none">Invalid Type!</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" id="registration-platform-btn" name="registration-platform-btn"
+                                                class="btn btn-default btn-info">Submit</button>
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Name:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformName}]]
+                    </div>
+
+                    <!-- Platform Panel Entry -->
+                    <div class="panel panel-primary platform-panel-entry" id="platform-entry" style="display: none">
+                        <div class="panel-heading clickable">
+                            <h3 class="panel-title">
+                                PLATFORM NAME
+                            </h3>
+                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span>
+                        </div>
+
+                        <div class="panel-body" style="display: none;">
+                            <div class="row" id="platform-update-row">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Platform Id</label>
+                                            <input type="text" class="form-control platformRegField platform-update-id" maxlength="30"
+                                                   placeholder="Enter preferred platform id"
+                                                   pattern="^[\w-][\w-][\w-][\w-]+" disabled="disabled" data-pattern-error="From 4 to 30 characters.
+                                                               Include only letters, digits, '-' and '_'. You can leave it empty for autogeneration"/>
+                                            <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                            <!--<div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'. You can leave it-->
+                                                <!--empty for autogeneration</div>-->
+                                            <div class="alert alert-danger" id="pl-update-error-id" style="display: none">
+                                                Up to 30 characters. Only letters, digits, '-' and '_' are permitted. Or leave it
+                                                empty for autogeneration</div>
+                                        </div>
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Platform Name</label>
+                                            <input type="text"  class="form-control platformRegField platform-update-name"
+                                                   name="name" placeholder="Enter the platform name"
+                                                   minlength="3" maxlength="30" required="required" disabled="disabled"
+                                                   data-required-error="Platform name is required"/>
+                                            <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                            <!--<div class="help-block with-errors">From 3 to 30 characters</div>-->
+                                            <div class="alert alert-danger" id="pl-update-error-name" style="display: none">Invalid name!</div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group has-feedback">
+                                        <label>Platform Description</label>
+                                        <textarea  class="form-control platformRegField platform-update-description"
+                                                   name="description" placeholder="Enter the platform description"
+                                                   rows="3" minlength="3" maxlength="300" required="required" disabled="disabled"
+                                                   data-required-error="Platform description is required"></textarea>
+                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                        <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
+                                        <div class="alert alert-danger" id="pl-update-error-description" style="display: none">Invalid Description!</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Labels (Optional)</label>
+                                        <div class="row">
+                                            <div class="col-sm-4 form-group has-feedback">
+                                                <input type="text" class="form-control platformRegField platform-update-labels"
+                                                       placeholder="Label" minlength="3" maxlength="30" disabled="disabled"/>
+                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                <!--<div class="help-block with-errors">From 3 to 30 characters</div>-->
+                                                <div class="alert alert-danger pl-update-error-label" style="display: none">Invalid Label!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Comments (Optional)</label>
+                                        <div class="row">
+                                            <div class="col-sm-12 form-group has-feedback">
+                                                            <textarea class="form-control platformRegField platform-update-comments"
+                                                                      placeholder="Enter a comment" rows="1"
+                                                                      minlength="3" maxlength="300" disabled="disabled"></textarea>
+                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
+                                                <div class="alert alert-danger pl-update-error-comment" style="display: none">Invalid Comment!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Interworking Services</label>
+                                        <div class="row interworking-service">
+                                            <div class="col-sm-8 form-group has-feedback">
+                                                <input type="url" class="form-control platformRegField platform-update-interworking-service-url"
+                                                       placeholder="Enter a valid https url" disabled="disabled"
+                                                       pattern="^(https:\/\/www\.|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"
+                                                       data-pattern-error="Please enter a valid https url" data-error="Not valid url"
+                                                       required="required" data-required-error="A valid https url is required"/>
+                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
+                                                <div class="help-block with-errors"></div>
+                                                <div class="alert alert-danger pl-update-error-interworkingServices-url" style="display: none">Invalid information url!</div>
+                                            </div>
+                                            <div class="col-sm-4 form-group">
+                                                <div class="platformRegField">
+                                                    <select class="selectpicker form-control platformRegField update-info-model-select"
+                                                            required="required" disabled="disabled" data-live-search="true"
+                                                            data-required-error="Information model is required" >
+                                                    </select>
+                                                    <div class="help-block with-errors"></div>
+                                                </div>
+                                                <div class="alert alert-danger pl-update-error-interworkingServices-informationModelId"
+                                                     style="display: none">Invalid information Model!</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row form-group">
+                                        <div class="col-sm-4 form-group">
+                                            <label>Type</label>
+                                            <select class="selectpicker form-control platformRegField update-isEnabler"
+                                                    name="update-isEnabler" required="required" disabled="disabled"
+                                                    data-required-error="Type is required">
+                                                <option value="false">Platform</option>
+                                                <option value="true">Enabler</option>
+                                            </select>
+                                            <div class="help-block with-errors"></div>
+                                            <div class="alert alert-danger" id="pl-update-error-isEnabler"
+                                                 style="display: none">Invalid Type!</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="panel-footer platform-info-footer">
+
+                            <!-- Trigger the modal with a button -->
+                            <button type="button" class="btn btn-default btn-warning btn-warning-delete"
+                                    data-toggle="modal" data-target="#platform-del-modal">Delete</button>
+
+                            <!-- Modal -->
+                            <div id="platform-del-modal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title">Are you sure you want to delete the platform
+                                                <strong>PLATFORMINSTANCEFRIENDLYNAME</strong>?</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <h4 class="text-danger">Warning - if you delete this platform, some information may be lost!</h4>
+                                            <p>(During release 0.2.1, make sure you have deleted all registered resources)</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-default btn-danger del-platform-btn">Verify Deletion</button>
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Address:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformUrl}]]
+                    </div>
+
+                    <script>
+                        storeNecessaryPlatformElements();
+                        buildPlatformRegistrationForm();
+                    </script>
+
+                    <!-- Show Platform Details -->
+                    <!--<script>buildPlatformPanels();</script>-->
+                </div>
+
+                <!-- Information Model Tab-->
+                <div class="tab-pane" id="information-models">
+
+                    <!-- Display errors -->
+                    <div class="alert alert-danger alert-dismissable list-user-info-model-error"
+                         id="list-user-info-model-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+                    <div class="alert alert-danger alert-dismissable"
+                         id="delete-information-model-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+
+                    <!-- Display success message -->
+                    <div class="alert alert-success alert-dismissable" id="info-model-registration-successful" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The information model was registered successfully!</p></div>
+                    <div class="alert alert-success alert-dismissable" id="info-model-successful-deletion" style="display: none">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The information model was deleted successfully!</p></div>
+
+                    <!-- Register new Information Model by triggering the button-->
+                    <!-- Trigger the modal with a button -->
+                    <button type="button" class="btn btn-info btn-default registration-btn" data-toggle="modal"
+                            data-target="#info-model-reg-modal">Register New Information Model</button>
+
+                    <!-- Modal -->
+                    <div id="info-model-reg-modal" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+
+                            <form id="info-model-registration-form" role="form" action="" data-toggle="validator">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h3 class="modal-title">Information Model Registration</h3>
+                                    </div>
+                                    <div class="modal-body" id="info-model-registration-modal-body">
+
+                                        <!-- Display errors -->
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="info-model-registration-error" style="display: none">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong></div>
+
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Name</label>
+                                                        <input type="text" class="form-control" id="info-model-name"
+                                                               minlength="2" maxlength="30" required="required"
+                                                               data-required-error="A valid name is required"
+                                                               name="info-model-name" placeholder="Enter name of the information model" />
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 2 to 30 characters</div>
+                                                        <div class="alert alert-danger" id="info-model-reg-error-name" style="display: none">
+                                                            Invalid name!</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Uri</label>
+                                                        <input type="url"  class="form-control" id="info-model-uri"
+                                                               name="info-model-uri" placeholder="Enter the uri of the information model"
+                                                               pattern="^((ftp|http|https):\/\/)?(\S+(:\S*)?@)?((([1-9]\d?|1\d\d|2[01]\d|22[0-3])(\.(1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.([0-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|((www\.)?)?(([a-z\x{00a1}-\x{ffff}0-9]+-?-?_?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.([a-z\x{00a1}-\x{ffff}]{2,}))?)|localhost)(:(\d{1,5}))?((\/|\?|#)[^\s]*)?$"
+                                                               data-error="Not valid url" required="required"
+                                                               data-required-error="A valid uri is required"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors"></div>
+                                                        <div class="alert alert-danger" id="info-model-reg-error-uri" style="display: none">
+                                                            Invalid name!</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12 form-group">
+                                                <label>Rdf file</label>
+                                                <input id="info-model-rdf" name="info-model-rdf" type="file"
+                                                       accept=".ttl, .nt, .rdf, .xml, .n3, .jsonld" required="required"/>
+                                                <div class="help-block with-errors">Supported format: .ttl, .nt, .rdf, .xml, .n3, .jsonld</div>
+                                                <div class="alert alert-danger" id="info-model-reg-error-rdf" style="display: none">
+                                                    Invalid name!</div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12 form-group">
+                                                <div class="progress" style="display: none">
+                                                    <div class="progress-bar progress-bar-success myprogress" role="progressbar" style="width:0%"></div>
+                                                </div>
+
+                                                <div class="msg"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" id="info-model-reg-btn" name="info-model-reg-btn"
+                                                class="btn btn-default btn-info">Submit</button>
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Information Model Panel Entry -->
+                    <div class="panel panel-primary info-model-panel-entry" id="info-model-entry" style="display: none">
+                        <div class="panel-heading clickable">
+                            <h3 class="panel-title">INFORMATION_MODEL_NAME</h3>
+                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span></div>
+                        <div class="panel-body" style="display: none;">
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Name</label>
+                                            <input type="text" class="form-control update-info-model-name"
+                                                   name="update-info-model-name" minlength="2" maxlength="30" required="required"
+                                                   data-required-error="A valid name is required" disabled="disabled"
+                                                   placeholder="Enter name of the information model" />
+                                            <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                            <!--<div class="help-block with-errors">From 2 to 30 characters</div>-->
+                                            <div class="alert alert-danger" id="info-model-update-error-name" style="display: none">
+                                                Invalid name!</div>
+                                        </div>
+                                        <div class="col-sm-6 form-group">
+                                            <label>Id</label>
+                                            <input type="text" class="form-control update-info-model-id" disabled="disabled"/>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Uri</label>
+                                            <input type="url" class="form-control update-info-model-uri"
+                                                   name="update-info-model-uri" placeholder="Enter the uri of the information model"
+                                                   pattern="^((ftp|http|https):\/\/)?(\S+(:\S*)?@)?((([1-9]\d?|1\d\d|2[01]\d|22[0-3])(\.(1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.([0-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|((www\.)?)?(([a-z\x{00a1}-\x{ffff}0-9]+-?-?_?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.([a-z\x{00a1}-\x{ffff}]{2,}))?)|localhost)(:(\d{1,5}))?((\/|\?|#)[^\s]*)?$"
+                                                   data-error="Not valid url" required="required"
+                                                   data-required-error="A valid uri is required" disabled="disabled"/>
+                                            <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                            <!--<div class="help-block with-errors"></div>-->
+                                            <div class="alert alert-danger" id="info-model-update-error-uri" style="display: none">
+                                                Invalid uri!</div>
+                                        </div>
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>RDF Format</label>
+                                            <input type="text" class="form-control update-info-model-rdfformat" disabled="disabled"/>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="list-group-item description">
-                            <h4 class="list-group-item-heading">
-                                Platform Description:
-                            </h4>
-                            <textarea class="list-group-item-text" id="description" name="description" value=""></textarea>
-                            <div class="alert alert-danger" th:if="${error_description}" th:text="${error_description}"></div>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Information Model:
-                            </h4>
-                            <input class="list-group-item-text input" id="informationModelId" name="informationModelId" value=""></input>
-                            <div class="alert alert-danger" th:if="${error_informationModelId}" th:text="${error_informationModelId}"></div>
-                        </div>
-                    </div>
-                    <div class="panel-footer">
-                        <input class="btn btn-success" type="submit" name="submit" value="Activate"></input>
-                    </div>
-                </form>
-                </th:block>
-                <th:block th:if="${user.state==3}">
-                <form class="panel panel-default tab" th:classappend="${page=='modify'}?active" id="platform_modify" th:action="@{/user/cpanel/modify}" method="post">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            Modify Platform
-                        </h3>
-                    </div>
-                    <div class="panel-body list-group">
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Id:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformId}]]
+                        <div class="panel-footer platform-info-footer">
+
+                            <!-- Trigger the information model delete modal with a button -->
+                            <button type="button" class="btn btn-default btn-warning btn-warning-delete"
+                                    data-toggle="modal" data-target="#info-model-del-modal">Delete</button>
+
+                            <!-- Information Model Delete Modal -->
+                            <div id="info-model-del-modal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title text-danger">Are you sure you want to delete the information model
+                                                <strong>INFORMATION MODEL NAME</strong>?</h4>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-default btn-danger del-info-model-btn">Verify Deletion</button>
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Name:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformName}]]
+                    </div>
+
+                    <!-- Show Information Model Details -->
+                    <script>
+                        storeNecessaryInfoModelElements();
+                        buildInfoModelsPanels();
+                    </script>
+
+                </div>
+
+                <!-- Federation Requests Tab-->
+                <div class="tab-pane" id="federation_requests">
+                    <h3>Federation Requests</h3>
+                </div>
+
+                <!-- Federation List Tab-->
+                <div class="tab-pane" id="federation_list">
+
+                    <!-- Display errors -->
+                    <div class="alert alert-danger alert-dismissable" id="list-federations-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+                    <div class="alert alert-danger alert-dismissable" id="leave-federation-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+
+                    <!-- Display success message -->
+                    <div class="alert alert-success alert-dismissable" id="federation-registration-successful" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The federation was created successfully!</p></div>
+                    <div class="alert alert-success alert-dismissable" id="leave-federation-successful" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>Your platform left the federation successfully!</p></div>
+
+                    <!-- Register new Federation by triggering the button-->
+                    <!-- Trigger the modal with a button -->
+                    <button type="button" class="btn btn-info btn-default registration-btn" data-toggle="modal"
+                            data-target="#federation-reg-modal">Create New Federation</button>
+
+                    <!-- Register Federation Modal -->
+                    <div id="federation-reg-modal" class="modal fade" role="dialog">
+                        <div class="modal-dialog">
+
+                            <form id="federation-registration-form" role="form" action="" data-toggle="validator">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                        <h3 class="modal-title">Federation Creation</h3>
+                                    </div>
+                                    <div class="modal-body" id="federation-registration-modal-body">
+
+                                        <!-- Display errors -->
+                                        <div class="alert alert-danger alert-dismissable"
+                                             id="federation-registration-error" style="display: none">
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                            <strong>Error!</strong></div>
+
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 form-group has-feedback">
+                                                        <label>Federation Id</label>
+                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
+                                                               id="federation-registration-id" name="id" placeholder="Enter preferred federation id"
+                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
+                                                               Include only letters, digits, '-' and '_'"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
+                                                        <div class="alert alert-danger" id="federation-reg-error-id" style="display: none">
+                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 form-group has-feedback">
+                                                        <label>Federated Platform Id 1</label>
+                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
+                                                               id="federated-platform-id-1" name="platform1Id"
+                                                               placeholder="Enter the id of the platform you want to add to the federation"
+                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
+                                                               Include only letters, digits, '-' and '_'."/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
+                                                        <div class="alert alert-danger" id="federation-reg-error-platform1-id" style="display: none">
+                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-12">
+                                                <div class="row">
+                                                    <div class="col-sm-12 form-group has-feedback">
+                                                        <label>Federated Platform Id 2</label>
+                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
+                                                               id="federated-platform-id-2" name="platform2Id"
+                                                               placeholder="Enter the id of the platform you want to add to the federation"
+                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
+                                                               Include only letters, digits, '-' and '_'."/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
+                                                        <div class="alert alert-danger" id="federation-reg-error-platform2-id" style="display: none">
+                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="submit" id="federation-reg-btn" name="federation-reg-btn"
+                                                class="btn btn-default btn-info">Submit</button>
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Federation Panel Entry -->
+                    <div class="panel panel-primary federation-panel-entry" id="federation-entry" style="display: none">
+                        <div class="panel-heading clickable">
+                            <h3 class="panel-title">FEDERATION_NAME</h3>
+                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span></div>
+                        <div class="panel-body" style="display: none;">
+
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="row">
+                                        <div class="col-sm-6 form-group">
+                                            <label>Id</label>
+                                            <p class="federation-id">FEDERATION_ID</p>
+                                        </div>
+                                        <div class="col-sm-6 form-group has-feedback">
+                                            <label>Federated Platforms</label>
+                                            <ul class="federated-platforms list-group">
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Address:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformUrl}]]
+                        <div class="panel-footer platform-info-footer">
+
+                            <!-- Trigger the federation delete modal with a button -->
+                            <button type="button" class="btn btn-default btn-warning btn-warning-delete"
+                                    data-toggle="modal" data-target="#del-federation-modal">Delete</button>
+
+                            <!-- Federation Delete Modal -->
+                            <div id="del-federation-modal" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title text-danger">Are you sure you want to cancel the federation
+                                                <strong>FEDERATION NAME</strong>?</h4>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="submit" class="btn btn-default btn-danger del-federation-btn">Verify Deletion</button>
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="list-group-item description">
-                            <h4 class="list-group-item-heading">
-                                Platform Description:
-                            </h4>
-                            <textarea class="list-group-item-text" id="description" name="description" value=""></textarea>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Information Model:
-                            </h4>
-                            <input class="list-group-item-text input" id="informationModelId" name="informationModelId" value=""></input>
-                        </div>
                     </div>
-                    <div class="panel-footer">
-                        <input class="btn btn-warning" type="submit" name="submit" value="Update"></input>
-                    </div>
-                </form>
-                <form class="panel panel-default tab" th:classappend="${page=='disable'}?active" id="platform_disable" th:action="@{/user/cpanel/disable}" method="post">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            Disable Platform
-                        </h3>
-                    </div>
-                    <div class="panel-body list-group">
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Id:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformId}]]
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="list-group-item-heading">
-                                Platform Name:
-                            </h4>
-                            <div class="list-group-item-text" th:inline="text">
-                                [[${user.platformName}]]
-                            </div>
-                        </div>
-                        <div class="list-group-item">
-                            <h4 class="text-danger">
-                                Warning - if you disable this platform, some information may be lost!
-                            </h4>
-                            <p>
-                                (During release 0.2.0, make sure you have deleted all registered resources)
-                            </p>
-                        </div>
-                    </div>
-                    <div class="panel-footer">
-                        <input class="btn btn-danger" type="submit" name="submit" value="Disable"></input>
-                    </div>
-                </form>
-                </th:block>
-                </th:block>
+
+                    <!-- Federation Details -->
+                    <script>
+                        storeNecessaryFederationElements();
+                        buildFederationPanels();
+                    </script>
+                </div>
+
             </div>
         </div>
     </div>
+</div>
 
-
-
-
-    <script type="text/javascript" src="/webjars/jquery/3.1.1-1/jquery.min.js"></script>
-    <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
 </body>
 </html>

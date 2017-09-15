@@ -1,4 +1,4 @@
-package eu.h2020.symbiote;
+package eu.h2020.symbiote.administration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -7,8 +7,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
-import eu.h2020.symbiote.CustomAuthenticationProvider;
 
 
 /**
@@ -23,6 +21,7 @@ import eu.h2020.symbiote.CustomAuthenticationProvider;
 @EnableWebSecurity
 public class WebSecurityConfig {
 
+    // In order to support multiple security domains (WebSecurityConfigurerAdapter) we need the Order Annotation
     @Configuration
     @Order(1)
     public static class UserWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
@@ -31,9 +30,9 @@ public class WebSecurityConfig {
         private CustomAuthenticationProvider authProvider;
 
         @Override
-        protected void configure( AuthenticationManagerBuilder auth) throws Exception {
+        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 
-            auth.authenticationProvider(authProvider);
+            auth.authenticationProvider(authProvider).eraseCredentials(false);
         }
 
         @Override
@@ -50,8 +49,10 @@ public class WebSecurityConfig {
                     .permitAll()
                     .and()
                 .logout()
-                    .logoutUrl("/user/logout")
+                    .logoutUrl("/")
                     .logoutSuccessUrl("/")
+//                    .deleteCookies("JSESSIONID")
+//                    .invalidateHttpSession(true)
                     .permitAll()
                     .and()
                 .exceptionHandling()
