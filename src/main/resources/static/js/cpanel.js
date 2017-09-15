@@ -89,9 +89,7 @@ $(document).on('click', '.del-platform-btn', function (e) {
             $('#platform-details').prepend($platformSuccessfulDeletion.clone().show());
             $modal.removeClass('fade').modal('hide');
 
-            deletePlatformPanels();
             buildPlatformPanels();
-
         },
         error : function(xhr) {
             var message = document.createElement('p');
@@ -118,11 +116,7 @@ $(document).on('click', '.del-info-model-btn', function (e) {
             $modal.removeClass('fade').modal('hide');
 
             // Refresh Information Models
-            deleteInfoModelsPanels();
             buildInfoModelsPanels();
-
-            // Delete old platform panels, because they are re-created in buildPlatformRegistrationForm
-            deletePlatformPanels();
 
             // Refresh Registration form
             buildPlatformRegistrationForm();
@@ -151,8 +145,7 @@ $(document).on('click', '.del-federation-btn', function (e) {
             $('#federation_list').prepend($federationSuccessfulDeletion.clone().show());
             $modal.removeClass('fade').modal('hide');
 
-            // Refresh Information Models
-            deleteFederationPanels();
+            // Refresh Federation Panels
             buildFederationPanels();
         },
         error : function(xhr) {
@@ -259,6 +252,7 @@ function buildPlatformPanels() {
         contentType: "application/json",
         success: function(data, textStatus, jqXHR) {
 
+            deletePlatformPanels();
 
             for (var i = 0; i < data.availablePlatforms.length; i++) {
                 $platformTab.append(platformPanel(data.availablePlatforms[i]));
@@ -367,6 +361,8 @@ function buildInfoModelsPanels() {
         dataType: "json",
         contentType: "application/json",
         success: function(data) {
+            deleteInfoModelsPanels();
+
             for (var i = 0; i < data.length; i++) {
                 $infoModelTab.append(infoModelPanel(data[i]));
             }
@@ -447,6 +443,8 @@ function buildFederationPanels() {
         dataType: "json",
         contentType: "application/json",
         success: function(data) {
+            deleteFederationPanels();
+
             for (var key in data) {
                 $federationListTab.append(federationPanel(data[key]));
             }
@@ -531,7 +529,6 @@ $(document).ready(function () {
                 // Resetting the validation
                 $('#platform-registration-form').validator('destroy').validator();
 
-                deletePlatformPanels();
                 buildPlatformPanels();
             },
             error : function(xhr) {
@@ -649,11 +646,7 @@ $(document).ready(function () {
                 $('#info-model-registration-form').validator('destroy').validator();
 
                 // Refresh Information Models
-                deleteInfoModelsPanels();
                 buildInfoModelsPanels();
-
-                // Delete old platform panels, because they are re-created in buildPlatformRegistrationForm
-                deletePlatformPanels();
 
                 // Refresh Registration form
                 buildPlatformRegistrationForm();
@@ -713,7 +706,6 @@ $(document).ready(function () {
                 // Resetting the validation
                 $('#federation-registration-form').validator('destroy').validator();
 
-                deleteFederationPanels();
                 buildFederationPanels();
             },
             error : function(xhr) {
