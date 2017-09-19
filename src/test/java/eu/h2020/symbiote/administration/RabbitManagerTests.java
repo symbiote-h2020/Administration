@@ -268,7 +268,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
-        InformationModelResponse response = rabbitManager.sendInfoModelRequest(sampleInformationModelRequest());
+        InformationModelResponse response = rabbitManager.sendInfoModelRequest("", sampleInformationModelRequest());
 
         assertNotNull(response);
         assertNotNull(response.getBody());
@@ -281,7 +281,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
-        response = rabbitManager.sendInfoModelRequest(sampleInformationModelRequest());
+        response = rabbitManager.sendInfoModelRequest("", sampleInformationModelRequest());
 
         assertNull(response);
 
@@ -296,7 +296,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendInfoModelRequest(sampleInformationModelRequest());
+            response = rabbitManager.sendInfoModelRequest("", sampleInformationModelRequest());
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -305,7 +305,7 @@ public class RabbitManagerTests extends AdministrationTests {
 
         // Throw IOException while deserializing the ErrorResponseContainer
         doThrow(new IOException()).when(om).readValue(any(String.class), eq(ErrorResponseContainer.class));
-        response = rabbitManager.sendInfoModelRequest(sampleInformationModelRequest());
+        response = rabbitManager.sendInfoModelRequest("", sampleInformationModelRequest());
 
         assertNull(response);
     }

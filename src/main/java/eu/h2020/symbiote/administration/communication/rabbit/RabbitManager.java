@@ -416,7 +416,7 @@ public class RabbitManager {
      * @param request contains the information model
      * @return response from registry
      */
-    public InformationModelResponse sendInfoModelRequest(InformationModelRequest request)
+    public InformationModelResponse sendInfoModelRequest(String routingKey, InformationModelRequest request)
             throws CommunicationException {
 
         log.debug("sendInfoModelRequest");
@@ -427,7 +427,7 @@ public class RabbitManager {
 
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.informationModelExchangeName,
-                    this.informationModelCreationRequestedRoutingKey, message, "application/json");
+                    routingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -458,7 +458,7 @@ public class RabbitManager {
     public InformationModelResponse sendRegisterInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
         log.debug("sendRegisterInfoModelRequest");
-        return sendInfoModelRequest(request);
+        return sendInfoModelRequest(this.informationModelCreationRequestedRoutingKey, request);
     }
 
     /**
@@ -469,7 +469,7 @@ public class RabbitManager {
     public InformationModelResponse sendDeleteInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
         log.debug("sendDeleteInfoModelRequest");
-        return sendInfoModelRequest(request);
+        return sendInfoModelRequest(this.informationModelRemovalRequestedRoutingKey, request);
     }
 
     /**

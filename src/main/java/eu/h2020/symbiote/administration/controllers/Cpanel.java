@@ -445,8 +445,8 @@ public class Cpanel {
                 }
 
                 if (!ownsPlatform) {
-                    log.debug("You do not own the platform you tried to delete");
-                    return new ResponseEntity<>("You do not own the platform you tried to delete",
+                    log.debug("You do not own the platform that you tried to delete");
+                    return new ResponseEntity<>("You do not own the platform that you tried to delete",
                             new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
@@ -677,7 +677,7 @@ public class Cpanel {
                 }
             }
 
-            return new ResponseEntity<>("You do not own the platform you tried to delete",
+            return new ResponseEntity<>("You do not own the Information Model that you tried to delete",
                     new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 

@@ -78,7 +78,7 @@ $(document).on('click', '.panel div.clickable', function () {
 $(document).on('click', '.del-platform-btn', function (e) {
     var $deleteButton = $(e.target);
     var $modal = $deleteButton.closest(".modal");
-    var platformIdToDelete = $modal.attr('id').split('-').pop();
+    var platformIdToDelete = $modal.attr('id').split('del-platform-modal-').pop();
 
 
     $.ajax({
@@ -103,7 +103,7 @@ $(document).on('click', '.del-platform-btn', function (e) {
 $(document).on('click', '.del-info-model-btn', function (e) {
     var $deleteButton = $(e.target);
     var $modal = $deleteButton.closest(".modal");
-    var infoModelIdToDelete = $modal.attr('id').split('-').pop();
+    var infoModelIdToDelete = $modal.attr('id').split('del-info-model-modal-').pop();
 
 
     $.ajax({
@@ -133,7 +133,7 @@ $(document).on('click', '.del-info-model-btn', function (e) {
 $(document).on('click', '.del-federation-btn', function (e) {
     var $deleteButton = $(e.target);
     var $modal = $deleteButton.closest(".modal");
-    var federationIdToDelete = $modal.attr('id').split('-').pop();
+    var federationIdToDelete = $modal.attr('id').split('del-federation-modal-').pop();
 
 
     $.ajax({
