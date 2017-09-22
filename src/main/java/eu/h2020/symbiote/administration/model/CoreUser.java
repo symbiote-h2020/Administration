@@ -3,6 +3,7 @@ package eu.h2020.symbiote.administration.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import javax.validation.constraints.NotNull;
 
@@ -27,7 +28,8 @@ public class CoreUser extends User {
     /* -------- Properties -------- */
     
     @NotNull
-    @Size(min=4, max=30)
+    @Pattern(regexp="^[\\w-][\\w-][\\w-][\\w-]+$")
+    @Size(max=30)
     private String validUsername;
 
     @NotNull

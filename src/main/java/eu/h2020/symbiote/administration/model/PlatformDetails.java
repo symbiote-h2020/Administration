@@ -21,7 +21,7 @@ import java.util.List;
 public class PlatformDetails {
 
     @NotNull
-    @Pattern(regexp="^(\\Z|[\\w-][\\w-][\\w-][\\w-]+)")
+    @Pattern(regexp="^(\\Z|[\\w-][\\w-][\\w-][\\w-]+)$")
     @Size(max=30)
     private String id;
 
