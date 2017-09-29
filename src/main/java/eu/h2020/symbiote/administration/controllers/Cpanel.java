@@ -46,6 +46,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 /**
  * Spring controller for the User control panel, handles management views and form validation.
  *
+ * @author Vasileios Glykantzis (ICOM)
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
 @Controller
@@ -81,7 +82,7 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/list_user_platforms")
-    public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Model model, Principal principal) {
+    public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Principal principal) {
 
         log.debug("POST request on /user/cpanel/list_user_platforms");
 
@@ -113,7 +114,7 @@ public class Cpanel {
                 for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
                     log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(platformDetails));
 
-                    // Send Platform Modification message to Registry to get back the full details
+                    // Get Platform information from Registry
                     try {
                         PlatformRegistryResponse registryResponse = rabbitManager.sendGetPlatformDetailsMessage(
                                 platformDetails.getPlatformInstanceId());
@@ -125,15 +126,17 @@ public class Cpanel {
                                 availablePlatforms.add(registryResponse.getBody());
                             }
                         } else {
-                            log.debug("Registry unreachable!");
-                            response.setMessage("Registry unreachable!");
+                            String message = "Registry unreachable!";
+                            log.info(message);
+                            response.setMessage(message);
                             return new ResponseEntity<>(response,
                                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                         }
                     } catch (CommunicationException e) {
-                        e.printStackTrace();
-                        log.debug("Registry threw communication exception");
-                        response.setMessage("Registry threw communication exception: " + e.getMessage());
+                        String message = "Registry threw CommunicationException";
+
+                        log.info(message, e);
+                        response.setMessage(message + ": " + e.getMessage());
                         return new ResponseEntity<>(response,
                                 new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
@@ -147,30 +150,38 @@ public class Cpanel {
                 response.setAvailablePlatforms(availablePlatformDetails);
 
                 if (unavailablePlatforms.size() == 0) {
-                    log.debug("All the owned platform details were successfully received");
-                    response.setMessage("All the owned platform details were successfully received");
+                    String message = "All the owned platform details were successfully received";
+                    log.debug(message);
+                    response.setMessage(message);
                     return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
                 }
                 else {
                     String message = "Could NOT retrieve information from Registry for the following platform that you own:";
+                    StringBuilder stringBuilder = new StringBuilder(message);
 
-                    for (String unavailablePlatform : unavailablePlatforms)
-                        message += " " + unavailablePlatform + ",";
+                    for (String unavailablePlatform : unavailablePlatforms) {
+                        stringBuilder.append(" ").append(unavailablePlatform).append(",");
+
+                    }
+
+                    message = stringBuilder.toString();
                     message = message.substring(0, message.length() - 1);
                     log.debug(message);
+
                     response.setMessage(message);
                     return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
                 }
             } else {
-                log.debug("AAM responded with null");
-                response.setMessage("AAM responded with null");
+                String message = "AAM responded with null";
+                log.info(message);
+                response.setMessage(message);
                 return new ResponseEntity<>(response,
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
-            log.debug("AAM threw CommunicationException");
-            response.setMessage("AAM threw CommunicationException: " + e.getMessage());
+            String message = "AAM threw CommunicationException";
+            log.info(message, e);
+            response.setMessage(message + ": " + e.getMessage());
             return new ResponseEntity<>(response,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -179,7 +190,7 @@ public class Cpanel {
 
     @PostMapping("/user/cpanel/register_platform")
     public ResponseEntity<?> registerPlatform(@Valid @RequestBody PlatformDetails platformDetails,
-                                   BindingResult bindingResult, RedirectAttributes model, Principal principal) {
+                                              BindingResult bindingResult, Principal principal) {
 
         log.debug("POST request on /user/cpanel/register_platform");
         boolean invalidInfoModel = false;
@@ -206,20 +217,18 @@ public class Cpanel {
             }
         }
 
-        int counter = 0;
         for (InterworkingService service : platformDetails.getInterworkingServices()) {
             if (!validInfoModelIds.contains(service.getInformationModelId())) {
                 log.debug("The information model id is not valid");
                 invalidInfoModel = true;
             }
-            counter++;
         }
 
         if (bindingResult.hasErrors() || invalidInfoModel) {
 
             List<FieldError> errors = bindingResult.getFieldErrors();
             for (FieldError fieldError : errors) {
-                String errorField = "";
+                String errorField;
                 String errorMessage = fieldError.getDefaultMessage();
                 String[] parts = fieldError.getField().split("\\[");
 
@@ -302,40 +311,16 @@ public class Cpanel {
                             } else {
                                 log.debug("Registration Failed: " + registryResponse.getMessage());
 
-                                // Send deletion message to AAM
-                                aamRequest.setOperationType(OperationType.DELETE);
-                                aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+                                sendPlatformDeleteMessageToAAM(aamRequest);
 
-                                // Todo: Check what happens when platform deletion request is not successful at this stage
-                                if (aamResponse != null) {
-                                    if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
-                                        log.debug("Platform was removed from AAM");
-                                    } else {
-                                        log.debug("Platform was NOT removed from AAM");
-                                    }
-                                } else {
-                                    log.debug("AAM unreachable during platform deletion request");
-                                }
                                 responseBody.put("platformRegistrationError", registryResponse.getMessage());
                                 return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
                             }
                         } else {
                             log.debug("Registry unreachable!");
 
-                            // Send deletion message to AAM
-                            aamRequest.setOperationType(OperationType.DELETE);
-                            aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+                            sendPlatformDeleteMessageToAAM(aamRequest);
 
-                            // Todo: Check what happens when platform deletion request is not successful at this stage
-                            if (aamResponse != null) {
-                                if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
-                                    log.debug("Platform was removed from AAM");
-                                } else {
-                                    log.debug("Platform was NOT removed from AAM");
-                                }
-                            } else {
-                                log.debug("AAM unreachable during platform deletion request");
-                            }
                             responseBody.put("platformRegistrationError", "Registry unreachable!");
                             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                         }
@@ -343,21 +328,9 @@ public class Cpanel {
                         e.printStackTrace();
                         log.debug("Registry threw communication exception: " + e.getMessage());
 
-                        // Send deletion message to AAM
-                        aamRequest.setOperationType(OperationType.DELETE);
-                        aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+                        sendPlatformDeleteMessageToAAM(aamRequest);
 
-                        // Todo: Check what happens when platform deletion request is not successful at this stage
-                        if (aamResponse != null) {
-                            if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
-                                log.debug("Platform was removed from AAM");
-                            } else {
-                                log.debug("Platform was NOT removed from AAM");
-                            }
-                        } else {
-                            log.debug("AAM unreachable during platform deletion request");
-                        }
-                        responseBody.put("platformRegistrationError", "Registry threw communication exception");
+                        responseBody.put("platformRegistrationError", "Registry threw CommunicationException");
                         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
 
@@ -377,7 +350,7 @@ public class Cpanel {
             }
         } catch (CommunicationException e) {
             e.printStackTrace();
-            String message = "AAM threw communication exception: " + e.getMessage();
+            String message = "AAM threw CommunicationException: " + e.getMessage();
             log.debug(message);
             responseBody.put("platformRegistrationError", message);
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -406,7 +379,7 @@ public class Cpanel {
     }
 
     @PostMapping("/user/cpanel/delete_platform")
-    public ResponseEntity<?> deletePlatforms(@RequestParam String platformIdToDelete, RedirectAttributes model, Principal principal) {
+    public ResponseEntity<?> deletePlatforms(@RequestParam String platformIdToDelete, Principal principal) {
 
         log.debug("POST request on /user/cpanel/delete_platform for platform with id: " +
                 platformIdToDelete);
@@ -438,26 +411,29 @@ public class Cpanel {
                 for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
                     log.debug(platformDetails);
                     if (platformDetails.getPlatformInstanceId().equals(platformIdToDelete)) {
-                        log.debug("The user owns the platform with id " + platformIdToDelete + " which tried to delete.");
+                        String message = "The user owns the platform with id " + platformIdToDelete + " which tried to delete.";
+                        log.info(message);
                         ownsPlatform = true;
                         break;
                     }
                 }
 
                 if (!ownsPlatform) {
-                    log.debug("You do not own the platform that you tried to delete");
+                    String message = "You do not own the platform that you tried to delete";
+                    log.info(message);
                     return new ResponseEntity<>("You do not own the platform that you tried to delete",
                             new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
-                log.debug("AAM unreachable");
+                String message = "AAM unreachable";
+                log.info(message);
                 return new ResponseEntity<>("AAM unreachable",
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
-            log.debug("AAM threw communication exception");
-            return new ResponseEntity<>("AAM threw communication exception: " + e.getMessage(),
+            String message = "AAM threw communication exception";
+            log.info(message, e);
+            return new ResponseEntity<>(message + ": " + e.getMessage(),
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -474,15 +450,16 @@ public class Cpanel {
                             new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
                 }
             } else {
-                log.debug("Registry unreachable!");
+                String message = "Registry unreachable!";
+                log.info(message);
                 // Send deletion message to AAM
-                return new ResponseEntity<>("Registry unreachable!",
+                return new ResponseEntity<>(message,
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
-            log.debug("Registry threw communication exception");
-            return new ResponseEntity<>("Registry threw communication exception: " + e.getMessage(),
+            String message = "Registry threw communication exception";
+            log.info(message, e);
+            return new ResponseEntity<>(message + ": " + e.getMessage(),
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
@@ -496,19 +473,20 @@ public class Cpanel {
                 log.debug("AAM responded with: " + aamResponse.getRegistrationStatus());
 
                 if (aamResponse.getRegistrationStatus() != ManagementStatus.OK) {
-                    log.debug("AAM says that the Platform does not exist!");
-                    return new ResponseEntity<>("AAM says that the Platform does not exist!",
+                    String message = "AAM says that the Platform does not exist!";
+                    log.info(message);
+                    return new ResponseEntity<>(message,
                             new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
-                log.debug("AAM unreachable!");
-                return new ResponseEntity<>("AAM unreachable",
+                String message = "AAM unreachable!";
+                log.info(message);
+                return new ResponseEntity<>(message,
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
             String message = "AAM threw communication exception: " + e.getMessage();
-            log.debug(message);
+            log.info(message, e);
             return new ResponseEntity<>(message,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -518,7 +496,7 @@ public class Cpanel {
 
 
     @PostMapping("/user/cpanel/list_all_info_models")
-    public ResponseEntity<?> listAllInformationModels(Principal principal) {
+    public ResponseEntity<?> listAllInformationModels() {
 
         log.debug("POST request on /user/cpanel/list_all_info_models");
 
@@ -597,29 +575,29 @@ public class Cpanel {
             InformationModelResponse registryResponse = rabbitManager.sendRegisterInfoModelRequest(request);
             if (registryResponse != null) {
                 if (registryResponse.getStatus() != HttpStatus.OK.value()) {
-                    log.debug("Registry responded with: " + registryResponse.getStatus());
+                    String message = "Registry responded with: " + registryResponse.getStatus();
+                    log.info(message);
                     response.put("error", registryResponse.getMessage());
                     return new ResponseEntity<>(response,
                             new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
                 }
             } else {
-                log.debug("Registry unreachable!");
-                response.put("error", "Registry unreachable!");
+                String message = "Registry unreachable!";
+                log.info(message);
+                response.put("error", message);
                 return new ResponseEntity<>(response,
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
-            String message = "Registry threw communication exception: " + e.getMessage();
-            log.debug(message);
+            String message = "Registry threw communication exception: " + e.getMessage();;
+            log.info(message);
             response.put("error", message);
             return new ResponseEntity<>(response,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (IOException e) {
-            e.printStackTrace();
-            log.debug("Could not read the rdfFile");
-            response.put("error", "Could not read the rdfFile");
-
+            String message = "Could not read the rdfFile";
+            log.info(message);
+            response.put("error", message);
             return new ResponseEntity<>(response,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -643,7 +621,6 @@ public class Cpanel {
         if (responseEntity.getStatusCode() != HttpStatus.OK)
             return responseEntity;
         else {
-            ArrayList<InformationModel> userInfoModels = new ArrayList<>();
 
             for (InformationModel informationModel : (List<InformationModel>)responseEntity.getBody()) {
                 log.debug(informationModel.getId() + " " + informationModel.getOwner());
@@ -665,7 +642,8 @@ public class Cpanel {
                         } else {
                             log.debug("Registry unreachable!");
                             return new ResponseEntity<>("Registry unreachable!",
-                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);                        }
+                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                        }
                     } catch (CommunicationException e) {
                         e.printStackTrace();
                         String message = "Registry threw communication exception: " + e.getMessage();
@@ -685,7 +663,7 @@ public class Cpanel {
 
     @PostMapping("/user/cpanel/create_federation")
     public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
-                                   BindingResult bindingResult, Principal principal) {
+                                              BindingResult bindingResult, Principal principal) {
 
         String username = principal.getName(); //get logged in username
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
@@ -696,10 +674,9 @@ public class Cpanel {
 
             List<FieldError> errors = bindingResult.getFieldErrors();
             for (FieldError fieldError : errors) {
-                String errorField = "";
                 String errorMessage = fieldError.getDefaultMessage();
 
-                errorField = "federation_reg_error_" + fieldError.getField();
+                String errorField = "federation_reg_error_" + fieldError.getField();
                 responseBody.put(errorField, errorMessage);
 
                 log.debug(errorField + ": " + errorMessage);
@@ -890,6 +867,28 @@ public class Cpanel {
             return new ResponseEntity<>("Communication exception while retrieving the information models: " +
                     e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
+        }
+    }
+
+    private void sendPlatformDeleteMessageToAAM(PlatformManagementRequest aamRequest) {
+
+        // Send deletion message to AAM
+        aamRequest.setOperationType(OperationType.DELETE);
+        try {
+            PlatformManagementResponse aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
+
+            // Todo: Check what happens when platform deletion request is not successful at this stage
+            if (aamResponse != null) {
+                if (aamResponse.getRegistrationStatus() == ManagementStatus.OK) {
+                    log.info("Platform was removed from AAM");
+                } else {
+                    log.info("Platform was NOT removed from AAM");
+                }
+            } else {
+                log.info("AAM unreachable during platform deletion request");
+            }
+        } catch (CommunicationException e) {
+            e.printStackTrace();
         }
     }
 }

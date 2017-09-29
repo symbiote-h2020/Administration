@@ -1,16 +1,15 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.controllers.Cpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
-import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
+
 import org.junit.Before;
 import org.junit.Test;
+
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -18,7 +17,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.Filter;
-import javax.ws.rs.core.MediaType;
 
 import java.util.Collections;
 
@@ -97,7 +95,7 @@ public class RegisterTests extends AdministrationTests {
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
                 .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validUsername", "Size"))
+                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validUsername", "Pattern"))
                 .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "Size"));
 
         // Username and password are 31 characters

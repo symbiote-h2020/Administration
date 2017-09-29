@@ -3,6 +3,9 @@ package eu.h2020.symbiote.administration;
 import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.Comment;
+import eu.h2020.symbiote.administration.model.Label;
+import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
@@ -58,14 +61,14 @@ public abstract class AdministrationTests {
     protected String mail = "test@mail.com";
 
     protected String platformId = "test1Plat";
-    protected String name = "Test Platform 1";
-    protected String url = "https://platform.test";
-    protected String description = "This is a test platform.";
+    protected String platformName = "Test Platform 1";
+    protected String platformUrl = "https://platform.test";
+    protected String platformDescription = "This is a test platform.";
 
     protected String informationModelId = "model_id";
     protected String informationModelName = "model_name";
-    protected String informationModelOwner = "model_owner";
-    protected String informationModelUri = "model_uri";
+    protected String informationModelOwner = username;
+    protected String informationModelUri = "http://model-uri.com";
     protected RDFFormat informationModelFormat = RDFFormat.JSONLD;
     protected String informationModelRdf = "model_rdf";
 
@@ -116,15 +119,39 @@ public abstract class AdministrationTests {
 
         InterworkingService interworkingService = new InterworkingService();
         interworkingService.setInformationModelId(informationModelId);
-        interworkingService.setUrl(url);
+        interworkingService.setUrl(platformUrl);
 
         Platform platform = new Platform();
         platform.setId(platformId);
-        platform.setLabels(Arrays.asList(name));
-        platform.setComments(Arrays.asList(description));
+        platform.setLabels(Arrays.asList(platformName));
+        platform.setComments(Arrays.asList(platformDescription));
         platform.setInterworkingServices(Arrays.asList(interworkingService));
 
         return platform;
+    }
+
+    public PlatformDetails samplePlatformDetails() {
+
+        InterworkingService interworkingService = new InterworkingService();
+        interworkingService.setInformationModelId(informationModelId);
+        interworkingService.setUrl(platformUrl);
+
+        List<Label> labels = new ArrayList<>();
+        labels.add(new Label(platformName));
+
+        List<Comment> comments = new ArrayList<>();
+        comments.add(new Comment(platformDescription));
+
+        PlatformDetails platformDetails = new PlatformDetails();
+        platformDetails.setId(platformId);
+        platformDetails.setLabels(labels);
+        platformDetails.setComments(comments);
+        platformDetails.setInterworkingServices(Arrays.asList(interworkingService));
+        platformDetails.setName(platformName);
+        platformDetails.setDescription(platformDescription);
+        platformDetails.setIsEnabler(false);
+
+        return platformDetails;
     }
 
     public InformationModel sampleInformationModel() {
@@ -257,8 +284,8 @@ public abstract class AdministrationTests {
         PlatformManagementRequest request = new PlatformManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
                 new Credentials(username, password),
-                url,
-                name,
+                platformUrl,
+                platformName,
                 operationType
             );
 
@@ -277,9 +304,9 @@ public abstract class AdministrationTests {
 
     public Set<OwnedPlatformDetails> sampleOwnedPlatformDetails() {
 
-        Map<String, Certificate>  componentCerificates = new HashMap<>();
+        Map<String, Certificate>  componentCertificates = new HashMap<>();
         Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
-        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, url, name, new Certificate(), componentCerificates));
+        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, platformUrl, platformName, new Certificate(), componentCertificates));
         return ownedPlatformDetails;
     }
 
