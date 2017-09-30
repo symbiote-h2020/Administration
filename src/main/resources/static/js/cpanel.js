@@ -553,19 +553,19 @@ $(document).ready(function () {
 
                 if (typeof message.pl_reg_error_labels_label !== 'undefined') {
                     for(var i = 0; i < message.pl_reg_error_labels_label.length; i++)
-                        if(message.pl_reg_error_labels_label[i] != null)
+                        if(message.pl_reg_error_labels_label[i])
                             $('.pl-reg-error-label').eq(i).html(message.pl_reg_error_labels_label[i]).show();
                 }
 
                 if (typeof message.pl_reg_error_comments_comment !== 'undefined') {
                     for(var i = 0; i < message.pl_reg_error_comments_comment.length; i++)
-                        if(message.pl_reg_error_comments_comment[i] != null)
+                        if(message.pl_reg_error_comments_comment[i])
                             $('.pl-reg-error-comment').eq(i).html(message.pl_reg_error_comments_comment[i]).show();
                 }
 
                 if (typeof message.pl_reg_error_interworkingServices_url !== 'undefined') {
                     for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
-                        if(message.pl_reg_error_interworkingServices_url[i] != null)
+                        if(message.pl_reg_error_interworkingServices_url[i])
                             $('.pl-reg-error-interworkingServices-url').eq(i).html(message.pl_reg_error_interworkingServices_url[i]).show();
                 }
 

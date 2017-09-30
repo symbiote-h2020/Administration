@@ -210,7 +210,7 @@ public class Cpanel {
 
         if (listOfInformationModels.getStatusCode() != HttpStatus.OK) {
             log.debug("Could not get information models from Registry");
-            return new ResponseEntity<>(listOfInformationModels.getBody(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(listOfInformationModels.getBody(), new HttpHeaders(), listOfInformationModels.getStatusCode());
         } else {
             for (InformationModel informationModel: (List<InformationModel>) listOfInformationModels.getBody()) {
                 validInfoModelIds.add(informationModel.getId());
@@ -242,13 +242,18 @@ public class Cpanel {
                     if (responseBody.get(errorField) == null) {
                         errorList = new ArrayList<>();
                         for (int i = 0; i < errorFieldIndex; i++)
-                            errorList.add(null);
+                            errorList.add("");
                         errorList.add(errorMessage);
                     } else {
                         errorList = (ArrayList<String>) responseBody.get(errorField);
-                        for (int i = errorList.size(); i < errorFieldIndex; i++)
-                            errorList.add(null);
-                        errorList.add(errorMessage);
+
+                        if (errorFieldIndex < errorList.size())
+                            errorList.set(errorFieldIndex, errorMessage);
+                        else {
+                            for (int i = errorList.size(); i < errorFieldIndex; i++)
+                                errorList.add("");
+                            errorList.add(errorMessage);
+                        }
                     }
 
                     responseBody.put(errorField, errorList);
@@ -358,25 +363,6 @@ public class Cpanel {
 
     }
 
-    @PostMapping("/user/cpanel/modify_platform")
-    public String modifyPlatform(@Valid PlatformDetails platformDetails, BindingResult bindingResult,
-                                 RedirectAttributes model, Principal principal) {
-
-        log.debug("POST request on /user/cpanel/modify");
-
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            String errorMessage = "";
-            for (FieldError fieldError : errors) {
-                errorMessage = fieldError.getDefaultMessage();
-                model.addFlashAttribute("pl_mod_error_" + fieldError.getField(), errorMessage.substring(0, 1).toUpperCase() + errorMessage.substring(1));
-            }
-            model.addFlashAttribute("page", "modify");
-            return "redirect:/user/cpanel";  
-        }
-        return "redirect:/user/cpanel";
-    }
 
     @PostMapping("/user/cpanel/delete_platform")
     public ResponseEntity<?> deletePlatforms(@RequestParam String platformIdToDelete, Principal principal) {
@@ -707,31 +693,31 @@ public class Cpanel {
 
                     if (entry.getValue().containPlatform(createFederationRequest.getPlatform1Id()) &&
                             entry.getValue().containPlatform(createFederationRequest.getPlatform2Id())) {
-                        responseBody.put("message", "Federation Registration was successful1");
+                        responseBody.put("message", "Federation Registration was successful!");
                         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
 
                     } else {
-                        responseBody.put("error", "Not both platforms ids present in AAM response");
+                        String message = "Not both platforms ids present in AAM response";
+                        responseBody.put("error", message);
                         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
                     }
                 } else {
                     String message = "Contains more than 1 Federation rule";
-                    log.debug(message);
+                    log.info(message);
                     responseBody.put("error", message);
                     return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 }
             } else {
                 String message = "AAM unreachable";
-                log.debug(message);
+                log.info(message);
                 responseBody.put("error", message);
                 return new ResponseEntity<>(responseBody,
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
-            String message = "AAM threw communication exception: " + e.getMessage();
-            log.debug(message);
-            responseBody.put("error", message);
+            String message = "AAM threw communication exception";
+            log.debug(message, e);
+            responseBody.put("error", message + ": " + e.getMessage());
             return new ResponseEntity<>(responseBody,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -891,4 +877,5 @@ public class Cpanel {
             e.printStackTrace();
         }
     }
+
 }

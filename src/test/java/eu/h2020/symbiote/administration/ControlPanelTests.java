@@ -5,12 +5,14 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.administration.controllers.Cpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
 import eu.h2020.symbiote.administration.model.Comment;
+import eu.h2020.symbiote.administration.model.CreateFederationRequest;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.model.InformationModel;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.FederationRule;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 
 import org.junit.Before;
@@ -29,9 +31,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.Filter;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.mockito.Matchers.eq;
@@ -641,6 +643,196 @@ public class ControlPanelTests extends AdministrationTests {
                 .param("infoModelIdToDelete", informationModelId))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Registry threw communication exception: error"));
+    }
+
+
+    @Test
+    public void createFederation() throws Exception {
+
+        CreateFederationRequest request = new CreateFederationRequest();
+        request.setId(federationRuleId);
+        request.setPlatform1Id(platformId);
+        request.setPlatform2Id(platformId + '2');
+
+        // Create Federation successfully
+        doReturn(sampleFederationRuleManagementResponse()).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+
+        mockMvc.perform(post("/user/cpanel/create_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Federation Registration was successful!"));
+
+        // Not both platforms ids are present in AAM response
+        request.setPlatform2Id(platformId + "3");
+
+        mockMvc.perform(post("/user/cpanel/create_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Not both platforms ids present in AAM response"));
+
+        // AAM response contains more than 1 federation rule
+        Map<String, FederationRule> responseWith2Rules = new HashMap<>();
+        responseWith2Rules.put("1", sampleFederationRuleManagementResponse().get(federationRuleId));
+        responseWith2Rules.put("2", sampleFederationRuleManagementResponse().get(federationRuleId));
+
+        doReturn(responseWith2Rules).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/create_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Contains more than 1 Federation rule"));
+
+        // AAM responds with null
+        doReturn(null).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/create_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("AAM unreachable"));
+
+        // AAM throws CommunicationException
+        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/create_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("AAM threw communication exception: error"));
+
+        // Invalid CreateFederationRequest
+        request.setId("a");
+        request.setPlatform1Id("a");
+        request.setPlatform2Id("b");
+
+        mockMvc.perform(post("/user/cpanel/create_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Invalid Arguments"))
+                .andExpect(jsonPath("$.federation_reg_error_id")
+                        .value("must match \"^([\\w-][\\w-][\\w-][\\w-]+)\""))
+                .andExpect(jsonPath("$.federation_reg_error_platform1Id")
+                        .value("must match \"^([\\w-][\\w-][\\w-][\\w-]+)\""))
+                .andExpect(jsonPath("$.federation_reg_error_platform2Id")
+                        .value("must match \"^([\\w-][\\w-][\\w-][\\w-]+)\""));
+    }
+
+
+    @Test
+    public void listFederations() throws Exception {
+
+        // Successfully listing Federations
+        doReturn(sampleFederationRuleManagementResponse()).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/list_federations")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$." + federationRuleId + ".platformIds.length()").value(2))
+                .andExpect(jsonPath("$." + federationRuleId + ".federationId").value(federationRuleId));
+
+        // AAM responds with null
+        doReturn(null).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/list_federations")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("AAM unreachable during ListFederationRequest"));
+
+        // AAM throws CommunicationException
+        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/list_federations")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error")
+                        .value("AAM threw communication exception during ListFederationRequest: error"));
+    }
+
+
+    @Test
+    public void deleteFederation() throws Exception {
+
+        // Successfully deleted Federation
+        doReturn(sampleFederationRuleManagementResponse()).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/delete_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .param("federationIdToDelete", federationRuleId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$." + federationRuleId + ".platformIds.length()").value(2))
+                .andExpect(jsonPath("$." + federationRuleId + ".federationId").value(federationRuleId));
+
+        // AAM responds with null
+        doReturn(null).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/delete_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .param("federationIdToDelete", federationRuleId))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("AAM unreachable during DeleteFederationRequest"));
+
+        // AAM throws CommunicationException
+        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
+
+        mockMvc.perform(post("/user/cpanel/delete_federation")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .param("federationIdToDelete", federationRuleId))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error")
+                        .value("AAM threw communication exception during DeleteFederationRequest: error"));
+    }
+
+
+    @Test
+    public void getInformationModels() throws Exception {
+
+        // Failed response
+        doReturn(sampleInformationModelListResponseFail()).when(mockRabbitManager).sendListInfoModelsRequest();
+
+        mockMvc.perform(post("/user/cpanel/register_platform")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(sampleInformationModelListResponseFail().getMessage()));
+
+
+        // Registry returns null
+        doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
+
+        mockMvc.perform(post("/user/cpanel/register_platform")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Could not retrieve the information models from registry"));
+
+        // Registry throws CommunicationException
+        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendListInfoModelsRequest();
+
+        mockMvc.perform(post("/user/cpanel/register_platform")
+                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Communication exception while retrieving the information models: error"));
     }
 
 }

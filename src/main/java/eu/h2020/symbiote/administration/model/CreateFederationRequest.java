@@ -21,17 +21,17 @@ public class CreateFederationRequest {
 
     @NotNull
     @Pattern(regexp="^([\\w-][\\w-][\\w-][\\w-]+)")
-    @Size(min=4, max=30)
+    @Size(max=30)
     private String id;
 
     @NotNull
     @Pattern(regexp="^([\\w-][\\w-][\\w-][\\w-]+)")
-    @Size(min=4, max=30)
+    @Size(max=30)
     private String platform1Id;
 
     @NotNull
     @Pattern(regexp="^([\\w-][\\w-][\\w-][\\w-]+)")
-    @Size(min=4, max=30)
+    @Size(max=30)
     private String platform2Id;
 
     public CreateFederationRequest() {

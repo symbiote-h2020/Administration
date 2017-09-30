@@ -626,7 +626,8 @@ public class RabbitManagerTests extends AdministrationTests {
         assertNotNull(response);
         assertNotNull(response.get(federationRuleId));
         assertEquals(federationRuleId, response.get(federationRuleId).getFederationId());
-        assertEquals(platformId, response.get(federationRuleId).getPlatformIds().iterator().next());
+        assertEquals(true, response.get(federationRuleId).getPlatformIds().contains(platformId));
+        assertEquals(true, response.get(federationRuleId).getPlatformIds().contains(platformId + '2'));
 
         // Return null
         doReturn(null)

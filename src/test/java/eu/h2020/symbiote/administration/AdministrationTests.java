@@ -313,7 +313,7 @@ public abstract class AdministrationTests {
     public FederationRule sampleFederationRule() {
         Set<String> platformIds = new HashSet<>();
         platformIds.add(platformId);
-        platformIds.add(platformId);
+        platformIds.add(platformId + '2');
         return new FederationRule(federationRuleId, platformIds);
     }
 
