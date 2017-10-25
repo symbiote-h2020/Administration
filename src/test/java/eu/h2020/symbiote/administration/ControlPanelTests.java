@@ -4,11 +4,11 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.controllers.Cpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
-import eu.h2020.symbiote.administration.model.Comment;
 import eu.h2020.symbiote.administration.model.CreateFederationRequest;
+import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
-import eu.h2020.symbiote.core.model.InformationModel;
+import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -321,9 +321,9 @@ public class ControlPanelTests extends AdministrationTests {
 
         PlatformDetails platformDetails = samplePlatformDetails();
         platformDetails.setName("aa");
-        platformDetails.getComments().add(new Comment("aa"));
-        platformDetails.getComments().add(new Comment("aaaa"));
-        platformDetails.getComments().add(new Comment("aa"));
+        platformDetails.getDescription().add(new Description("aa"));
+        platformDetails.getDescription().add(new Description("aaaa"));
+        platformDetails.getDescription().add(new Description("aa"));
 
         doReturn(informationModelListResponse).when(mockRabbitManager)
                 .sendListInfoModelsRequest();
@@ -337,11 +337,11 @@ public class ControlPanelTests extends AdministrationTests {
                         .value("Invalid Arguments"))
                 .andExpect(jsonPath("$.pl_reg_error_name")
                         .value("Length must be between 3 and 30 characters"))
-                .andExpect(jsonPath("$.pl_reg_error_comments_comment.length()")
+                .andExpect(jsonPath("$.pl_reg_error_description_description.length()")
                         .value(4))
-                .andExpect(jsonPath("$.pl_reg_error_comments_comment[1]")
+                .andExpect(jsonPath("$.pl_reg_error_description_description[1]")
                         .value("Length must be between 4 and 300 characters"))
-                .andExpect(jsonPath("$.pl_reg_error_comments_comment[3]")
+                .andExpect(jsonPath("$.pl_reg_error_description_description[3]")
                         .value("Length must be between 4 and 300 characters"));
 
     }

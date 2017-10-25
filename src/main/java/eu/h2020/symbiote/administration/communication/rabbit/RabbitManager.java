@@ -11,11 +11,13 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
+import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
 
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -30,7 +32,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
-import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
@@ -286,7 +287,7 @@ public class RabbitManager {
     public PlatformRegistryResponse sendRegistryPlatformMessage(String exchangeName, String routingKey,
                                                                 Platform platform) throws CommunicationException {
 
-        log.debug("sendRegistryPlatformMessage");
+        log.trace("sendRegistryPlatformMessage");
 
         try {
             
@@ -299,7 +300,7 @@ public class RabbitManager {
 
             try {
                 PlatformRegistryResponse response = mapper.readValue(responseMsg, PlatformRegistryResponse.class);
-                log.info("Received response from Registry.");
+                log.trace("Received response from Registry.");
                 return response;
 
             } catch (Exception e){
@@ -321,7 +322,7 @@ public class RabbitManager {
      * @param platform platform to be created
      */
     public PlatformRegistryResponse sendPlatformCreationRequest(Platform platform) throws CommunicationException  {
-        log.debug("sendPlatformCreationRequest");
+        log.debug("sendPlatformCreationRequest to Registry for: " + ReflectionToStringBuilder.toString(platform));
         return sendRegistryPlatformMessage(this.platformExchangeName, this.platformCreationRequestedRoutingKey, platform);
     }
 
@@ -331,7 +332,7 @@ public class RabbitManager {
      * @param platform platform to be removed
      */
     public PlatformRegistryResponse sendPlatformRemovalRequest(Platform platform) throws CommunicationException  {
-        log.debug("sendPlatformRemovalRequest");
+        log.debug("sendPlatformRemovalRequest to Registry for: " + ReflectionToStringBuilder.toString(platform));
         return sendRegistryPlatformMessage(this.platformExchangeName, this.platformRemovalRequestedRoutingKey, platform);
     }
 
@@ -341,7 +342,7 @@ public class RabbitManager {
      * @param platform platform to be modified
      */
     public PlatformRegistryResponse sendPlatformModificationRequest(Platform platform) throws CommunicationException  {
-        log.debug("sendPlatformModificationRequest");
+        log.debug("sendPlatformModificationRequest to Registry for: " + ReflectionToStringBuilder.toString(platform));
         return sendRegistryPlatformMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 
@@ -354,7 +355,7 @@ public class RabbitManager {
      */
     public PlatformRegistryResponse sendGetPlatformDetailsMessage(String platformId) throws CommunicationException {
 
-        log.debug("sendGetPlatformDetailsMessage");
+        log.debug("sendGetPlatformDetailsMessage for platform: " + platformId);
 
         String responseMsg = this.sendRpcMessage(this.platformExchangeName, this.platformDetailsRequestedRoutingKey,
                 platformId, "text/plain");
@@ -364,7 +365,7 @@ public class RabbitManager {
 
         try {
             PlatformRegistryResponse response = mapper.readValue(responseMsg, PlatformRegistryResponse.class);
-            log.info("Received response from Registry.");
+            log.trace("Received response from Registry.");
             return response;
 
         } catch (Exception e){
@@ -383,7 +384,7 @@ public class RabbitManager {
     public InformationModelListResponse sendListInfoModelsRequest()
             throws CommunicationException {
 
-        log.debug("sendListInfoModelsRequest");
+        log.debug("sendListInfoModelsRequest to Registry");
 
         try {
             // The message is false to indicate that we do not need the rdf of Information Models
@@ -396,7 +397,7 @@ public class RabbitManager {
             try {
                 InformationModelListResponse response = mapper.readValue(responseMsg,
                         InformationModelListResponse.class);
-                log.info("Received information model details response from Registry.");
+                log.trace("Received information model details response from Registry.");
                 return response;
 
             } catch (Exception e){
@@ -419,7 +420,7 @@ public class RabbitManager {
     public InformationModelResponse sendInfoModelRequest(String routingKey, InformationModelRequest request)
             throws CommunicationException {
 
-        log.debug("sendInfoModelRequest");
+        log.trace("sendInfoModelRequest to Registry");
 
         try {
 
@@ -435,7 +436,7 @@ public class RabbitManager {
             try {
                 InformationModelResponse response = mapper.readValue(responseMsg,
                         InformationModelResponse.class);
-                log.info("Received information model response from Registry.");
+                log.trace("Received information model response from Registry.");
                 return response;
 
             } catch (Exception e){
@@ -457,7 +458,7 @@ public class RabbitManager {
      */
     public InformationModelResponse sendRegisterInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
-        log.debug("sendRegisterInfoModelRequest");
+        log.debug("sendRegisterInfoModelRequest to Registry for info model: " + ReflectionToStringBuilder.toString(request));
         return sendInfoModelRequest(this.informationModelCreationRequestedRoutingKey, request);
     }
 
@@ -468,7 +469,7 @@ public class RabbitManager {
      */
     public InformationModelResponse sendDeleteInfoModelRequest(InformationModelRequest request)
             throws CommunicationException {
-        log.debug("sendDeleteInfoModelRequest");
+        log.debug("sendDeleteInfoModelRequest to Registry for info model: " + ReflectionToStringBuilder.toString(request));
         return sendInfoModelRequest(this.informationModelRemovalRequestedRoutingKey, request);
     }
 
@@ -481,6 +482,8 @@ public class RabbitManager {
     public ResourceListResponse sendRegistryResourcesRequest(CoreResourceRegistryRequest request)
             throws CommunicationException {
 
+        log.trace("sendRegistryResourcesRequest to Registry");
+
         try {
             String message = mapper.writeValueAsString(request);
 
@@ -492,7 +495,7 @@ public class RabbitManager {
 
             try {
                 ResourceListResponse response = mapper.readValue(responseMsg, ResourceListResponse.class);
-                log.info("Received response from Registry.");
+                log.trace("Received response from Registry.");
                 return response;
 
             } catch (Exception e){
@@ -520,7 +523,7 @@ public class RabbitManager {
      * @return response status
      */
     public ManagementStatus sendUserManagementRequest(UserManagementRequest request) throws CommunicationException {
-        log.debug("sendUserManagementRequest");
+        log.debug("sendUserManagementRequest to AAM: " + ReflectionToStringBuilder.toString(request));
         try {
             String message = mapper.writeValueAsString(request);
 
@@ -533,7 +536,7 @@ public class RabbitManager {
 
             try {
                 ManagementStatus response = mapper.readValue(responseMsg, ManagementStatus.class);
-                log.info("Received response from AAM.");
+                log.trace("Received response from AAM.");
                 return response;
 
             } catch (Exception e){
@@ -559,7 +562,7 @@ public class RabbitManager {
     public PlatformManagementResponse sendManagePlatformRequest(PlatformManagementRequest request)
             throws CommunicationException {
 
-        log.debug("sendManagePlatformRequest");
+        log.debug("sendManagePlatformRequest to AAM: " + ReflectionToStringBuilder.toString(request));
 
         try {
             String message = mapper.writeValueAsString(request);
@@ -571,7 +574,7 @@ public class RabbitManager {
 
             try {
                 PlatformManagementResponse response = mapper.readValue(responseMsg, PlatformManagementResponse.class);
-                log.info("Received ManagePlatformResponse from AAM.");
+                log.trace("Received ManagePlatformResponse from AAM.");
                 return response;
 
             } catch (Exception e){
@@ -594,7 +597,7 @@ public class RabbitManager {
      */
     public UserDetailsResponse sendLoginRequest(Credentials userCredentials) throws CommunicationException {
 
-        log.debug("sendLoginRequest");
+        log.debug("sendLoginRequest to AAM: " + ReflectionToStringBuilder.toString(userCredentials));
 
         try {
             UserManagementRequest request = new UserManagementRequest(
@@ -619,7 +622,7 @@ public class RabbitManager {
 
             try {
                 UserDetailsResponse response = mapper.readValue(responseMsg, UserDetailsResponse.class);
-                log.info("Received login response from AAM.");
+                log.trace("Received login response from AAM.");
                 return response;
 
             } catch (Exception e){
@@ -643,7 +646,7 @@ public class RabbitManager {
     public Set<OwnedPlatformDetails> sendOwnedPlatformDetailsRequest(UserManagementRequest request)
             throws CommunicationException {
 
-        log.debug("sendOwnedPlatformDetailsRequest");
+        log.debug("sendOwnedPlatformDetailsRequest to AAM: " + ReflectionToStringBuilder.toString(request));
 
         try {
             String message = mapper.writeValueAsString(request);
@@ -656,7 +659,7 @@ public class RabbitManager {
             try {
                 Set<OwnedPlatformDetails> response = mapper.readValue(responseMsg,
                         mapper.getTypeFactory().constructCollectionType(Set.class, OwnedPlatformDetails.class));
-                log.info("Received platform owner details response from AAM.");
+                log.trace("Received platform owner details response from AAM.");
                 return response;
 
             } catch (Exception e){
@@ -680,7 +683,7 @@ public class RabbitManager {
     public Map<String, FederationRule> sendFederationRuleManagementRequest(FederationRuleManagementRequest request)
             throws CommunicationException {
 
-        log.debug("sendFederationRuleManagementRequest");
+        log.debug("sendFederationRuleManagementRequest to AAM: " + ReflectionToStringBuilder.toString(request));
 
         try {
             String message = mapper.writeValueAsString(request);
@@ -693,7 +696,7 @@ public class RabbitManager {
             try {
                 Map<String, FederationRule> response = mapper.readValue(responseMsg,
                         mapper.getTypeFactory().constructMapType(Map.class, String.class, FederationRule.class));
-                log.info("Received federation rules response from AAM.");
+                log.trace("Received federation rules response from AAM.");
                 return response;
 
             } catch (Exception e){

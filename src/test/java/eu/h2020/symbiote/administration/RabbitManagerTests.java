@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
+import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -22,7 +23,6 @@ import static org.junit.Assert.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.core.model.Platform;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import org.springframework.http.HttpStatus;
 
@@ -128,7 +128,7 @@ public class RabbitManagerTests extends AdministrationTests {
     public void sendPlatformModificationRequest() throws Exception {
         
         Platform newPlatform = samplePlatform();
-        newPlatform.setComments(Arrays.asList("Changed description"));
+        newPlatform.setDescription(Arrays.asList("Changed description"));
         PlatformRegistryResponse newResponse = samplePlatformResponseSuccess();
         newResponse.setBody(newPlatform);
         String serializedResponse = serialize(newResponse);
@@ -143,7 +143,7 @@ public class RabbitManagerTests extends AdministrationTests {
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getId());
         assertEquals(platformId, response.getBody().getId());
-        assertEquals("Changed description", response.getBody().getComments().get(0));
+        assertEquals("Changed description", response.getBody().getDescription().get(0));
         assertEquals(200, response.getStatus());
     }
 

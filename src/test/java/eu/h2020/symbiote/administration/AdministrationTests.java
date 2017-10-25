@@ -1,44 +1,41 @@
 package eu.h2020.symbiote.administration;
 
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.model.Comment;
-import eu.h2020.symbiote.administration.model.Label;
+import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
+import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
-import eu.h2020.symbiote.core.model.InformationModel;
-import eu.h2020.symbiote.core.model.RDFFormat;
-import eu.h2020.symbiote.core.model.resources.Resource;
+import eu.h2020.symbiote.model.cim.Resource;
+import eu.h2020.symbiote.model.mim.InformationModel;
+import eu.h2020.symbiote.model.mim.InterworkingService;
+import eu.h2020.symbiote.model.mim.Platform;
+import eu.h2020.symbiote.security.commons.Certificate;
+import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.*;
+
 import org.junit.runner.RunWith;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.junit4.SpringRunner;
-
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import org.springframework.beans.factory.annotation.Value;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import eu.h2020.symbiote.core.model.Platform;
-import eu.h2020.symbiote.core.model.InterworkingService;
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
-
-import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
-import eu.h2020.symbiote.security.commons.Certificate;
-import eu.h2020.symbiote.security.communication.payloads.*;
-
-import eu.h2020.symbiote.administration.model.CoreUser;
+import java.util.*;
 
 
 /**
@@ -123,8 +120,8 @@ public abstract class AdministrationTests {
 
         Platform platform = new Platform();
         platform.setId(platformId);
-        platform.setLabels(Arrays.asList(platformName));
-        platform.setComments(Arrays.asList(platformDescription));
+        platform.setName(platformName);
+        platform.setDescription(Arrays.asList(platformDescription));
         platform.setInterworkingServices(Arrays.asList(interworkingService));
 
         return platform;
@@ -136,19 +133,14 @@ public abstract class AdministrationTests {
         interworkingService.setInformationModelId(informationModelId);
         interworkingService.setUrl(platformUrl);
 
-        List<Label> labels = new ArrayList<>();
-        labels.add(new Label(platformName));
-
-        List<Comment> comments = new ArrayList<>();
-        comments.add(new Comment(platformDescription));
+        List<Description> descriptions = new ArrayList<>();
+        descriptions.add(new Description(platformDescription));
 
         PlatformDetails platformDetails = new PlatformDetails();
         platformDetails.setId(platformId);
-        platformDetails.setLabels(labels);
-        platformDetails.setComments(comments);
         platformDetails.setInterworkingServices(Arrays.asList(interworkingService));
         platformDetails.setName(platformName);
-        platformDetails.setDescription(platformDescription);
+        platformDetails.setDescription(descriptions);
         platformDetails.setIsEnabler(false);
 
         return platformDetails;
@@ -249,9 +241,7 @@ public abstract class AdministrationTests {
 
     public UserManagementRequest sampleUserManagementRequest(UserRole role) throws Exception {
 
-        CoreUser user = sampleCoreUser(role);
-
-        UserManagementRequest request = new UserManagementRequest(
+        return new UserManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
                 new Credentials(username, password),
                 new UserDetails(
@@ -264,8 +254,6 @@ public abstract class AdministrationTests {
                 ),
                 OperationType.CREATE
             );
-
-        return request;
     }
 
     public UserDetailsResponse sampleUserDetailsResponse (HttpStatus status) {
@@ -281,25 +269,21 @@ public abstract class AdministrationTests {
 
     public PlatformManagementRequest samplePlatformManagementRequest(OperationType operationType) throws Exception {
 
-        PlatformManagementRequest request = new PlatformManagementRequest(
+        return new PlatformManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
                 new Credentials(username, password),
                 platformUrl,
                 platformName,
                 operationType
             );
-
-        return request;
     }
 
     public PlatformManagementResponse samplePlatformManagementResponse(ManagementStatus status) throws Exception {
 
-        PlatformManagementResponse response = new PlatformManagementResponse(
+        return new PlatformManagementResponse(
                 platformId,
                 status
             );
-
-        return response;
     }
 
     public Set<OwnedPlatformDetails> sampleOwnedPlatformDetails() {

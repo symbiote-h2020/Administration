@@ -36,12 +36,10 @@ function InterworkingService(url, informationModelId) {
     this.informationModelId = informationModelId;
 }
 
-function Platform(id, name, description, labels, comments, interworkingServices, isEnabler) {
+function Platform(id, name, description, interworkingServices, isEnabler) {
     this.id = id;
     this.name = name;
     this.description = description;
-    this.labels = labels;
-    this.comments = comments;
     this.interworkingServices = interworkingServices;
     this.isEnabler = isEnabler;
 }
@@ -85,7 +83,7 @@ $(document).on('click', '.del-platform-btn', function (e) {
         url: "/user/cpanel/delete_platform",
         type: "POST",
         data: {platformIdToDelete : platformIdToDelete},
-        success: function(data) {
+        success: function() {
             $('#platform-details').prepend($platformSuccessfulDeletion.clone().show());
             $modal.removeClass('fade').modal('hide');
 
@@ -110,7 +108,7 @@ $(document).on('click', '.del-info-model-btn', function (e) {
         url: "/user/cpanel/delete_information_model",
         type: "POST",
         data: {infoModelIdToDelete : infoModelIdToDelete},
-        success: function(data) {
+        success: function() {
 
             $('#information-models').prepend($infoModelSuccessfulDeletion.clone().show());
             $modal.removeClass('fade').modal('hide');
@@ -205,7 +203,6 @@ function storeNecessaryPlatformElements() {
 }
 
 function buildPlatformRegistrationForm() {
-    var $form = $('#platform-registration-form');
 
     $.ajax({
         url: "/user/cpanel/list_all_info_models",
@@ -294,15 +291,8 @@ function platformPanel(ownedPlatform) {
     // Setting the platform details
     $platform.find('.platform-update-id').val(ownedPlatform.id);
     $platform.find('.platform-update-name').val(ownedPlatform.name);
-    $platform.find('.platform-update-description').val(ownedPlatform.description);
+    $platform.find('.platform-update-description').val(ownedPlatform.description[0].description); // Todo: Add support for more than 1 descriptions
     $platform.find('.selectpicker.update-isEnabler').val(ownedPlatform.isEnabler.toString());
-
-
-    for (var iter = 0; iter < ownedPlatform.labels.length; iter++)
-        $platform.find(".platform-update-labels").eq(iter).val(ownedPlatform.labels[iter].label);
-
-    for (var iter = 0; iter < ownedPlatform.comments.length; iter++)
-        $platform.find(".platform-update-comments").eq(iter).val(ownedPlatform.comments[iter].comment);
 
     for (var iter = 0; iter < ownedPlatform.interworkingServices.length; iter++) {
         $platform.find(".platform-update-interworking-service-url").eq(iter).val(ownedPlatform.interworkingServices[iter].url);
@@ -496,9 +486,8 @@ $(document).ready(function () {
 
         var platformId = $('#platform-registration-id').val();
         var platformName = $('#platform-registration-name').val();
-        var platformDescription = $('#platform-registration-description').val();
-        var labels = $.map($('.registration-labels'), function (elem) { return elem.value; });
-        var comments = $.map($('.registration-comments'), function (elem) { return elem.value; });
+        var platformDescription = [];
+        platformDescription.push($('#platform-registration-description').val());
         var isEnabler = $('#isEnabler').val();
 
         var interworkingServicesUrls = $.map($('.interworking-service-url'), function (elem) { return elem.value; });
@@ -508,7 +497,7 @@ $(document).ready(function () {
             interworkingServices.push(new InterworkingService(interworkingServicesUrls[i], interworkingServicesModels[i]));
         }
 
-        var newPlatform = new Platform(platformId, platformName, platformDescription, labels, comments, interworkingServices, isEnabler);
+        var newPlatform = new Platform(platformId, platformName, platformDescription, interworkingServices, isEnabler);
 
         $.ajax({
             type : "POST",
@@ -548,20 +537,9 @@ $(document).ready(function () {
                 if (typeof message.pl_reg_error_name !== 'undefined')
                     $('#pl-reg-error-name').html(message.pl_reg_error_name).show();
 
-                if (typeof message.pl_reg_error_description !== 'undefined')
-                    $('#pl-reg-error-description').html(message.pl_reg_error_description).show();
-
-                if (typeof message.pl_reg_error_labels_label !== 'undefined') {
-                    for(var i = 0; i < message.pl_reg_error_labels_label.length; i++)
-                        if(message.pl_reg_error_labels_label[i])
-                            $('.pl-reg-error-label').eq(i).html(message.pl_reg_error_labels_label[i]).show();
-                }
-
-                if (typeof message.pl_reg_error_comments_comment !== 'undefined') {
-                    for(var i = 0; i < message.pl_reg_error_comments_comment.length; i++)
-                        if(message.pl_reg_error_comments_comment[i])
-                            $('.pl-reg-error-comment').eq(i).html(message.pl_reg_error_comments_comment[i]).show();
-                }
+                // Todo: Add support for more than 1 descriptions
+                if (typeof message.pl_reg_error_description_description !== 'undefined')
+                    $('#pl-reg-error-description').html(message.pl_reg_error_description_description[0]).show();
 
                 if (typeof message.pl_reg_error_interworkingServices_url !== 'undefined') {
                     for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)

@@ -1,15 +1,9 @@
 package eu.h2020.symbiote.administration.model;
 
-import eu.h2020.symbiote.core.model.InterworkingService;
-import eu.h2020.symbiote.core.model.Platform;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
-
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
+
 
 
 /**

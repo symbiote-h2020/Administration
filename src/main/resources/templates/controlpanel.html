@@ -28,7 +28,6 @@
 
 <script>
     setupAjax();
-    cloneNecessaryHtml();
 </script>
 
 <div class="header shadow">
@@ -174,37 +173,37 @@
                                                     <label>Platform Description</label>
                                                     <textarea  class="form-control platformRegField"
                                                                id="platform-registration-description" name="description" placeholder="Enter the platform description"
-                                                               rows="3" minlength="3" maxlength="300" required="required"
+                                                               rows="3" minlength="4" maxlength="300" required="required"
                                                                data-required-error="Platform description is required"></textarea>
                                                     <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                     <div class="help-block with-errors">From 4 to 30 characters</div>
                                                     <div class="alert alert-danger" id="pl-reg-error-description" style="display: none">Invalid Description!</div>
                                                 </div>
-                                                <div class="form-group">
-                                                    <label>Labels (Optional)</label>
-                                                    <div class="row">
-                                                        <div class="col-sm-4 form-group has-feedback">
-                                                            <input type="text" class="form-control platformRegField registration-labels"
-                                                                   placeholder="Label" minlength="3" maxlength="30"/>
-                                                            <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
-                                                            <div class="help-block with-errors">From 3 to 30 characters</div>
-                                                            <div class="alert alert-danger pl-reg-error-label" style="display: none">Invalid Label!</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>Comments (Optional)</label>
-                                                    <div class="row">
-                                                        <div class="col-sm-12 form-group has-feedback">
-                                                            <textarea class="form-control platformRegField registration-comments"
-                                                                      placeholder="Enter a comment" rows="1"
-                                                                      minlength="3" maxlength="300"></textarea>
-                                                            <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
-                                                            <div class="help-block with-errors">From 4 to 30 characters</div>
-                                                            <div class="alert alert-danger pl-reg-error-comment" style="display: none">Invalid Comment!</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <!--<div class="form-group">-->
+                                                    <!--<label>Labels (Optional)</label>-->
+                                                    <!--<div class="row">-->
+                                                        <!--<div class="col-sm-4 form-group has-feedback">-->
+                                                            <!--<input type="text" class="form-control platformRegField registration-labels"-->
+                                                                   <!--placeholder="Label" minlength="3" maxlength="30"/>-->
+                                                            <!--<span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>-->
+                                                            <!--<div class="help-block with-errors">From 3 to 30 characters</div>-->
+                                                            <!--<div class="alert alert-danger pl-reg-error-label" style="display: none">Invalid Label!</div>-->
+                                                        <!--</div>-->
+                                                    <!--</div>-->
+                                                <!--</div>-->
+                                                <!--<div class="form-group">-->
+                                                    <!--<label>Comments (Optional)</label>-->
+                                                    <!--<div class="row">-->
+                                                        <!--<div class="col-sm-12 form-group has-feedback">-->
+                                                            <!--<textarea class="form-control platformRegField registration-comments"-->
+                                                                      <!--placeholder="Enter a comment" rows="1"-->
+                                                                      <!--minlength="3" maxlength="300"></textarea>-->
+                                                            <!--<span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>-->
+                                                            <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
+                                                            <!--<div class="alert alert-danger pl-reg-error-comment" style="display: none">Invalid Comment!</div>-->
+                                                        <!--</div>-->
+                                                    <!--</div>-->
+                                                <!--</div>-->
                                                 <div class="form-group">
                                                     <label>Interworking Services</label>
                                                     <div class="row interworking-service">
@@ -305,31 +304,31 @@
                                         <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
                                         <div class="alert alert-danger" id="pl-update-error-description" style="display: none">Invalid Description!</div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Labels (Optional)</label>
-                                        <div class="row">
-                                            <div class="col-sm-4 form-group has-feedback">
-                                                <input type="text" class="form-control platformRegField platform-update-labels"
-                                                       placeholder="Label" minlength="3" maxlength="30" disabled="disabled"/>
-                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
-                                                <!--<div class="help-block with-errors">From 3 to 30 characters</div>-->
-                                                <div class="alert alert-danger pl-update-error-label" style="display: none">Invalid Label!</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Comments (Optional)</label>
-                                        <div class="row">
-                                            <div class="col-sm-12 form-group has-feedback">
-                                                            <textarea class="form-control platformRegField platform-update-comments"
-                                                                      placeholder="Enter a comment" rows="1"
-                                                                      minlength="3" maxlength="300" disabled="disabled"></textarea>
-                                                <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
-                                                <!--<div class="help-block with-errors">From 4 to 30 characters</div>-->
-                                                <div class="alert alert-danger pl-update-error-comment" style="display: none">Invalid Comment!</div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <!--<div class="form-group">-->
+                                        <!--<label>Labels (Optional)</label>-->
+                                        <!--<div class="row">-->
+                                            <!--<div class="col-sm-4 form-group has-feedback">-->
+                                                <!--<input type="text" class="form-control platformRegField platform-update-labels"-->
+                                                       <!--placeholder="Label" minlength="3" maxlength="30" disabled="disabled"/>-->
+                                                <!--<span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>-->
+                                                <!--&lt;!&ndash;<div class="help-block with-errors">From 3 to 30 characters</div>&ndash;&gt;-->
+                                                <!--<div class="alert alert-danger pl-update-error-label" style="display: none">Invalid Label!</div>-->
+                                            <!--</div>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
+                                    <!--<div class="form-group">-->
+                                        <!--<label>Comments (Optional)</label>-->
+                                        <!--<div class="row">-->
+                                            <!--<div class="col-sm-12 form-group has-feedback">-->
+                                                            <!--<textarea class="form-control platformRegField platform-update-comments"-->
+                                                                      <!--placeholder="Enter a comment" rows="1"-->
+                                                                      <!--minlength="3" maxlength="300" disabled="disabled"></textarea>-->
+                                                <!--<span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>-->
+                                                <!--&lt;!&ndash;<div class="help-block with-errors">From 4 to 30 characters</div>&ndash;&gt;-->
+                                                <!--<div class="alert alert-danger pl-update-error-comment" style="display: none">Invalid Comment!</div>-->
+                                            <!--</div>-->
+                                        <!--</div>-->
+                                    <!--</div>-->
                                     <div class="form-group">
                                         <label>Interworking Services</label>
                                         <div class="row interworking-service">
