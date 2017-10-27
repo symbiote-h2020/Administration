@@ -1,6 +1,9 @@
 package eu.h2020.symbiote.administration.controllers;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
@@ -23,20 +26,28 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.apache.commons.validator.routines.UrlValidator;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
@@ -58,8 +69,18 @@ public class Cpanel {
     @Value("${aam.deployment.owner.password}")
     private String aaMOwnerPassword;
 
-    @Autowired
     private RabbitManager rabbitManager;
+    private ResourceLoader resourceLoader;
+
+
+    @Autowired
+    public Cpanel(RabbitManager rabbitManager, ResourceLoader resourceLoader) {
+        Assert.notNull(rabbitManager,"RabbitManager can not be null!");
+        this.rabbitManager = rabbitManager;
+
+        Assert.notNull(resourceLoader,"ResourceLoader can not be null!");
+        this.resourceLoader = resourceLoader;
+    }
 
     /**
      * Gets the default view. If the user is a platform owner, tries to fetch their details.
@@ -470,6 +491,48 @@ public class Cpanel {
         }
 
         return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+    }
+
+
+    @PostMapping(value = "/user/cpanel/get_platform_config", produces="application/zip")
+    public void getPlatformConfig(@RequestParam String platformId, Principal principal,
+                                  HttpServletResponse response) throws IOException {
+
+        log.debug("POST request on /user/cpanel/get_platform_config for platform with id: " +
+                platformId);
+
+        // Checking if the user owns the platform
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        //setting headers
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.addHeader("Content-Disposition", "attachment; filename=\"test.zip\"");
+        response.addHeader("Content-Type", "application/zip");
+
+        // Loading bootstrap.properties
+        InputStream propertiesResourceAsStream = resourceLoader
+                .getResource("classpath:bootstrap.properties").getInputStream();
+        String exampleProperties = new BufferedReader(new InputStreamReader(propertiesResourceAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        // Modify the property file accordingly
+        exampleProperties = exampleProperties.replaceFirst("(?m)^.*(rabbit.host=localhost).*$", "test_rabbit");
+
+        // Create .zip output stream
+        ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("Example.txt"));
+        InputStream stream = new ByteArrayInputStream(exampleProperties.getBytes(StandardCharsets.UTF_8.name()));
+
+        IOUtils.copy(stream, zipOutputStream);
+
+        stream.close();
+
+        zipOutputStream.close();
+        response.getOutputStream().close();
     }
 
 
