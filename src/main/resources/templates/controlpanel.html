@@ -234,6 +234,7 @@
 
                     <!-- Platform Panel Entry -->
                     <div class="panel panel-primary platform-panel-entry" id="platform-entry" style="display: none">
+
                         <div class="panel-heading clickable">
                             <h3 class="panel-title">
                                 PLATFORM NAME
@@ -328,7 +329,8 @@
                             <!-- Trigger the modal with a button -->
                             <button type="button" class="btn btn-default btn-warning btn-warning-delete"
                                     data-toggle="modal" data-target="#platform-del-modal">Delete</button>
-                            <button type="button" class="btn btn-default btn-info get-platform-config">Get Configuration</button>
+                            <button type="button" class="btn btn-default btn-info btn-info-platform-config"
+                                    data-toggle="modal" data-target="#platform-configuration">Get Configuration</button>
 
                             <!-- Modal -->
                             <div id="platform-del-modal" class="modal fade" role="dialog">
@@ -352,6 +354,114 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Modal -->
+                            <div id="platform-configuration-modal" class="modal fade platform-config-modal" role="dialog">
+                                <div class="modal-dialog">
+                                    <form id="get-platform-config-form" class="get-platform-config-form" role="form"
+                                          method="" action="" data-toggle="validator">
+
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                <h4 class="modal-title">Get Configuration for platform
+                                                    <strong>PLATFORMINSTANCEFRIENDLYNAME</strong></h4>
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <!-- Display errors -->
+                                                <div class="alert alert-danger alert-dismissable"
+                                                     id="get-platform-config-error" style="display: none">
+                                                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                                    <strong>Error!</strong></div>
+
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Platform Owner Username</label>
+                                                        <input type="text" class="form-control paam-username"
+                                                               placeholder="Platform Owner Username" required="required"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The Platform Owner Username in your PAAM deployment</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Platform Owner Password</label>
+                                                        <input type="text" class="form-control paam-password"
+                                                               required="required" placeholder="Platform Owner Password"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The Platform Owner Password in your PAAM deployment</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Components Keystore Password</label>
+                                                        <input type="text" class="form-control component-keystore-password"
+                                                               required="required" placeholder="Components Keystore Password"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The keystore password in your cloud components (apart from PAAM)</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>AAM Keystore Path</label>
+                                                        <input type="text" class="form-control aam-keystore-path"
+                                                               required="required" placeholder="AAM Keystore Path"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The path where you want to have the AAM keystore generated</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>AAM Keystore Password</label>
+                                                        <input type="text" class="form-control aam-keystore-password"
+                                                               required="required" placeholder="AAM Keystore Password"
+                                                               maxlength="7"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The password of the AAM keystore. MUST NOT be longer than 7 chars</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>AAM Private Key Password</label>
+                                                        <input type="text" class="form-control aam-private-key-password"
+                                                               required="required" placeholder="AAM Private Key Password"
+                                                               maxlength="7"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The password to access the AAM private key. MUST NOT be longer than 7 chars</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>SSL Keystore</label>
+                                                        <input type="text" class="form-control ssl-keystore"
+                                                               required="required" placeholder="SSL Keystore"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The name of the keystore containing the letsencrypt
+                                                            (or other) certificate and key pair for your AAM host's SSL</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>SSL Keystore Password</label>
+                                                        <input type="text" class="form-control ssl-keystore-password"
+                                                               required="required" placeholder="SSL Keystore Password"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The SSL keystore password</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>SSL Key Password</label>
+                                                        <input type="text" class="form-control ssl-key-password"
+                                                               required="required" placeholder="SSL Key Password"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The SSL certificate private key password</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="submit" class="btn btn-default btn-info get-platform-configuration">Get Configuration</button>
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -393,7 +503,6 @@
                     <!-- Modal -->
                     <div id="info-model-reg-modal" class="modal fade" role="dialog">
                         <div class="modal-dialog">
-
                             <form id="info-model-registration-form" role="form" action="" data-toggle="validator">
 
                                 <!-- Modal content-->

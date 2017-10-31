@@ -9,6 +9,7 @@ var $platformRegistrationSuccessful = null;
 var $platformSuccessfulDeletion = null;
 var $platformRegistrationError = null;
 var $deletePlatformError = null;
+var $getPlatformConfigError = null;
 
 var $infoModelRegistrationSuccessful = null;
 var $infoModelRegistrationError = null;
@@ -22,7 +23,7 @@ var $deleteFederationError = null;
 
 var $listOwnedPlatformsError = null;
 var $listUserInfoModelError = null;
-var $listFederationsError = null
+var $listFederationsError = null;
 
 
 
@@ -42,6 +43,21 @@ function Platform(id, name, description, interworkingServices, isEnabler) {
     this.description = description;
     this.interworkingServices = interworkingServices;
     this.isEnabler = isEnabler;
+}
+
+function PlatformConfigurationMessage(platformId, platformOwnerUsername, platformOwnerPassword,
+                                      componentsKeystorePassword, aamKeystorePath, aamKeystorePassword,
+                                      aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword) {
+    this.platformId = platformId;
+    this.platformOwnerUsername = platformOwnerUsername;
+    this.platformOwnerPassword = platformOwnerPassword;
+    this.componentsKeystorePassword = componentsKeystorePassword;
+    this.aamKeystorePath = aamKeystorePath;
+    this.aamKeystorePassword = aamKeystorePassword;
+    this.aamPrivateKeyPassword = aamPrivateKeyPassword;
+    this.sslKeystore = sslKeystore;
+    this.sslKeystorePassword = sslKeystorePassword;
+    this.sslKeyPassword = sslKeyPassword;
 }
 
 function InformationModel(id, uri, name, owner, rdf, rdfFormat) {
@@ -156,64 +172,6 @@ $(document).on('click', '.del-federation-btn', function (e) {
 });
 
 
-$(document).on('click', '.get-platform-config', function (e) {
-    var $configButton = $(e.target);
-    var $modal = $configButton.next(".modal");
-    var platformId = $modal.attr('id').split('del-platform-modal-').pop();
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', "/user/cpanel/get_platform_config", true);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function () {
-        if (this.status === 200) {
-            var filename = "";
-            var disposition = xhr.getResponseHeader('Content-Disposition');
-            if (disposition && disposition.indexOf('attachment') !== -1) {
-                var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                var matches = filenameRegex.exec(disposition);
-                if (matches !== null && matches[1])
-                    filename = matches[1].replace(/['"]/g, '');
-            }
-            var type = xhr.getResponseHeader('Content-Type');
-
-            var blob = typeof File === 'function'
-                ? new File([this.response], filename, { type: type })
-                : new Blob([this.response], { type: type });
-            if (typeof window.navigator.msSaveBlob !== 'undefined') {
-                // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they
-                // were created. These URLs will no longer resolve as the data backing the URL has been freed."
-                window.navigator.msSaveBlob(blob, filename);
-            } else {
-                var URL = window.URL || window.webkitURL;
-                var downloadUrl = URL.createObjectURL(blob);
-
-                if (filename) {
-                    // use HTML5 a[download] attribute to specify filename
-                    var a = document.createElement("a");
-                    // safari doesn't support this yet
-                    if (typeof a.download === 'undefined') {
-                        window.location = downloadUrl;
-                    } else {
-                        a.href = downloadUrl;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                    }
-                } else {
-                    window.location = downloadUrl;
-                }
-
-                setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
-            }
-        }
-    };
-    xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-    xhr.setRequestHeader(csrfHeader, csrfToken);
-    xhr.send("platformId=" + platformId);
-
-});
-
-
 // Setting up ajax queries
 function setupAjax() {
     if (csrfToken === null || csrfHeader === null) {
@@ -229,6 +187,13 @@ function setupAjax() {
 }
 
 function storeNecessaryPlatformElements() {
+
+    if ($getPlatformConfigError === null) {
+        // Deep clone
+        $getPlatformConfigError = $('#get-platform-config-error').clone(true, true).removeAttr("id");;
+        $('#get-platform-config-error').remove();
+    }
+
     if ($platformPanelEntry === null) {
         // Deep clone
         $platformPanelEntry = $('#platform-entry').clone(true, true);
@@ -341,11 +306,14 @@ function platformPanel(ownedPlatform) {
     var $platform = $platformPanelEntry.clone(true);
 
     // Configuration of the platform panel
-    var deleteplatformlId = "del-platform-modal-" + ownedPlatform.id;
+    var deletePlatformlId = "del-platform-modal-" + ownedPlatform.id;
     $platform.find('.panel-title').text(ownedPlatform.name);
-    $platform.find('.btn-warning-delete').attr("data-target", "#" + deleteplatformlId);
-    $platform.find('#platform-del-modal').attr("id", deleteplatformlId);
+    $platform.find('.btn-warning-delete').attr("data-target", "#" + deletePlatformlId);
+    $platform.find('#platform-del-modal').attr("id", deletePlatformlId);
+    $platform.find('.btn-info-platform-config').attr("data-target", "#platform-configuration-modal-" + ownedPlatform.id);
+    $platform.find('#platform-configuration-modal').attr("id", "platform-configuration-modal-" + ownedPlatform.id);
     $platform.find('.modal-title').find('strong').text(ownedPlatform.name);
+    $platform.find('#get-platform-config-form').attr("id", "get-platform-config-form-" + ownedPlatform.id);
 
     // Setting the platform details
     $platform.find('.platform-update-id').val(ownedPlatform.id);
@@ -768,4 +736,80 @@ $(document).ready(function () {
 
     });
 
+    $(document).on('click', '.get-platform-configuration', function(e) {
+        e.preventDefault();
+
+        var $configButton = $(e.target);
+        var $modal = $configButton.closest(".modal");
+        var platformId = $modal.attr('id').split('platform-configuration-modal-').pop();
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', "/user/cpanel/get_platform_config", true);
+        xhr.responseType = 'arraybuffer';
+        xhr.onload = function () {
+            if (this.status === 200) {
+                var filename = "";
+                var disposition = xhr.getResponseHeader('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    var filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    var matches = filenameRegex.exec(disposition);
+                    if (matches !== null && matches[1])
+                        filename = matches[1].replace(/['"]/g, '');
+                }
+                var type = xhr.getResponseHeader('Content-Type');
+
+                var blob = typeof File === 'function'
+                    ? new File([this.response], filename, { type: type })
+                    : new Blob([this.response], { type: type });
+                if (typeof window.navigator.msSaveBlob !== 'undefined') {
+                    // IE workaround for "HTML7007: One or more blob URLs were revoked by closing the blob for which they
+                    // were created. These URLs will no longer resolve as the data backing the URL has been freed."
+                    window.navigator.msSaveBlob(blob, filename);
+                } else {
+                    var URL = window.URL || window.webkitURL;
+                    var downloadUrl = URL.createObjectURL(blob);
+
+                    if (filename) {
+                        // use HTML5 a[download] attribute to specify filename
+                        var a = document.createElement("a");
+                        // safari doesn't support this yet
+                        if (typeof a.download === 'undefined') {
+                            window.location = downloadUrl;
+                        } else {
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                        }
+                    } else {
+                        window.location = downloadUrl;
+                    }
+
+                    setTimeout(function () { URL.revokeObjectURL(downloadUrl); }, 100); // cleanup
+                }
+
+                $modal.find('.get-platform-config-error').hide();
+                $modal.modal('hide');
+            } else {
+                var dec = new TextDecoder();
+                var message = document.createElement('p');
+                message.innerHTML = dec.decode(this.response);
+                $modal.find('.modal-body').prepend($getPlatformConfigError.clone().append(message).show());
+            }
+        };
+        xhr.setRequestHeader('Content-type', 'application/json');
+        xhr.setRequestHeader(csrfHeader, csrfToken);
+
+        var message = new PlatformConfigurationMessage(platformId, $modal.find('.paam-username').val(),
+            $modal.find('.paam-password').val(), $modal.find('.component-keystore-password').val(),
+            $modal.find('.aam-keystore-path').val(), $modal.find('.aam-keystore-password').val(),
+            $modal.find('.aam-private-key-password').val(), $modal.find('.ssl-keystore').val(),
+            $modal.find('.ssl-keystore-password').val(), $modal.find('.ssl-key-password').val());
+        xhr.send(JSON.stringify(message));
+
+    });
+
+    $(document).on('shown.bs.modal', '.platform-config-modal', function(e) {
+        $(e.target).find('.get-platform-config-form').validator('update');
+    });
 });

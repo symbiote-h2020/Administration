@@ -2,8 +2,6 @@ package eu.h2020.symbiote.administration.controllers;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
@@ -29,7 +27,6 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -63,23 +60,35 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 public class Cpanel {
     private static Log log = LogFactory.getLog(Cpanel.class);
 
-    @Value("${aam.deployment.owner.username}")
     private String aaMOwnerUsername;
-
-    @Value("${aam.deployment.owner.password}")
     private String aaMOwnerPassword;
-
+    private String coreInterfaceAddress;
+    private String cloudCoreInterfaceAddress;
     private RabbitManager rabbitManager;
     private ResourceLoader resourceLoader;
 
 
     @Autowired
-    public Cpanel(RabbitManager rabbitManager, ResourceLoader resourceLoader) {
+    public Cpanel(RabbitManager rabbitManager, ResourceLoader resourceLoader,
+                  @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
+                  @Value("${aam.deployment.owner.password}") String aaMOwnerPassword,
+                  @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress) {
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 
         Assert.notNull(resourceLoader,"ResourceLoader can not be null!");
         this.resourceLoader = resourceLoader;
+
+        Assert.notNull(resourceLoader,"aaMOwnerUsername can not be null!");
+        this.aaMOwnerUsername = aaMOwnerUsername;
+
+        Assert.notNull(resourceLoader,"aaMOwnerPassword can not be null!");
+        this.aaMOwnerPassword = aaMOwnerPassword;
+
+        Assert.notNull(resourceLoader,"coreInterfaceAddress can not be null!");
+        this.coreInterfaceAddress = coreInterfaceAddress;
+
+        this.cloudCoreInterfaceAddress = this.coreInterfaceAddress.replace("8100/coreInterface", "8101/cloudCoreInterface");
     }
 
     /**
@@ -378,7 +387,7 @@ public class Cpanel {
 
 
     @PostMapping("/user/cpanel/delete_platform")
-    public ResponseEntity<?> deletePlatforms(@RequestParam String platformIdToDelete, Principal principal) {
+    public ResponseEntity<?> deletePlatform(@RequestParam String platformIdToDelete, Principal principal) {
 
         log.debug("POST request on /user/cpanel/delete_platform for platform with id: " +
                 platformIdToDelete);
@@ -387,54 +396,10 @@ public class Cpanel {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
-
-        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), ""),
-                new UserDetails(
-                        new Credentials(user.getUsername(), ""),
-                        "",
-                        "",
-                        UserRole.NULL,
-                        new HashMap<>(),
-                        new HashMap<>()
-                ),
-                OperationType.CREATE
-        );
-
-        try {
-            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
-                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
-            if (ownedPlatformDetailsSet != null) {
-                boolean ownsPlatform = false;
-                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
-                    log.debug(platformDetails);
-                    if (platformDetails.getPlatformInstanceId().equals(platformIdToDelete)) {
-                        String message = "The user owns the platform with id " + platformIdToDelete + " which tried to delete.";
-                        log.info(message);
-                        ownsPlatform = true;
-                        break;
-                    }
-                }
-
-                if (!ownsPlatform) {
-                    String message = "You do not own the platform that you tried to delete";
-                    log.info(message);
-                    return new ResponseEntity<>("You do not own the platform that you tried to delete",
-                            new HttpHeaders(), HttpStatus.BAD_REQUEST);
-                }
-            } else {
-                String message = "AAM unreachable";
-                log.warn(message);
-                return new ResponseEntity<>("AAM unreachable",
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "AAM threw communication exception";
-            log.warn(message, e);
-            return new ResponseEntity<>(message + ": " + e.getMessage(),
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        
+        ResponseEntity<?> ownedPlatformDetailsResponse = checkIfUserOwnsPlatform(platformIdToDelete, user);
+        if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK)
+            return ownedPlatformDetailsResponse;
 
         // Check with Registry
         try {
@@ -495,44 +460,88 @@ public class Cpanel {
 
 
     @PostMapping(value = "/user/cpanel/get_platform_config", produces="application/zip")
-    public void getPlatformConfig(@RequestParam String platformId, Principal principal,
-                                  HttpServletResponse response) throws IOException {
+    public void getPlatformConfig(@Valid @RequestBody PlatformConfigurationMessage configurationMessage,
+                                  BindingResult bindingResult, Principal principal,
+                                  HttpServletResponse response) throws Exception {
 
-        log.debug("POST request on /user/cpanel/get_platform_config for platform with id: " +
-                platformId);
+        log.debug("POST request on /user/cpanel/get_platform_config: " + configurationMessage);
 
-        // Checking if the user owns the platform
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
+        Map<String, Object> responseBody = new HashMap<>();
 
-        //setting headers
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.addHeader("Content-Disposition", "attachment; filename=\"test.zip\"");
-        response.addHeader("Content-Type", "application/zip");
+        if (bindingResult.hasErrors()) {
 
-        // Loading bootstrap.properties
-        InputStream propertiesResourceAsStream = resourceLoader
-                .getResource("classpath:bootstrap.properties").getInputStream();
-        String exampleProperties = new BufferedReader(new InputStreamReader(propertiesResourceAsStream))
-                .lines().collect(Collectors.joining("\n"));
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = fieldError.getDefaultMessage();
 
-        // Modify the property file accordingly
-        exampleProperties = exampleProperties.replaceFirst("(?m)^.*(rabbit.host=localhost).*$", "test_rabbit");
+                String errorField = "platform_get_config_error_" + fieldError.getField();
+                responseBody.put(errorField, errorMessage);
 
-        // Create .zip output stream
-        ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
+                log.debug(errorField + ": " + errorMessage);
 
-        //packing files
-        zipOutputStream.putNextEntry(new ZipEntry("Example.txt"));
-        InputStream stream = new ByteArrayInputStream(exampleProperties.getBytes(StandardCharsets.UTF_8.name()));
+            }
 
-        IOUtils.copy(stream, zipOutputStream);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.addHeader("Content-Type", "text/html");
 
-        stream.close();
+            response.getWriter().write("Invalid Arguments");
+            response.getWriter().flush();
+            response.getWriter().close();
+        } else {
+            // Checking if the user owns the platform
+            UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+            CoreUser user = (CoreUser) token.getPrincipal();
 
-        zipOutputStream.close();
-        response.getOutputStream().close();
+            String platformId = configurationMessage.getPlatformId();
+            String platformOwnerUsername = configurationMessage.getPlatformOwnerUsername();
+            String platformOwnerPassword = configurationMessage.getPlatformOwnerPassword();
+            String platformOwnerUsernameInCore = user.getUsername();
+            String platformOwnerPasswordInCore = user.getPassword();
+            String componentKeystorePassword = configurationMessage.getComponentsKeystorePassword();
+            String aamKeystorePath = configurationMessage.getAamKeystorePath();
+            String aamKeystorePassword = configurationMessage.getAamKeystorePassword();
+            String aamPrivateKeyPassword = configurationMessage.getAamPrivateKeyPassword();
+            String sslKeystore = configurationMessage.getSslKeystore();
+            String sslKeystorePassword = configurationMessage.getSslKeystorePassword();
+            String sslKeyPassword = configurationMessage.getSslKeyPassword();
+
+            ResponseEntity<?> aamResponse = checkIfUserOwnsPlatform(platformId, user);
+            if (aamResponse.getStatusCode() != HttpStatus.OK) {
+                response.setStatus(aamResponse.getStatusCodeValue());
+                response.getWriter().write((String) aamResponse.getBody());
+                response.getWriter().flush();
+                response.getWriter().close();
+            } else {
+
+                OwnedPlatformDetails platformDetails = (OwnedPlatformDetails) aamResponse.getBody();
+
+                // Create .zip output stream
+                ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
+
+                //setting headers
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.addHeader("Content-Disposition", "attachment; filename=\"test.zip\"");
+                response.addHeader("Content-Type", "application/zip");
+
+                configureCloudConfigProperties(platformDetails, zipOutputStream);
+                configureNginx(zipOutputStream);
+                configureComponentProperties(zipOutputStream, "registrationHandler", platformOwnerUsername,
+                        platformOwnerPassword, componentKeystorePassword);
+                configureComponentProperties(zipOutputStream, "rap", platformOwnerUsername,
+                        platformOwnerPassword, componentKeystorePassword);
+                configureComponentProperties(zipOutputStream, "monitoring", platformOwnerUsername,
+                        platformOwnerPassword, componentKeystorePassword);
+
+                configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystorePath,
+                        aamKeystorePassword, aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword);
+                configurePlatformAAMCertificateKeyStoreFactory(zipOutputStream, platformId, platformOwnerUsernameInCore,
+                        platformOwnerPasswordInCore, aamKeystorePath, aamKeystorePassword, aamPrivateKeyPassword,
+                        this.coreInterfaceAddress);
+
+                zipOutputStream.close();
+                response.getOutputStream().close();
+            }
+        }
     }
 
 
@@ -704,11 +713,8 @@ public class Cpanel {
 
     @PostMapping("/user/cpanel/create_federation")
     public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
-                                              BindingResult bindingResult, Principal principal) {
+                                              BindingResult bindingResult) {
 
-        String username = principal.getName(); //get logged in username
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
-        CoreUser user = (CoreUser)token.getPrincipal();
         Map<String, Object> responseBody = new HashMap<>();
 
         if (bindingResult.hasErrors()) {
@@ -784,9 +790,6 @@ public class Cpanel {
 
         log.debug("POST request on /user/cpanel/list_federations");
 
-        String username = principal.getName(); //get logged in username
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken)principal;
-        CoreUser user = (CoreUser)token.getPrincipal();
         Map<String, Object> responseBody = new HashMap<>();
 
         Set<String> platformIds = new HashSet<>();
@@ -825,8 +828,7 @@ public class Cpanel {
 
 
     @PostMapping("/user/cpanel/delete_federation")
-    public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete,
-                                              Principal principal) {
+    public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete) {
 
         log.debug("POST request on /user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
 
@@ -886,6 +888,243 @@ public class Cpanel {
 
     @ModelAttribute("informationModel")
     public InformationModel getEmptyInformationModel() { return new InformationModel(); }
+
+    
+    private ResponseEntity<?> checkIfUserOwnsPlatform(String platformId, CoreUser user) {
+
+        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), ""),
+                new UserDetails(
+                        new Credentials(user.getUsername(), ""),
+                        "",
+                        "",
+                        UserRole.NULL,
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.CREATE
+        );
+        
+        try {
+            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
+                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
+            OwnedPlatformDetails ownedPlatformDetails = new OwnedPlatformDetails();
+            
+            if (ownedPlatformDetailsSet != null) {
+                boolean ownsPlatform = false;
+                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
+                    log.debug(platformDetails);
+                    if (platformDetails.getPlatformInstanceId().equals(platformId)) {
+                        String message = "The user owns the platform with id " + platformId;
+                        log.info(message);
+                        ownsPlatform = true;
+                        ownedPlatformDetails = platformDetails;
+                        break;
+                    }
+                }
+                                
+                if (!ownsPlatform) {
+                    String message = "You do not own the platform with id " + platformId;
+                    log.info(message);
+                    return new ResponseEntity<>("You do not own the platform with id " + platformId,
+                            new HttpHeaders(), HttpStatus.BAD_REQUEST);
+                } else {
+                    return new ResponseEntity<>(ownedPlatformDetails,
+                            new HttpHeaders(), HttpStatus.OK);
+                }
+            } else {
+                String message = "AAM unreachable";
+                log.warn(message);
+                return new ResponseEntity<>("AAM unreachable",
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            String message = "AAM threw communication exception";
+            log.warn(message, e);
+            return new ResponseEntity<>(message + ": " + e.getMessage(),
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    
+
+    private void configureCloudConfigProperties(OwnedPlatformDetails platformDetails, ZipOutputStream zipOutputStream)
+            throws Exception {
+        // Loading application.properties
+        InputStream propertiesResourceAsStream = resourceLoader
+                .getResource("classpath:files/CloudConfigProperties/application.properties").getInputStream();
+        String applicationProperties = new BufferedReader(new InputStreamReader(propertiesResourceAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+
+        // Modify the application.properties file accordingly
+        // Platform Details Configuration
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(platform.id=).*$",
+                "platform.id=" + platformDetails.getPlatformInstanceId());
+
+        // AMQP Configuration
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
+                "rabbit.host=localhost");
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.username=).*$",
+                "rabbit.username=guest");
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.password=).*$",
+                "rabbit.password=guest");
+
+        // Necessary Urls Configuration
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.core.interface.url=).*$",
+                "symbIoTe.core.interface.url=" + this.coreInterfaceAddress);
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.core.cloud.interface.url=).*$",
+                "symbIoTe.core.cloud.interface.url=" + this.cloudCoreInterfaceAddress);
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.interworking.interface.url=).*$",
+                "symbIoTe.interworking.interface.url=" + platformDetails.getPlatformInterworkingInterfaceAddress() +
+                        "/cloudCoreInterface/v1");
+        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
+                "symbIoTe.localaam.url=" + platformDetails.getPlatformInterworkingInterfaceAddress() +
+                        "/paam");
+
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("CloudConfigProperties/application.properties"));
+        InputStream stream = new ByteArrayInputStream(applicationProperties.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
+
+    private void configureNginx(ZipOutputStream zipOutputStream) throws Exception {
+        // Loading nginx.conf
+        InputStream nginxConfAsStream = resourceLoader
+                .getResource("classpath:files/nginx.conf").getInputStream();
+        String nginxConf = new BufferedReader(new InputStreamReader(nginxConfAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        // Modify the nginx.conf file accordingly
+        // AMQP Configuration
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}:8101).*$",
+                "          proxy_pass  " + this.cloudCoreInterfaceAddress + "/;");
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}:8100).*$",
+                "          proxy_pass " + this.coreInterfaceAddress + "/;");
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("nginx.conf"));
+        InputStream stream = new ByteArrayInputStream(nginxConf.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
+
+    private void configureComponentProperties(ZipOutputStream zipOutputStream, String componentFolder,
+                                              String platformOwnerUsername, String platformOwnerPassword,
+                                              String keystorePassword) throws Exception {
+        // Loading nginx.conf
+        InputStream bootstrapPropertiesAsStream = resourceLoader
+                .getResource("classpath:files/" + componentFolder + "/bootstrap.properties").getInputStream();
+        String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        // Modify the nginx.conf file accordingly
+        // AMQP Configuration
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.username=).*$",
+                "symbIoTe.component.username=" + platformOwnerUsername);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.password=).*$",
+                "symbIoTe.component.password=" + platformOwnerPassword);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.keystore.password=).*$",
+                "symbIoTe.component.keystore.password=" + keystorePassword);
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry(componentFolder + "/bootstrap.properties"));
+        InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
+
+    private void configureAAMProperties(ZipOutputStream zipOutputStream, String platformOwnerUsername,
+                                        String platformOwnerPassword, String aamKeystorePath,
+                                        String aamKeystorePassword, String aamPrivateKeyPassword,
+                                        String sslKeystore, String sslKeystorePassword, String sslKeyPassword)
+            throws Exception {
+        // Loading nginx.conf
+        InputStream bootstrapPropertiesAsStream = resourceLoader
+                .getResource("classpath:files/aam/bootstrap.properties").getInputStream();
+        String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        // Modify the nginx.conf file accordingly
+        // AMQP Configuration
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.owner.username=).*$",
+                "aam.deployment.owner.username=" + platformOwnerUsername);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.owner.password=).*$",
+                "aam.deployment.owner.password=" + platformOwnerPassword);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_FILE_NAME=).*$",
+                "aam.security.KEY_STORE_FILE_NAME=" + aamKeystorePath);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.ROOT_CA_CERTIFICATE_ALIAS=).*$",
+                "aam.security.ROOT_CA_CERTIFICATE_ALIAS=caam");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.CERTIFICATE_ALIAS=).*$",
+                "aam.security.CERTIFICATE_ALIAS=paam");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_PASSWORD=).*$",
+                "aam.security.KEY_STORE_PASSWORD=" + aamKeystorePassword);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.PV_KEY_PASSWORD=).*$",
+                "aam.security.PV_KEY_PASSWORD=" + aamPrivateKeyPassword);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
+                "aam.deployment.token.validityMillis=60000");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store=).*$",
+                "server.ssl.key-store=" + sslKeystore);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store-password=).*$",
+                "server.ssl.key-store-password=" + sslKeystorePassword);
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-password=).*$",
+                "server.ssl.key-password=" + sslKeyPassword);
+
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("aam/bootstrap.properties"));
+        InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
+
+    private void configurePlatformAAMCertificateKeyStoreFactory(ZipOutputStream zipOutputStream, String platformId,
+                                                                String platformOwnerUsernameInCore,
+                                                                String platformOwnerPasswordInCore,
+                                                                String aamKeystorePath, String aamKeystorePassword,
+                                                                String aamPrivateKeyPassword, String coreAAMAddress)
+            throws Exception {
+        // Loading nginx.conf
+        InputStream bootstrapPropertiesAsStream = resourceLoader
+                .getResource("classpath:files/symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java").getInputStream();
+        String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        // Modify the nginx.conf file accordingly
+        // AMQP Configuration
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String coreAAMAddress = ).*$",
+                "        String coreAAMAddress = \"" + coreAAMAddress + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformOwnerUsername =).*$",
+                "        String platformOwnerUsername = \"" + platformOwnerUsernameInCore + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformOwnerPassword = ).*$",
+                "        String platformOwnerPassword = \"" + platformOwnerPasswordInCore + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformId = ).*$",
+                "        String platformId = \"" + platformId + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStorePath =).*$",
+                "        String keyStorePath = \"" + aamKeystorePath + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStorePassword = ).*$",
+                "        String keyStorePassword = \"" + aamKeystorePassword + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String privateKeyPassword =).*$",
+                "        String privateKeyPassword = \"" + aamPrivateKeyPassword + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String aamCertificateAlias = ).*$",
+                "        String aamCertificateAlias = \"caam\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String rootCACertificateAlias =).*$",
+                "        String rootCACertificateAlias = \"paam\";");
+
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java"));
+        InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
 
     private ResponseEntity<?> getInformationModels() {
         try {

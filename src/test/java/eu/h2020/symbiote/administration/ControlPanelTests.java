@@ -370,7 +370,7 @@ public class ControlPanelTests extends AdministrationTests {
                 .with(csrf().asHeader())
                 .param("platformIdToDelete", "dummy"))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("You do not own the platform that you tried to delete"));
+                .andExpect(content().string("You do not own the platform with id dummy"));
 
         // AAM return null
         doReturn(null).when(mockRabbitManager)
