@@ -60,33 +60,39 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 public class Cpanel {
     private static Log log = LogFactory.getLog(Cpanel.class);
 
+    private RabbitManager rabbitManager;
+    private ResourceLoader resourceLoader;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
     private String coreInterfaceAddress;
     private String cloudCoreInterfaceAddress;
-    private RabbitManager rabbitManager;
-    private ResourceLoader resourceLoader;
+    private String paamValidityMillis;
+
 
 
     @Autowired
     public Cpanel(RabbitManager rabbitManager, ResourceLoader resourceLoader,
                   @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                   @Value("${aam.deployment.owner.password}") String aaMOwnerPassword,
-                  @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress) {
+                  @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress,
+                  @Value("${paam.deployment.token.validityMillis}") String paamValidityMillis) {
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 
         Assert.notNull(resourceLoader,"ResourceLoader can not be null!");
         this.resourceLoader = resourceLoader;
 
-        Assert.notNull(resourceLoader,"aaMOwnerUsername can not be null!");
+        Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
 
-        Assert.notNull(resourceLoader,"aaMOwnerPassword can not be null!");
+        Assert.notNull(aaMOwnerPassword,"aaMOwnerPassword can not be null!");
         this.aaMOwnerPassword = aaMOwnerPassword;
 
-        Assert.notNull(resourceLoader,"coreInterfaceAddress can not be null!");
+        Assert.notNull(coreInterfaceAddress,"coreInterfaceAddress can not be null!");
         this.coreInterfaceAddress = coreInterfaceAddress;
+
+        Assert.notNull(paamValidityMillis,"paamValidityMillis can not be null!");
+        this.paamValidityMillis = paamValidityMillis;
 
         this.cloudCoreInterfaceAddress = this.coreInterfaceAddress.replace("8100/coreInterface", "8101/cloudCoreInterface");
     }
@@ -498,7 +504,7 @@ public class Cpanel {
             String platformOwnerUsernameInCore = user.getUsername();
             String platformOwnerPasswordInCore = user.getPassword();
             String componentKeystorePassword = configurationMessage.getComponentsKeystorePassword();
-            String aamKeystorePath = configurationMessage.getAamKeystorePath();
+            String aamKeystoreName = configurationMessage.getAamKeystoreName();
             String aamKeystorePassword = configurationMessage.getAamKeystorePassword();
             String aamPrivateKeyPassword = configurationMessage.getAamPrivateKeyPassword();
             String sslKeystore = configurationMessage.getSslKeystore();
@@ -532,10 +538,10 @@ public class Cpanel {
                 configureComponentProperties(zipOutputStream, "monitoring", platformOwnerUsername,
                         platformOwnerPassword, componentKeystorePassword);
 
-                configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystorePath,
+                configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
                         aamKeystorePassword, aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword);
                 configurePlatformAAMCertificateKeyStoreFactory(zipOutputStream, platformId, platformOwnerUsernameInCore,
-                        platformOwnerPasswordInCore, aamKeystorePath, aamKeystorePassword, aamPrivateKeyPassword,
+                        platformOwnerPasswordInCore, aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword,
                         this.coreInterfaceAddress);
 
                 zipOutputStream.close();
@@ -1040,7 +1046,7 @@ public class Cpanel {
 
 
     private void configureAAMProperties(ZipOutputStream zipOutputStream, String platformOwnerUsername,
-                                        String platformOwnerPassword, String aamKeystorePath,
+                                        String platformOwnerPassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword,
                                         String sslKeystore, String sslKeystorePassword, String sslKeyPassword)
             throws Exception {
@@ -1057,7 +1063,7 @@ public class Cpanel {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.owner.password=).*$",
                 "aam.deployment.owner.password=" + platformOwnerPassword);
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_FILE_NAME=).*$",
-                "aam.security.KEY_STORE_FILE_NAME=" + aamKeystorePath);
+                "aam.security.KEY_STORE_FILE_NAME=" + aamKeystoreName + ".p12");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.ROOT_CA_CERTIFICATE_ALIAS=).*$",
                 "aam.security.ROOT_CA_CERTIFICATE_ALIAS=caam");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.CERTIFICATE_ALIAS=).*$",
@@ -1067,7 +1073,7 @@ public class Cpanel {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.PV_KEY_PASSWORD=).*$",
                 "aam.security.PV_KEY_PASSWORD=" + aamPrivateKeyPassword);
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
-                "aam.deployment.token.validityMillis=60000");
+                "aam.deployment.token.validityMillis=" + paamValidityMillis);
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store=).*$",
                 "server.ssl.key-store=" + sslKeystore);
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store-password=).*$",
@@ -1087,7 +1093,7 @@ public class Cpanel {
     private void configurePlatformAAMCertificateKeyStoreFactory(ZipOutputStream zipOutputStream, String platformId,
                                                                 String platformOwnerUsernameInCore,
                                                                 String platformOwnerPasswordInCore,
-                                                                String aamKeystorePath, String aamKeystorePassword,
+                                                                String aamKeystoreName, String aamKeystorePassword,
                                                                 String aamPrivateKeyPassword, String coreAAMAddress)
             throws Exception {
         // Loading nginx.conf
@@ -1106,8 +1112,8 @@ public class Cpanel {
                 "        String platformOwnerPassword = \"" + platformOwnerPasswordInCore + "\";");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformId = ).*$",
                 "        String platformId = \"" + platformId + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStorePath =).*$",
-                "        String keyStorePath = \"" + aamKeystorePath + "\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStoreFileName =).*$",
+                "        String keyStoreFileName = \"" + aamKeystoreName + "\";");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStorePassword = ).*$",
                 "        String keyStorePassword = \"" + aamKeystorePassword + "\";");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String privateKeyPassword =).*$",

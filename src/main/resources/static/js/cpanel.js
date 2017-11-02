@@ -46,13 +46,13 @@ function Platform(id, name, description, interworkingServices, isEnabler) {
 }
 
 function PlatformConfigurationMessage(platformId, platformOwnerUsername, platformOwnerPassword,
-                                      componentsKeystorePassword, aamKeystorePath, aamKeystorePassword,
+                                      componentsKeystorePassword, aamKeystoreName, aamKeystorePassword,
                                       aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword) {
     this.platformId = platformId;
     this.platformOwnerUsername = platformOwnerUsername;
     this.platformOwnerPassword = platformOwnerPassword;
     this.componentsKeystorePassword = componentsKeystorePassword;
-    this.aamKeystorePath = aamKeystorePath;
+    this.aamKeystoreName = aamKeystoreName;
     this.aamKeystorePassword = aamKeystorePassword;
     this.aamPrivateKeyPassword = aamPrivateKeyPassword;
     this.sslKeystore = sslKeystore;
@@ -802,7 +802,7 @@ $(document).ready(function () {
 
         var message = new PlatformConfigurationMessage(platformId, $modal.find('.paam-username').val(),
             $modal.find('.paam-password').val(), $modal.find('.component-keystore-password').val(),
-            $modal.find('.aam-keystore-path').val(), $modal.find('.aam-keystore-password').val(),
+            $modal.find('.aam-keystore-name').val(), $modal.find('.aam-keystore-password').val(),
             $modal.find('.aam-private-key-password').val(), $modal.find('.ssl-keystore').val(),
             $modal.find('.ssl-keystore-password').val(), $modal.find('.ssl-key-password').val());
         xhr.send(JSON.stringify(message));

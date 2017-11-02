@@ -23,7 +23,7 @@ public class PlatformConfigurationMessage {
 
     @NotNull
     @Size(min=1)
-    String aamKeystorePath;
+    String aamKeystoreName;
 
     @NotNull
     @Size(min=1, max=7)
@@ -50,14 +50,14 @@ public class PlatformConfigurationMessage {
     }
 
     public PlatformConfigurationMessage(String platformId, String platformOwnerUsername, String platformOwnerPassword,
-                                        String componentsKeystorePassword, String aamKeystorePath,
+                                        String componentsKeystorePassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword, String sslKeystore,
                                         String sslKeystorePassword, String sslKeyPassword) {
         this.platformId = platformId;
         this.platformOwnerUsername = platformOwnerUsername;
         this.platformOwnerPassword = platformOwnerPassword;
         this.componentsKeystorePassword = componentsKeystorePassword;
-        this.aamKeystorePath = aamKeystorePath;
+        this.aamKeystoreName = aamKeystoreName;
         this.aamKeystorePassword = aamKeystorePassword;
         this.aamPrivateKeyPassword = aamPrivateKeyPassword;
         this.sslKeystore = sslKeystore;
@@ -98,13 +98,9 @@ public class PlatformConfigurationMessage {
         this.componentsKeystorePassword = componentsKeystorePassword;
     }
 
-    public String getAamKeystorePath() {
-        return aamKeystorePath;
-    }
+    public String getAamKeystoreName() { return aamKeystoreName; }
 
-    public void setAamKeystorePath(String aamKeystorePath) {
-        this.aamKeystorePath = aamKeystorePath;
-    }
+    public void setAamKeystoreName(String aamKeystoreName) { this.aamKeystoreName = aamKeystoreName; }
 
     public String getAamKeystorePassword() {
         return aamKeystorePassword;
@@ -153,7 +149,7 @@ public class PlatformConfigurationMessage {
                 ", platformOwnerUsername='" + platformOwnerUsername + '\'' +
                 ", platformOwnerPassword='" + platformOwnerPassword + '\'' +
                 ", componentsKeystorePassword='" + componentsKeystorePassword + '\'' +
-                ", aamKeystorePath='" + aamKeystorePath + '\'' +
+                ", aamKeystoreName='" + aamKeystoreName + '\'' +
                 ", aamKeystorePassword='" + aamKeystorePassword + '\'' +
                 ", aamPrivateKeyPassword='" + aamPrivateKeyPassword + '\'' +
                 ", sslKeystore='" + sslKeystore + '\'' +
