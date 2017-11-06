@@ -499,17 +499,6 @@ public class Cpanel {
             CoreUser user = (CoreUser) token.getPrincipal();
 
             String platformId = configurationMessage.getPlatformId();
-            String platformOwnerUsername = configurationMessage.getPlatformOwnerUsername();
-            String platformOwnerPassword = configurationMessage.getPlatformOwnerPassword();
-            String platformOwnerUsernameInCore = user.getUsername();
-            String platformOwnerPasswordInCore = user.getPassword();
-            String componentKeystorePassword = configurationMessage.getComponentsKeystorePassword();
-            String aamKeystoreName = configurationMessage.getAamKeystoreName();
-            String aamKeystorePassword = configurationMessage.getAamKeystorePassword();
-            String aamPrivateKeyPassword = configurationMessage.getAamPrivateKeyPassword();
-            String sslKeystore = configurationMessage.getSslKeystore();
-            String sslKeystorePassword = configurationMessage.getSslKeystorePassword();
-            String sslKeyPassword = configurationMessage.getSslKeyPassword();
 
             ResponseEntity<?> aamResponse = checkIfUserOwnsPlatform(platformId, user);
             if (aamResponse.getStatusCode() != HttpStatus.OK) {
@@ -521,6 +510,24 @@ public class Cpanel {
 
                 OwnedPlatformDetails platformDetails = (OwnedPlatformDetails) aamResponse.getBody();
 
+                String platformOwnerUsername = configurationMessage.getPlatformOwnerUsername();
+                String platformOwnerPassword = configurationMessage.getPlatformOwnerPassword();
+                String platformOwnerUsernameInCore = user.getUsername();
+                String platformOwnerPasswordInCore = user.getPassword();
+                String componentKeystorePassword = configurationMessage.getComponentsKeystorePassword().isEmpty() ?
+                        "pass" : configurationMessage.getComponentsKeystorePassword();
+                String aamKeystoreName = configurationMessage.getAamKeystoreName().isEmpty() ?
+                        "paam-keystore-" + platformDetails.getPlatformInstanceFriendlyName() :
+                        configurationMessage.getAamKeystoreName();
+                String aamKeystorePassword = configurationMessage.getAamKeystorePassword().isEmpty() ?
+                        "pass" : configurationMessage.getAamKeystorePassword();
+                String aamPrivateKeyPassword = configurationMessage.getAamPrivateKeyPassword().isEmpty() ?
+                        "pass" : configurationMessage.getAamPrivateKeyPassword();
+                String sslKeystore = configurationMessage.getSslKeystore();
+                String sslKeystorePassword = configurationMessage.getSslKeystorePassword();
+                String sslKeyPassword = configurationMessage.getSslKeyPassword();
+                Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
+
                 // Create .zip output stream
                 ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
 
@@ -529,7 +536,7 @@ public class Cpanel {
                 response.addHeader("Content-Disposition", "attachment; filename=\"test.zip\"");
                 response.addHeader("Content-Type", "application/zip");
 
-                configureCloudConfigProperties(platformDetails, zipOutputStream);
+                configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
                 configureNginx(zipOutputStream);
                 configureComponentProperties(zipOutputStream, "registrationHandler", platformOwnerUsername,
                         platformOwnerPassword, componentKeystorePassword);
@@ -954,7 +961,8 @@ public class Cpanel {
     }
     
 
-    private void configureCloudConfigProperties(OwnedPlatformDetails platformDetails, ZipOutputStream zipOutputStream)
+    private void configureCloudConfigProperties(OwnedPlatformDetails platformDetails, ZipOutputStream zipOutputStream,
+                                                Boolean useBuiltInRapPlugin)
             throws Exception {
         // Loading application.properties
         InputStream propertiesResourceAsStream = resourceLoader
@@ -988,6 +996,9 @@ public class Cpanel {
                 "symbIoTe.localaam.url=" + platformDetails.getPlatformInterworkingInterfaceAddress() +
                         "/paam");
 
+        // RAP Configuration
+        applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
+                "rap.enableSpecificPlugin=" + useBuiltInRapPlugin.booleanValue());
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("CloudConfigProperties/application.properties"));

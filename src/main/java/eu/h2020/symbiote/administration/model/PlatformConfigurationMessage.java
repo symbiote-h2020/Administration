@@ -18,19 +18,16 @@ public class PlatformConfigurationMessage {
     String platformOwnerPassword;
 
     @NotNull
-    @Size(min=1)
     String componentsKeystorePassword;
 
     @NotNull
-    @Size(min=1)
     String aamKeystoreName;
 
     @NotNull
-    @Size(min=1, max=7)
+    @Size(max=7)
     String aamKeystorePassword;
 
     @NotNull
-    @Size(min=1, max=7)
     String aamPrivateKeyPassword;
 
     @NotNull
@@ -45,6 +42,8 @@ public class PlatformConfigurationMessage {
     @Size(min=1)
     String sslKeyPassword;
 
+    @NotNull
+    Boolean useBuiltInRapPlugin;
 
     public PlatformConfigurationMessage() {
     }
@@ -52,7 +51,7 @@ public class PlatformConfigurationMessage {
     public PlatformConfigurationMessage(String platformId, String platformOwnerUsername, String platformOwnerPassword,
                                         String componentsKeystorePassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword, String sslKeystore,
-                                        String sslKeystorePassword, String sslKeyPassword) {
+                                        String sslKeystorePassword, String sslKeyPassword, Boolean useBuiltInRapPlugin) {
         this.platformId = platformId;
         this.platformOwnerUsername = platformOwnerUsername;
         this.platformOwnerPassword = platformOwnerPassword;
@@ -63,8 +62,8 @@ public class PlatformConfigurationMessage {
         this.sslKeystore = sslKeystore;
         this.sslKeystorePassword = sslKeystorePassword;
         this.sslKeyPassword = sslKeyPassword;
+        this.useBuiltInRapPlugin = useBuiltInRapPlugin;
     }
-
 
     public String getPlatformId() {
         return platformId;
@@ -142,6 +141,10 @@ public class PlatformConfigurationMessage {
         this.sslKeyPassword = sslKeyPassword;
     }
 
+    public Boolean getUseBuiltInRapPlugin() { return useBuiltInRapPlugin; }
+
+    public void setUseBuiltInRapPlugin(Boolean useBuiltInRapPlugin) { this.useBuiltInRapPlugin = useBuiltInRapPlugin; }
+
     @Override
     public String toString() {
         return "PlatformConfigurationMessage{" +
@@ -155,6 +158,7 @@ public class PlatformConfigurationMessage {
                 ", sslKeystore='" + sslKeystore + '\'' +
                 ", sslKeystorePassword='" + sslKeystorePassword + '\'' +
                 ", sslKeyPassword='" + sslKeyPassword + '\'' +
+                ", useBuiltInRapPlugin=" + useBuiltInRapPlugin +
                 '}';
     }
 }

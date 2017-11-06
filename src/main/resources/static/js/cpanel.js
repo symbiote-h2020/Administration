@@ -47,7 +47,8 @@ function Platform(id, name, description, interworkingServices, isEnabler) {
 
 function PlatformConfigurationMessage(platformId, platformOwnerUsername, platformOwnerPassword,
                                       componentsKeystorePassword, aamKeystoreName, aamKeystorePassword,
-                                      aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword) {
+                                      aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword,
+                                      useBuiltInRapPlugin) {
     this.platformId = platformId;
     this.platformOwnerUsername = platformOwnerUsername;
     this.platformOwnerPassword = platformOwnerPassword;
@@ -58,6 +59,7 @@ function PlatformConfigurationMessage(platformId, platformOwnerUsername, platfor
     this.sslKeystore = sslKeystore;
     this.sslKeystorePassword = sslKeystorePassword;
     this.sslKeyPassword = sslKeyPassword;
+    this.useBuiltInRapPlugin = useBuiltInRapPlugin;
 }
 
 function InformationModel(id, uri, name, owner, rdf, rdfFormat) {
@@ -284,6 +286,7 @@ function buildPlatformPanels() {
             $platformTab.find(".selectpicker.update-info-model-select").nextAll("option").remove();
             $platformTab.find(".selectpicker.update-isEnabler").selectpicker("refresh");
             $platformTab.find(".selectpicker.update-isEnabler").nextAll("option").remove();
+            $platformTab.find(".selectpicker.built-in-plugin").selectpicker("refresh");
 
 
             if (jqXHR.status === 206) {
@@ -314,6 +317,8 @@ function platformPanel(ownedPlatform) {
     $platform.find('#platform-configuration-modal').attr("id", "platform-configuration-modal-" + ownedPlatform.id);
     $platform.find('.modal-title').find('strong').text(ownedPlatform.name);
     $platform.find('#get-platform-config-form').attr("id", "get-platform-config-form-" + ownedPlatform.id);
+    $platform.find('#built-in-plugin').attr("id", "built-in-plugin-" + ownedPlatform.id);
+
 
     // Setting the platform details
     $platform.find('.platform-update-id').val(ownedPlatform.id);
@@ -804,7 +809,8 @@ $(document).ready(function () {
             $modal.find('.paam-password').val(), $modal.find('.component-keystore-password').val(),
             $modal.find('.aam-keystore-name').val(), $modal.find('.aam-keystore-password').val(),
             $modal.find('.aam-private-key-password').val(), $modal.find('.ssl-keystore').val(),
-            $modal.find('.ssl-keystore-password').val(), $modal.find('.ssl-key-password').val());
+            $modal.find('.ssl-keystore-password').val(), $modal.find('.ssl-key-password').val(),
+            $modal.find('#built-in-plugin-' + platformId).val());
         xhr.send(JSON.stringify(message));
 
     });

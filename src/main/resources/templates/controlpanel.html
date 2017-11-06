@@ -380,57 +380,23 @@
                                                     <div class="col-sm-6 form-group has-feedback">
                                                         <label>Platform Owner Username</label>
                                                         <input type="text" class="form-control paam-username"
-                                                               placeholder="Platform Owner Username" required="required"/>
+                                                               placeholder="Mandatory Field" required="required"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">The Platform Owner Username in your PAAM deployment</div>
                                                     </div>
                                                     <div class="col-sm-6 form-group has-feedback">
                                                         <label>Platform Owner Password</label>
                                                         <input type="text" class="form-control paam-password"
-                                                               required="required" placeholder="Platform Owner Password"/>
+                                                               required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">The Platform Owner Password in your PAAM deployment</div>
                                                     </div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>Components Keystore Password</label>
-                                                        <input type="text" class="form-control component-keystore-password"
-                                                               required="required" placeholder="Components Keystore Password"/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The keystore password in your cloud components (apart from PAAM)</div>
-                                                    </div>
-                                                    <div class="col-sm-6 form-group has-feedback">
-                                                        <label>AAM Keystore File Name</label>
-                                                        <input type="text" class="form-control aam-keystore-name"
-                                                               required="required" placeholder="AAM Keystore Name"/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The name of the AAM keystore generated</div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-sm-6 form-group has-feedback">
-                                                        <label>AAM Keystore Password</label>
-                                                        <input type="text" class="form-control aam-keystore-password"
-                                                               required="required" placeholder="AAM Keystore Password"
-                                                               maxlength="7"/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The password of the AAM keystore. MUST NOT be longer than 7 chars</div>
-                                                    </div>
-                                                    <div class="col-sm-6 form-group has-feedback">
-                                                        <label>AAM Private Key Password</label>
-                                                        <input type="text" class="form-control aam-private-key-password"
-                                                               required="required" placeholder="AAM Private Key Password"
-                                                               maxlength="7"/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The password to access the AAM private key. MUST NOT be longer than 7 chars</div>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <div class="col-sm-6 form-group has-feedback">
-                                                        <label>SSL Keystore</label>
+                                                        <label>SSL Keystore File Name</label>
                                                         <input type="text" class="form-control ssl-keystore"
-                                                               required="required" placeholder="SSL Keystore"/>
+                                                               required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">The name of the keystore containing the letsencrypt
                                                             (or other) certificate and key pair for your AAM host's SSL</div>
@@ -438,7 +404,7 @@
                                                     <div class="col-sm-6 form-group has-feedback">
                                                         <label>SSL Keystore Password</label>
                                                         <input type="text" class="form-control ssl-keystore-password"
-                                                               required="required" placeholder="SSL Keystore Password"/>
+                                                               required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">The SSL keystore password</div>
                                                     </div>
@@ -447,9 +413,57 @@
                                                     <div class="col-sm-6 form-group has-feedback">
                                                         <label>SSL Key Password</label>
                                                         <input type="text" class="form-control ssl-key-password"
-                                                               required="required" placeholder="SSL Key Password"/>
+                                                               required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">The SSL certificate private key password</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>Components Keystore Password</label>
+                                                        <input type="text" class="form-control component-keystore-password"
+                                                               placeholder="Optional"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The keystore password in your cloud components (apart from PAAM) <br/>
+                                                            <strong>Default:</strong> 'pass'</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>AAM Keystore File Name</label>
+                                                        <input type="text" class="form-control aam-keystore-name"
+                                                               placeholder="Optional"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The name of the AAM keystore generated.<br/>
+                                                            <strong>Default:</strong> 'paam-keystore-{platform_name}'</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>AAM Keystore Password</label>
+                                                        <input type="text" class="form-control aam-keystore-password"
+                                                               placeholder="Optional"
+                                                               maxlength="7"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The password of the AAM keystore. MUST NOT be longer than 7 chars<br/>
+                                                            <strong>Default:</strong> 'pass'</div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-sm-6 form-group has-feedback">
+                                                        <label>AAM Private Key Password</label>
+                                                        <input type="text" class="form-control aam-private-key-password"
+                                                               placeholder="Optional"
+                                                               maxlength="7"/>
+                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+                                                        <div class="help-block with-errors">The password to access the AAM private key. MUST NOT be longer than 7 chars<br/>
+                                                            <strong>Default:</strong> 'pass'</div>
+                                                    </div>
+                                                    <div class="col-sm-6 form-group">
+                                                        <label>Use built-in RAP plugin</label>
+                                                        <select class="selectpicker form-control built-in-plugin"
+                                                                id="built-in-plugin" name="built-in-plugin">
+                                                            <option value="false">No</option>
+                                                            <option value="true">Yes</option>
+                                                        </select>
+                                                        <div class="help-block with-errors">Use built-in plugin provided by rap.<br/>
+                                                            <strong>Default:</strong> No</div>
                                                     </div>
                                                 </div>
                                             </div>
