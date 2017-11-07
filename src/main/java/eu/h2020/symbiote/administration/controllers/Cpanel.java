@@ -533,7 +533,7 @@ public class Cpanel {
 
                 //setting headers
                 response.setStatus(HttpServletResponse.SC_OK);
-                response.addHeader("Content-Disposition", "attachment; filename=\"test.zip\"");
+                response.addHeader("Content-Disposition", "attachment; filename=\"configuration.zip\"");
                 response.addHeader("Content-Type", "application/zip");
 
                 configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
@@ -1130,9 +1130,9 @@ public class Cpanel {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String privateKeyPassword =).*$",
                 "        String privateKeyPassword = \"" + aamPrivateKeyPassword + "\";");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String aamCertificateAlias = ).*$",
-                "        String aamCertificateAlias = \"caam\";");
+                "        String aamCertificateAlias = \"paam\";");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String rootCACertificateAlias =).*$",
-                "        String rootCACertificateAlias = \"paam\";");
+                "        String rootCACertificateAlias = \"caam\";");
 
 
         //packing files
