@@ -108,10 +108,14 @@ $(document).on('click', '.del-platform-btn', function (e) {
             buildPlatformPanels();
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
-            $('#platform-details').prepend($deletePlatformError.clone().append(message).show());
-            $modal.modal('hide');
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            } else {
+                var message = document.createElement('p');
+                message.innerHTML = xhr.responseText;
+                $('#platform-details').prepend($deletePlatformError.clone().append(message).show());
+                $modal.modal('hide');
+            }
         }
     });
 });
@@ -138,10 +142,14 @@ $(document).on('click', '.del-info-model-btn', function (e) {
             buildPlatformRegistrationForm();
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
-            $('#information-models').prepend($deleteInformationModelError.clone().append(message).show());
-            $modal.modal('hide');
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            } else {
+                var message = document.createElement('p');
+                message.innerHTML = xhr.responseText;
+                $('#information-models').prepend($deleteInformationModelError.clone().append(message).show());
+                $modal.modal('hide');
+            }
         }
     });
 });
@@ -165,10 +173,14 @@ $(document).on('click', '.del-federation-btn', function (e) {
             buildFederationPanels();
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = JSON.parse(xhr.responseText).error;
-            $('#federation_list').prepend($deleteFederationError.clone().append(message).show());
-            $modal.modal('hide');
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            } else {
+                var message = document.createElement('p');
+                message.innerHTML = JSON.parse(xhr.responseText).error;
+                $('#federation_list').prepend($deleteFederationError.clone().append(message).show());
+                $modal.modal('hide');
+            }
         }
     });
 });
@@ -256,9 +268,13 @@ function buildPlatformRegistrationForm() {
             buildPlatformPanels();
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
-            $('#list-all-info-model-error').append(message).show();
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            } else {
+                var message = document.createElement('p');
+                message.innerHTML = xhr.responseText;
+                $('#list-all-info-model-error').append(message).show();
+            }
         }
     });
 }
@@ -296,9 +312,13 @@ function buildPlatformPanels() {
             }
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = JSON.parse(xhr.responseText).message;
-            $('#platform-details').prepend($listOwnedPlatformsError.clone().append(message).show());
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            } else {
+                var message = document.createElement('p');
+                message.innerHTML = JSON.parse(xhr.responseText).message;
+                $('#platform-details').prepend($listOwnedPlatformsError.clone().append(message).show());
+            }
         }
     });
 }
@@ -390,9 +410,13 @@ function buildInfoModelsPanels() {
             }
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = xhr.responseText;
-            $('#information-models').prepend($listUserInfoModelError.clone().append(message).show());
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            } else {
+                var message = document.createElement('p');
+                message.innerHTML = xhr.responseText;
+                $('#information-models').prepend($listUserInfoModelError.clone().append(message).show());
+            }
         }
     });
 }
@@ -472,9 +496,14 @@ function buildFederationPanels() {
             }
         },
         error : function(xhr) {
-            var message = document.createElement('p');
-            message.innerHTML = JSON.parse(xhr.responseText).error;
-            $federationListTab.prepend($listFederationsError.clone().append(message).show());
+            if (xhr.status === 405) {
+                window.location.href = "/user/login";
+            }
+            else {
+                var message = document.createElement('p');
+                message.innerHTML = JSON.parse(xhr.responseText).error;
+                $federationListTab.prepend($listFederationsError.clone().append(message).show());
+            }
         }
     });
 }
@@ -553,41 +582,44 @@ $(document).ready(function () {
                 buildPlatformPanels();
             },
             error : function(xhr) {
-                $('#platform-registration-modal-body').find('.alert-danger').hide();
-                var message = JSON.parse(xhr.responseText);
+                if (xhr.status === 405) {
+                    window.location.href = "/user/login";
+                } else {
+                    $('#platform-registration-modal-body').find('.alert-danger').hide();
+                    var message = JSON.parse(xhr.responseText);
 
-                var platformRegistrationError = document.createElement('p');
-                platformRegistrationError.innerHTML = message.platformRegistrationError;
-                $('#platform-registration-modal-body').prepend($platformRegistrationError.clone().append(platformRegistrationError).show());
+                    var platformRegistrationError = document.createElement('p');
+                    platformRegistrationError.innerHTML = message.platformRegistrationError;
+                    $('#platform-registration-modal-body').prepend($platformRegistrationError.clone().append(platformRegistrationError).show());
 
-                $('#platform-registration-modal').animate({ scrollTop: 0 }, 400);
+                    $('#platform-registration-modal').animate({ scrollTop: 0 }, 400);
 
 
-                if (typeof message.pl_reg_error_id !== 'undefined')
-                    $('#pl-reg-error-id').html(message.pl_reg_error_id).show();
+                    if (typeof message.pl_reg_error_id !== 'undefined')
+                        $('#pl-reg-error-id').html(message.pl_reg_error_id).show();
 
-                if (typeof message.pl_reg_error_name !== 'undefined')
-                    $('#pl-reg-error-name').html(message.pl_reg_error_name).show();
+                    if (typeof message.pl_reg_error_name !== 'undefined')
+                        $('#pl-reg-error-name').html(message.pl_reg_error_name).show();
 
-                // Todo: Add support for more than 1 descriptions
-                if (typeof message.pl_reg_error_description_description !== 'undefined')
-                    $('#pl-reg-error-description').html(message.pl_reg_error_description_description[0]).show();
+                    // Todo: Add support for more than 1 descriptions
+                    if (typeof message.pl_reg_error_description_description !== 'undefined')
+                        $('#pl-reg-error-description').html(message.pl_reg_error_description_description[0]).show();
 
-                if (typeof message.pl_reg_error_interworkingServices_url !== 'undefined') {
-                    for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
-                        if(message.pl_reg_error_interworkingServices_url[i])
-                            $('.pl-reg-error-interworkingServices-url').eq(i).html(message.pl_reg_error_interworkingServices_url[i]).show();
+                    if (typeof message.pl_reg_error_interworkingServices_url !== 'undefined') {
+                        for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
+                            if(message.pl_reg_error_interworkingServices_url[i])
+                                $('.pl-reg-error-interworkingServices-url').eq(i).html(message.pl_reg_error_interworkingServices_url[i]).show();
+                    }
+
+                    if (typeof message.pl_reg_error_interworkingServices_informationModelId !== 'undefined') {
+                        for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
+                            if(message.pl_reg_error_interworkingServices_informationModelId[i] != null)
+                                $('.pl-reg-error-interworkingServices-informationModelId').eq(i).html(message.pl_reg_error_interworkingServices_informationModelId[i]).show();
+                    }
+
+                    if (typeof message.pl_reg_error_isEnabler !== 'undefined')
+                        $('#pl-reg-error-isEnabler').html(message.pl_reg_error_isEnabler).show();
                 }
-
-                if (typeof message.pl_reg_error_interworkingServices_informationModelId !== 'undefined') {
-                    for(var i = 0; i < message.pl_reg_error_interworkingServices_url.length; i++)
-                        if(message.pl_reg_error_interworkingServices_informationModelId[i] != null)
-                            $('.pl-reg-error-interworkingServices-informationModelId').eq(i).html(message.pl_reg_error_interworkingServices_informationModelId[i]).show();
-                }
-
-                if (typeof message.pl_reg_error_isEnabler !== 'undefined')
-                    $('#pl-reg-error-isEnabler').html(message.pl_reg_error_isEnabler).show();
-
             }
         });
 
@@ -719,23 +751,25 @@ $(document).ready(function () {
                 buildFederationPanels();
             },
             error : function(xhr) {
-                $('#federation-registration-modal-body').find('.alert-danger').hide();
-                var message = JSON.parse(xhr.responseText);
+                if (xhr.status === 405) {
+                    window.location.href = "/user/login";
+                } else {
+                    $('#federation-registration-modal-body').find('.alert-danger').hide();
+                    var message = JSON.parse(xhr.responseText);
 
-                var federationRegistrationError = document.createElement('p');
-                federationRegistrationError.innerHTML = message.error;
-                $('#federation-registration-modal-body').prepend($federationRegistrationError.clone().append(federationRegistrationError).show());
+                    var federationRegistrationError = document.createElement('p');
+                    federationRegistrationError.innerHTML = message.error;
+                    $('#federation-registration-modal-body').prepend($federationRegistrationError.clone().append(federationRegistrationError).show());
 
-                if (typeof message.federation_reg_error_id !== 'undefined')
-                    $('#federation-reg-error-id').html(message.federation_reg_error_id).show();
+                    if (typeof message.federation_reg_error_id !== 'undefined')
+                        $('#federation-reg-error-id').html(message.federation_reg_error_id).show();
 
-                if (typeof message.federation_reg_error_platform1Id !== 'undefined')
-                    $('#federation-reg-error-platform1-id').html(message.federation_reg_error_platform1Id).show();
+                    if (typeof message.federation_reg_error_platform1Id !== 'undefined')
+                        $('#federation-reg-error-platform1-id').html(message.federation_reg_error_platform1Id).show();
 
-                if (typeof message.federation_reg_error_platform2Id !== 'undefined')
-                    $('#federation-reg-error-platform2-id').html(message.federation_reg_error_platform2Id).show();
-
-
+                    if (typeof message.federation_reg_error_platform2Id !== 'undefined')
+                        $('#federation-reg-error-platform2-id').html(message.federation_reg_error_platform2Id).show();
+                }
             }
         });
 

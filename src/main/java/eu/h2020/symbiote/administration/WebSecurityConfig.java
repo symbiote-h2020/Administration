@@ -56,7 +56,10 @@ public class WebSecurityConfig {
                     .permitAll()
                     .and()
                 .exceptionHandling()
-                    .accessDeniedPage("/denied");
+                    .accessDeniedPage("/denied")
+                    .and()
+                .sessionManagement()
+                    .invalidSessionUrl("/user/login");
         }
     }
 
