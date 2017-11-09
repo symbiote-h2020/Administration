@@ -7,6 +7,8 @@ import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.CreateFederationRequest;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
+import eu.h2020.symbiote.core.internal.ClearDataRequest;
+import eu.h2020.symbiote.core.internal.ClearDataResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
@@ -103,6 +105,34 @@ public class AdminCpanel {
         return "admincontrolpanel";
     }
 
+    @PostMapping("/admin/cpanel/delete_platform_resources")
+    public ResponseEntity<?> deletePlatformResources(@RequestParam String platformId) {
+
+        log.debug("POST request on /admin/cpanel/delete_platform_resources for info model with id = " + platformId);
+
+        // Ask Registry
+        try {
+            ClearDataRequest request = new ClearDataRequest(null, platformId);
+
+            ClearDataResponse response = rabbitManager.sendClearDataRequest(request);
+            if (response != null) {
+                if (response.getStatus() != HttpStatus.OK.value()) {
+                    return new ResponseEntity<>(response.getMessage(),
+                            new HttpHeaders(), HttpStatus.valueOf(response.getStatus()));
+                }
+            } else {
+                log.warn("Registry unreachable!");
+                return new ResponseEntity<>("Registry unreachable!",
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            String message = "Registry threw communication exception: " + e.getMessage();
+            log.warn(message, e);
+            return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+    }
+
     @PostMapping("/admin/cpanel/delete_information_model")
     public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete) {
 
@@ -136,9 +166,8 @@ public class AdminCpanel {
                                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                         }
                     } catch (CommunicationException e) {
-                        e.printStackTrace();
                         String message = "Registry threw communication exception: " + e.getMessage();
-                        log.warn(message);
+                        log.warn(message, e);
                         return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
                     }
 
@@ -257,9 +286,8 @@ public class AdminCpanel {
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
             String message = "AAM threw communication exception during ListFederationRequest: " + e.getMessage();
-            log.warn(message);
+            log.warn(message, e);
             responseBody.put("error", message);
             return new ResponseEntity<>(responseBody,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -297,9 +325,8 @@ public class AdminCpanel {
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
             String message = "AAM threw communication exception during DeleteFederationRequest: " + e.getMessage();
-            log.warn(message);
+            log.warn(message, e);
             responseBody.put("error", message);
             return new ResponseEntity<>(responseBody,
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -324,7 +351,7 @@ public class AdminCpanel {
 
             }
         } catch (CommunicationException e) {
-            e.printStackTrace();
+            log.warn("Communication exception while retrieving the information models", e);
             return new ResponseEntity<>("Communication exception while retrieving the information models: " +
                     e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 

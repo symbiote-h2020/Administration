@@ -10,7 +10,7 @@ import com.rabbitmq.client.QueueingConsumer;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
-import eu.h2020.symbiote.core.internal.InformationModelListResponse;
+import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
@@ -33,8 +33,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
-import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
-import eu.h2020.symbiote.core.internal.ResourceListResponse;
 
 
 /**
@@ -86,6 +84,17 @@ public class RabbitManager {
     @Value("${rabbit.exchange.platform.internal}")
     private boolean informationModelExchangeInternal;
 
+    @Value("${rabbit.exchange.resource.name}")
+    private String resourceExchangeName;
+    @Value("${rabbit.exchange.resource.type}")
+    private String resourceExchangeType;
+    @Value("${rabbit.exchange.resource.durable}")
+    private boolean resourceExchangeDurable;
+    @Value("${rabbit.exchange.resource.autodelete}")
+    private boolean resourceExchangeAutodelete;
+    @Value("${rabbit.exchange.resource.internal}")
+    private boolean resourceExchangeInternal;
+
     @Value("${rabbit.routingKey.platform.creationRequested}")
     private String platformCreationRequestedRoutingKey;
     @Value("${rabbit.routingKey.platform.removalRequested}")
@@ -103,6 +112,10 @@ public class RabbitManager {
     private String informationModelRemovalRequestedRoutingKey;
     @Value("${rabbit.routingKey.platform.model.creationRequested}")
     private String informationModelCreationRequestedRoutingKey;
+
+    @Value("${rabbit.routingKey.resource.clearDataRequested}")
+    private String clearPlatformResourcesRoutingKey;
+
 
     // ------------ Core AAM communication ----------------
 
@@ -177,6 +190,13 @@ public class RabbitManager {
                     this.informationModelExchangeDurable,
                     this.informationModelExchangeAutodelete,
                     this.informationModelExchangeInternal,
+                    null);
+
+            this.channel.exchangeDeclare(this.resourceExchangeName,
+                    this.resourceExchangeType,
+                    this.resourceExchangeDurable,
+                    this.resourceExchangeAutodelete,
+                    this.resourceExchangeInternal,
                     null);
 
             this.channel.exchangeDeclare(this.aamExchangeName,
@@ -510,6 +530,45 @@ public class RabbitManager {
         return null;
     }
 
+
+    /**
+     * Method used to request the removal of platform resources from the Administrator
+     * @param request contains the information model
+     * @return response from registry
+     */
+    public ClearDataResponse sendClearDataRequest(ClearDataRequest request)
+            throws CommunicationException {
+
+        log.trace("sendClearDataRequest to Registry");
+
+        try {
+
+            String message = mapper.writeValueAsString(request);
+
+            // The message is false to indicate that we do not need the rdf of Information Models
+            String responseMsg = this.sendRpcMessage(this.resourceExchangeName
+                    , clearPlatformResourcesRoutingKey, message, "application/json");
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                ClearDataResponse response = mapper.readValue(responseMsg,
+                        ClearDataResponse.class);
+                log.trace("Received ClearDataResponse from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in ClearDataResponse from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc information model request message.", e);
+        }
+        return null;
+    }
 
 
     /**

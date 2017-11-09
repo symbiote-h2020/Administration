@@ -2,6 +2,9 @@
 var $federationPanelEntry = null;
 var $listFederationsError = null;
 
+var $platformResourcesSuccessfulDeletion = null;
+var $deletePlatformResourcesError = null;
+
 var $infoModelSuccessfulDeletion = null;
 var $deleteInformationModelError = null;
 
@@ -85,8 +88,18 @@ function setupAjax() {
 }
 
 
-function storeNecessaryInfoModelElements() {
+function storeNecessaryElements() {
 
+    if ($platformResourcesSuccessfulDeletion === null) {
+        $platformResourcesSuccessfulDeletion = $('#platform-resources-successful-deletion').clone().removeAttr("id");
+        $('#platform-resources-successful-deletion').remove();
+    }
+
+    if ($deletePlatformResourcesError === null) {
+        $deletePlatformResourcesError = $('#delete-platform-resources-error').clone().removeAttr("id");
+        $('#delete-platform-resources-error').remove();
+    }
+    
     if ($infoModelSuccessfulDeletion === null) {
         $infoModelSuccessfulDeletion = $('#info-model-successful-deletion').clone().removeAttr("id");
         $('#info-model-successful-deletion').remove();
@@ -195,8 +208,30 @@ function deleteFederationPanels() {
 // On ready function
 $(document).ready(function () {
 
+    $('#admin-delete-platform-resources-btn').click(function (e) {
+
+        var platformId = $('#admin-delete-platform-resources-input').val();
+
+        $.ajax({
+            url: "/admin/cpanel/delete_platform_resources",
+            type: "POST",
+            data: {platformId : platformId},
+            success: function() {
+                $('#admin-delete-platform-resources').prepend($platformResourcesSuccessfulDeletion.clone().show());
+            },
+            error : function(xhr) {
+                if (xhr.status === 405) {
+                    window.location.href = "/admin/login";
+                } else {
+                    var message = document.createElement('p');
+                    message.innerHTML = xhr.responseText;
+                    $('#admin-delete-platform-resources').prepend($deletePlatformResourcesError.clone().append(message).show());
+                }
+            }
+        });
+    });
+    
     $('#admin-delete-info-model-btn').click(function (e) {
-        e.preventDefault();
 
         var infoModelIdToDelete = $('#admin-delete-info-model-input').val();
 

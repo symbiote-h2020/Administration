@@ -73,6 +73,19 @@
 
                 <!-- Delete Platform Resources Tab-->
                 <div class="tab-pane active" id="admin-delete-platform-resources">
+
+                    <!-- Display errors -->
+                    <div class="alert alert-danger alert-dismissable delete-platform-resources-error"
+                         id="delete-platform-resources-error" style="display: none;">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Error!</strong></div>
+
+                    <!-- Display success message -->
+                    <div class="alert alert-success alert-dismissable" id="platform-resources-successful-deletion" style="display: none">
+                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                        <strong>Success!</strong>
+                        <p>The platform resources were deleted successfully!</p></div>
+
                     <div class="form-group col-sm-6">
                         <input id="admin-delete-platform-resources-input" class="form-control" placeholder="Platform Id"/>
                         <div class="help-block">Id of the platform, the resources of which will be deleted</div>
@@ -99,12 +112,12 @@
                     <div class="form-group col-sm-6">
                         <input id="admin-delete-info-model-input" class="form-control" placeholder="Information Model Id"/>
                         <div class="help-block">Id of the information model to be deleted</div>
-                        <button type="submit" id="admin-delete-info-model-btn" name="admin-delete-info-model-btn"
+                        <button type="button" id="admin-delete-info-model-btn" name="admin-delete-info-model-btn"
                                 class="btn btn-default btn-danger">Submit</button>
                     </div>
 
                     <script>
-                        storeNecessaryInfoModelElements();
+                        storeNecessaryElements();
                     </script>
                 </div>
 
