@@ -344,7 +344,13 @@ public class UserCpanel {
                             } else {
                                 log.warn("Registration Failed: " + registryResponse.getMessage());
 
-                                sendPlatformDeleteMessageToAAM(aamRequest);
+                                sendPlatformDeleteMessageToAAM(new PlatformManagementRequest(
+                                        aamRequest.getAamOwnerCredentials(),
+                                        aamRequest.getPlatformOwnerCredentials(),
+                                        aamRequest.getPlatformInterworkingInterfaceAddress(),
+                                        aamRequest.getPlatformInstanceFriendlyName(),
+                                        aamRequest.getPlatformInstanceId(),
+                                        OperationType.DELETE));
 
                                 responseBody.put("platformRegistrationError", registryResponse.getMessage());
                                 return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
@@ -352,7 +358,13 @@ public class UserCpanel {
                         } else {
                             log.warn("Registry unreachable!");
 
-                            sendPlatformDeleteMessageToAAM(aamRequest);
+                            sendPlatformDeleteMessageToAAM(new PlatformManagementRequest(
+                                    aamRequest.getAamOwnerCredentials(),
+                                    aamRequest.getPlatformOwnerCredentials(),
+                                    aamRequest.getPlatformInterworkingInterfaceAddress(),
+                                    aamRequest.getPlatformInstanceFriendlyName(),
+                                    aamRequest.getPlatformInstanceId(),
+                                    OperationType.DELETE));
 
                             responseBody.put("platformRegistrationError", "Registry unreachable!");
                             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -361,7 +373,13 @@ public class UserCpanel {
                         e.printStackTrace();
                         log.warn("Registry threw communication exception: " + e.getMessage());
 
-                        sendPlatformDeleteMessageToAAM(aamRequest);
+                        sendPlatformDeleteMessageToAAM(new PlatformManagementRequest(
+                                aamRequest.getAamOwnerCredentials(),
+                                aamRequest.getPlatformOwnerCredentials(),
+                                aamRequest.getPlatformInterworkingInterfaceAddress(),
+                                aamRequest.getPlatformInstanceFriendlyName(),
+                                aamRequest.getPlatformInstanceId(),
+                                OperationType.DELETE));
 
                         responseBody.put("platformRegistrationError", "Registry threw CommunicationException");
                         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -757,7 +775,7 @@ public class UserCpanel {
         try {
             Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
                     rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
-            OwnedPlatformDetails ownedPlatformDetails = new OwnedPlatformDetails();
+            OwnedPlatformDetails ownedPlatformDetails = null;
             
             if (ownedPlatformDetailsSet != null) {
                 boolean ownsPlatform = false;
@@ -1005,7 +1023,6 @@ public class UserCpanel {
     private void sendPlatformDeleteMessageToAAM(PlatformManagementRequest aamRequest) {
 
         // Send deletion message to AAM
-        aamRequest.setOperationType(OperationType.DELETE);
         try {
             PlatformManagementResponse aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
 
