@@ -32,11 +32,11 @@
 
 <div class="header shadow">
     <div class="container">
-        <img class="logo" th:src="@{/images/logo-1.1.png}" src="../static/images/logo-1.1.png"></img>
+        <img class="logo" th:src="@{/images/logo-1.1.png}" src="../static/images/logo-1.1.png"/>
         <span class="title">User Dashboard</span>
         <div class="btn-group logout">
 
-            <button class="btn top" th:inline="text">[[${user.getUsername()}]]</button>
+            <button class="btn top" th:text="${user.username}">Username</button>
             <button data-toggle="dropdown" class="btn dropdown-toggle">
                 <span class="caret"></span>
             </button>
@@ -67,13 +67,6 @@
                     </li>
                     <li th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
                         <a href="#information-models" data-toggle="tab">Information Models</a>
-                    </li>
-                    <li class="dropdown dropdown-submenu" th:if="${user.role == T(eu.h2020.symbiote.security.commons.enums.UserRole).PLATFORM_OWNER}">
-                        <a class="dropdown-toggle" href="#federation-panels" data-toggle="dropdown">Federations</a>
-                        <ul id="federation-panels" class="dropdown-menu nav nav-pills nav-stacked sidebar panel-primary shadow">
-                            <li><a href="#federation_requests" data-toggle="tab">Federation Requests</a></li>
-                            <li><a href="#federation_list" data-toggle="tab">Federation List</a></li>
-                        </ul>
                     </li>
                 </ul>
             </div>
@@ -674,179 +667,6 @@
                         buildInfoModelsPanels();
                     </script>
 
-                </div>
-
-                <!-- Federation Requests Tab-->
-                <div class="tab-pane" id="federation_requests">
-                    <h3>Federation Requests</h3>
-                </div>
-
-                <!-- Federation List Tab-->
-                <div class="tab-pane" id="federation_list">
-
-                    <!-- Display errors -->
-                    <div class="alert alert-danger alert-dismissable list-federations-error" id="list-federations-error" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <strong>Error!</strong></div>
-                    <div class="alert alert-danger alert-dismissable leave-federation-error" id="leave-federation-error" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <strong>Error!</strong></div>
-
-                    <!-- Display success message -->
-                    <div class="alert alert-success alert-dismissable" id="federation-registration-successful" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <strong>Success!</strong>
-                        <p>The federation was created successfully!</p></div>
-                    <div class="alert alert-success alert-dismissable" id="leave-federation-successful" style="display: none;">
-                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                        <strong>Success!</strong>
-                        <p>Your platform left the federation successfully!</p></div>
-
-                    <!-- Register new Federation by triggering the button-->
-                    <!-- Trigger the modal with a button -->
-                    <button type="button" class="btn btn-info btn-default registration-btn" data-toggle="modal"
-                            data-target="#federation-reg-modal">Create New Federation</button>
-
-                    <!-- Register Federation Modal -->
-                    <div id="federation-reg-modal" class="modal fade" role="dialog">
-                        <div class="modal-dialog">
-
-                            <form id="federation-registration-form" role="form" action="" data-toggle="validator">
-
-                                <!-- Modal content-->
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                        <h3 class="modal-title">Federation Creation</h3>
-                                    </div>
-                                    <div class="modal-body" id="federation-registration-modal-body">
-
-                                        <!-- Display errors -->
-                                        <div class="alert alert-danger alert-dismissable federation-registration-error"
-                                             id="federation-registration-error" style="display: none">
-                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                            <strong>Error!</strong></div>
-
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <div class="row">
-                                                    <div class="col-sm-12 form-group has-feedback">
-                                                        <label>Federation Id</label>
-                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
-                                                               id="federation-registration-id" name="id" placeholder="Enter preferred federation id"
-                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
-                                                               Include only letters, digits, '-' and '_'"/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
-                                                        <div class="alert alert-danger" id="federation-reg-error-id" style="display: none">
-                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <div class="row">
-                                                    <div class="col-sm-12 form-group has-feedback">
-                                                        <label>Federated Platform Id 1</label>
-                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
-                                                               id="federated-platform-id-1" name="platform1Id"
-                                                               placeholder="Enter the id of the platform you want to add to the federation"
-                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
-                                                               Include only letters, digits, '-' and '_'."/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
-                                                        <div class="alert alert-danger" id="federation-reg-error-platform1-id" style="display: none">
-                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-12">
-                                                <div class="row">
-                                                    <div class="col-sm-12 form-group has-feedback">
-                                                        <label>Federated Platform Id 2</label>
-                                                        <input type="text" class="form-control" minlength="4" maxlength="30"
-                                                               id="federated-platform-id-2" name="platform2Id"
-                                                               placeholder="Enter the id of the platform you want to add to the federation"
-                                                               pattern="^[\w-][\w-][\w-][\w-]+" data-pattern-error="From 4 to 30 characters.
-                                                               Include only letters, digits, '-' and '_'."/>
-                                                        <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">From 4 to 30 characters. Include only letters, digits, '-' and '_'</div>
-                                                        <div class="alert alert-danger" id="federation-reg-error-platform2-id" style="display: none">
-                                                            From 4 to 30 characters. Only letters, digits, '-' and '_' are permitted</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="submit" id="federation-reg-btn" name="federation-reg-btn"
-                                                class="btn btn-default btn-info">Submit</button>
-                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Federation Panel Entry -->
-                    <div class="panel panel-primary federation-panel-entry" id="federation-entry" style="display: none">
-                        <div class="panel-heading clickable">
-                            <h3 class="panel-title">FEDERATION_NAME</h3>
-                            <span class="pull-right"><i class="glyphicon glyphicon-plus"></i></span></div>
-                        <div class="panel-body" style="display: none;">
-
-                            <div class="row">
-                                <div class="col-sm-12">
-                                    <div class="row">
-                                        <div class="col-sm-6 form-group">
-                                            <label>Id</label>
-                                            <p class="federation-id">FEDERATION_ID</p>
-                                        </div>
-                                        <div class="col-sm-6 form-group has-feedback">
-                                            <label>Federated Platforms</label>
-                                            <ul class="federated-platforms list-group">
-
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="panel-footer platform-info-footer">
-
-                            <!-- Trigger the federation delete modal with a button -->
-                            <button type="button" class="btn btn-default btn-warning btn-warning-delete"
-                                    data-toggle="modal" data-target="#del-federation-modal">Delete</button>
-
-                            <!-- Federation Delete Modal -->
-                            <div id="del-federation-modal" class="modal fade" role="dialog">
-                                <div class="modal-dialog">
-
-                                    <!-- Modal content-->
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                            <h4 class="modal-title text-danger">Are you sure you want to cancel the federation
-                                                <strong>FEDERATION NAME</strong>?</h4>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="submit" class="btn btn-default btn-danger del-federation-btn">Verify Deletion</button>
-                                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Federation Details -->
-                    <script>
-                        storeNecessaryFederationElements();
-                        buildFederationPanels();
-                    </script>
                 </div>
 
             </div>

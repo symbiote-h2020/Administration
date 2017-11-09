@@ -79,17 +79,25 @@ public abstract class AdministrationTests {
         return mapper.writeValueAsString(o);
     }
 
-    public List<GrantedAuthority> sampleAuthorities() {
+    public List<GrantedAuthority> sampleUserAuthorities() {
 
         List<GrantedAuthority> grantedAuths = new ArrayList<>();
         grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
         return grantedAuths;
     }
 
+    public List<GrantedAuthority> sampleAdminAuthorities() {
+
+        List<GrantedAuthority> grantedAuths = new ArrayList<>();
+        grantedAuths.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        return grantedAuths;
+    }
+
     public CoreUser sampleCoreUser(UserRole role) throws Exception {
 
 
-        CoreUser user = new CoreUser(username, password, role, true, true, true, true, sampleAuthorities());
+        CoreUser user = new CoreUser(username, password, role, true, true,
+                true, true, sampleUserAuthorities());
         user.setValidUsername(username);
         user.setValidPassword(password);
         user.setRole(role);
@@ -98,9 +106,27 @@ public abstract class AdministrationTests {
         return user;
     }
 
-    public Authentication sampleAuth(UserRole role) throws Exception {
+    public CoreUser sampleAdminUser(UserRole role) throws Exception {
 
-        return new UsernamePasswordAuthenticationToken(sampleCoreUser(role), null, sampleAuthorities());
+
+        CoreUser user = new CoreUser(username, password, role, true, true,
+                true, true, sampleAdminAuthorities());
+        user.setValidUsername(username);
+        user.setValidPassword(password);
+        user.setRole(role);
+        user.setRecoveryMail(mail);
+
+        return user;
+    }
+
+    public Authentication sampleUserAuth(UserRole role) throws Exception {
+
+        return new UsernamePasswordAuthenticationToken(sampleCoreUser(role), null, sampleUserAuthorities());
+    }
+
+    public Authentication sampleAdminAuth(UserRole role) throws Exception {
+
+        return new UsernamePasswordAuthenticationToken(sampleAdminUser(role), null, sampleAdminAuthorities());
     }
 
     public Platform sampleEmptyPlatform(){

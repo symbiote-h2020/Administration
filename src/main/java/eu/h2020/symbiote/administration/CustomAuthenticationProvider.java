@@ -8,9 +8,11 @@ import eu.h2020.symbiote.administration.exceptions.authentication.AAMProblemExce
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,10 +42,20 @@ import eu.h2020.symbiote.administration.model.CoreUser;
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
     private static Log log = LogFactory.getLog(CustomAuthenticationProvider.class);
- 
-    @Autowired
-    private RabbitManager rabbitManager;
 
+
+    private RabbitManager rabbitManager;
+    private String adminUsername;
+    private String adminPassword;
+
+    @Autowired
+    public CustomAuthenticationProvider(RabbitManager rabbitManager,
+                                        @Value("${aam.deployment.owner.username}") String adminUsername,
+                                        @Value("${aam.deployment.owner.password}") String adminPassword) {
+        this.rabbitManager = rabbitManager;
+        this.adminUsername = adminUsername;
+        this.adminPassword = adminPassword;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) 
@@ -53,7 +65,25 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
 
+        // Checking for admin
+        if (name.equals(adminUsername) && password.equals(adminPassword)) {
+            log.info("Valid Admin Username and password!");
 
+            List<GrantedAuthority> grantedAuths = new ArrayList<>();
+
+            // Todo: Are all the roles somewhere?
+            grantedAuths.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
+            CoreUser user = new CoreUser(name, password, UserRole.PLATFORM_OWNER,
+                    true, true, true, true,
+                    grantedAuths);
+
+            // We clear the credential so that they are not shown anywhere
+            user.clearPassword();
+            return new UsernamePasswordAuthenticationToken(user, password, grantedAuths);
+        }
+
+        // Checking for normal user
         try{
 
             UserDetailsResponse response = rabbitManager.sendLoginRequest(new Credentials(name, password));

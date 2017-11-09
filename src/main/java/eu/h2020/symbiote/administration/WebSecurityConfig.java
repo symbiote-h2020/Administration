@@ -41,7 +41,6 @@ public class WebSecurityConfig {
                 .antMatcher("/user/**")
                 .authorizeRequests()
                     .anyRequest().authenticated()
-                    // .anyRequest().hasRole("USER")
                     .and()
                 .formLogin()
                     .loginPage("/user/login")
@@ -51,8 +50,6 @@ public class WebSecurityConfig {
                 .logout()
                     .logoutUrl("/")
                     .logoutSuccessUrl("/")
-//                    .deleteCookies("JSESSIONID")
-//                    .invalidateHttpSession(true)
                     .permitAll()
                     .and()
                 .exceptionHandling()
@@ -71,7 +68,7 @@ public class WebSecurityConfig {
             http
                 .antMatcher("/admin/**")
                 .authorizeRequests()
-                    .anyRequest().hasRole("admin")
+                    .anyRequest().hasRole("ADMIN")
                     .and()
                 .formLogin()
                     .loginPage("/admin/login")
@@ -84,7 +81,10 @@ public class WebSecurityConfig {
                     .permitAll()
                     .and()
                 .exceptionHandling()
-                    .accessDeniedPage("/denied");
+                    .accessDeniedPage("/denied")
+                    .and()
+                .sessionManagement()
+                    .invalidSessionUrl("/admin/login");
         }
     }
 }

@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.controllers.Cpanel;
+import eu.h2020.symbiote.administration.controllers.UserCpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 
@@ -65,8 +65,8 @@ public class LoginTests extends AdministrationTests {
         Register registerController = appContext.getBean(Register.class);
         registerController.setRabbitManager(mockRabbitManager);
 
-        Cpanel cpanelController = appContext.getBean(Cpanel.class);
-        cpanelController.setRabbitManager(mockRabbitManager);
+        UserCpanel userCpanelController = appContext.getBean(UserCpanel.class);
+        userCpanelController.setRabbitManager(mockRabbitManager);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class LoginTests extends AdministrationTests {
     @Test
     public void getLoginPageAsUser() throws Exception {
 
-        mockMvc.perform(get("/user/login").with(authentication(sampleAuth(UserRole.USER))) )
+        mockMvc.perform(get("/user/login").with(authentication(sampleUserAuth(UserRole.USER))) )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/user/cpanel"));
     }
@@ -101,7 +101,7 @@ public class LoginTests extends AdministrationTests {
     @Test
     public void getLogoutPage() throws Exception {
 
-        mockMvc.perform(get("/user/logout").with(authentication(sampleAuth(UserRole.PLATFORM_OWNER))) )
+        mockMvc.perform(get("/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
             .andExpect(status().is3xxRedirection());
     }
 

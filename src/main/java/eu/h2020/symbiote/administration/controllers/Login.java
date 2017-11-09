@@ -33,9 +33,17 @@ public class Login {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
+			log.debug("User is already logged in");
+			log.debug("User authorities = " + auth.getAuthorities());
 
-			/* The user is logged in :) */
-			return "redirect:/user/cpanel";
+			if (auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"))) {
+				log.debug("Redirecting to /admin/cpanel");
+				return "redirect:/admin/cpanel";
+			}
+			else {
+				log.debug("Redirecting to /user/cpanel");
+				return "redirect:/user/cpanel";
+			}
 		} else {
 			return "login";
 		}
@@ -49,8 +57,8 @@ public class Login {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
-
-			/* The user is logged in :) */
+			log.debug("User is already logged in");
+			log.debug("Redirecting to /admin/cpanel");
 			return "redirect:/admin/cpanel";
 		} else {
 			return "login";

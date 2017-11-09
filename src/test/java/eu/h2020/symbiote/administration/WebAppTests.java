@@ -128,7 +128,7 @@
 //    @Test
 //    public void getLoginPageAsUser() throws Exception {
 //
-//        mockMvc.perform(get("/user/login").with(authentication(sampleAuth(UserRole.USER))) )
+//        mockMvc.perform(get("/user/login").with(authentication(sampleUserAuth(UserRole.USER))) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"));
 //    }
@@ -150,7 +150,7 @@
 //    @Test
 //    public void getLogoutPage() throws Exception {
 //
-//        mockMvc.perform(get("/user/logout").with(authentication(sampleAuth(UserRole.PLATFORM_OWNER))) )
+//        mockMvc.perform(get("/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 //            .andExpect(status().is3xxRedirection());
 //    }
 //
@@ -182,7 +182,7 @@
 ////        when(mockRabbitManager.sendDetailsRequest(any())).thenReturn(sampleOwnerDetails());
 ////
 ////        mockMvc.perform(get("/user/cpanel")
-////                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER))) )
+////                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 ////            .andExpect(status().isOk());
 ////            // .andExpect(model().attributeExists("user"))
 ////            // .andExpect(model().attribute("user", hasProperty("state", is(3))) );
@@ -195,7 +195,7 @@
 ////        when(mockRabbitManager.sendDetailsRequest(any())).thenReturn(sampleOwnerDetails());
 ////
 ////        mockMvc.perform(get("/user/cpanel")
-////                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER))) )
+////                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 ////            .andExpect(status().isOk())
 ////            .andExpect(model().attributeExists("user"))
 ////            .andExpect(model().attribute("user", hasProperty("state", is(2))) );
@@ -204,7 +204,7 @@
 //    @Test
 //    public void getControlPanelAsUserCommunicationError() throws Exception {
 //
-//        mockMvc.perform( get("/user/cpanel").with(authentication(sampleAuth(UserRole.PLATFORM_OWNER))) )
+//        mockMvc.perform( get("/user/cpanel").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 //            .andExpect(model().attribute("user", hasProperty("state", is(0))) );
 //    }
 //
@@ -215,7 +215,7 @@
 //
 //        mockMvc.perform( post("/user/cpanel/register_platform")
 //                .param("description", "ER")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -227,7 +227,7 @@
 //    public void postActivatePlatformTimeout() throws Exception {
 //
 //        mockMvc.perform( post("/user/cpanel/register_platform")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -242,7 +242,7 @@
 //        mockMvc.perform( post("/user/cpanel/register_platform")
 //                .param("description", description)
 //                .param("informationModelId", informationModelId)
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -257,7 +257,7 @@
 //
 //        mockMvc.perform( post("/user/cpanel/modify")
 //                .param("description", "ER")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -269,7 +269,7 @@
 //    public void postModifyPlatformTimeout() throws Exception {
 //
 //        mockMvc.perform( post("/user/cpanel/modify")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -283,7 +283,7 @@
 //
 //        mockMvc.perform( post("/user/cpanel/modify")
 //                .param("description", "Modified Description")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -295,7 +295,7 @@
 //    public void postDisablePlatformTimeout() throws Exception {
 //
 //        mockMvc.perform( post("/user/cpanel/disable")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
@@ -309,7 +309,7 @@
 //
 //        mockMvc.perform( post("/user/cpanel/disable")
 //                .param("description", "Modified Description")
-//                .with(authentication(sampleAuth(UserRole.PLATFORM_OWNER)))
+//                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
 //            .andExpect(redirectedUrl("/user/cpanel"))
