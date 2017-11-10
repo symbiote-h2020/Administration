@@ -5,6 +5,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.administration.controllers.UserCpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
 import eu.h2020.symbiote.administration.model.Description;
+import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
@@ -13,6 +14,9 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -24,15 +28,23 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.Filter;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -49,6 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Test class for use in testing MVC and form validation.
  */
 public class UserControlPanelTests extends AdministrationTests {
+    private static Log log = LogFactory.getLog(AdministrationTests.class);
 
     @Autowired
     private ApplicationContext appContext;
@@ -462,6 +475,137 @@ public class UserControlPanelTests extends AdministrationTests {
                 .param("platformIdToDelete", platformId))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM threw communication exception: error"));
+    }
+
+
+    @Test
+    public void getPlatformConfig() throws Exception {
+
+        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+                .sendOwnedPlatformDetailsRequest(any());
+
+        // User does not own the platform
+        PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage();
+        invalidPlatform.setPlatformId("dummy");
+
+        mockMvc.perform(post("/user/cpanel/get_platform_config")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidPlatform)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("You do not own the platform with id dummy"));
+
+        // Successful Request
+        MvcResult mvcResult = mockMvc.perform(post("/user/cpanel/get_platform_config")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformConfigurationMessage())))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"configuration.zip\""))
+                .andExpect(header().string("Content-Type", "application/zip"))
+                .andReturn();
+
+        Map<String, String> zipFiles = new HashMap<>();
+        ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(mvcResult.getResponse().getContentAsByteArray()));
+
+        ZipEntry zipEntry = zis.getNextEntry();
+        while (zipEntry != null) {
+            String fileName = zipEntry.getName();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            IOUtils.copy(zis, baos);
+            zipFiles.put(fileName, baos.toString(StandardCharsets.UTF_8.name()));
+            zipEntry = zis.getNextEntry();
+        }
+
+        zis.closeEntry();
+        zis.close();
+
+        String cloudCoreInterfaceAddress = this.coreInterfaceAddress.replace("8100/coreInterface", "8101/cloudCoreInterface");
+
+        // Checking application.properties of CloudConfigProperties
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("platform.id=" + platformId));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("rabbit.host=localhost"));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("rabbit.username=guest"));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("rabbit.password=guest"));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("symbIoTe.core.interface.url="
+                + this.coreInterfaceAddress));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("symbIoTe.core.cloud.interface.url="
+                + cloudCoreInterfaceAddress));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("symbIoTe.interworking.interface.url="
+                + platformUrl + "/cloudCoreInterface/v1"));
+        assertTrue(zipFiles.get("CloudConfigProperties/application.properties").contains("symbIoTe.localaam.url="
+                + platformUrl + "/paam"));
+
+        // Checking nginx.conf
+        assertTrue(zipFiles.get("nginx.conf").contains("proxy_pass  " + coreInterfaceAddress + "/;"));
+        assertTrue(zipFiles.get("nginx.conf").contains("proxy_pass  " + cloudCoreInterfaceAddress + "/;"));
+
+        // Checking bootstrap.properties of Registration Handler
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("symbIoTe.component.username=" + username));
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("symbIoTe.component.password=" + password));
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
+        // Checking bootstrap.properties of RAP
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("symbIoTe.component.username=" + username));
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("symbIoTe.component.password=" + password));
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
+        // Checking bootstrap.properties of Monitoring
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("symbIoTe.component.username=" + username));
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("symbIoTe.component.password=" + password));
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
+        // Checking bootstrap.properties of AAM
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.deployment.owner.username=" + username));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.deployment.owner.password=" + password));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.security.KEY_STORE_FILE_NAME=" + aamKeystoreName + ".p12"));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.security.ROOT_CA_CERTIFICATE_ALIAS=caam"));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.security.CERTIFICATE_ALIAS=paam"));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.security.KEY_STORE_PASSWORD=" + aamKeystorePassword));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.security.PV_KEY_PASSWORD=" + aamPrivateKeyPassword));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("aam.deployment.token.validityMillis=" + paamValidityMillis));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("server.ssl.key-store=" + sslKeystore));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("server.ssl.key-store-password=" + sslKeystorePassword));
+        assertTrue(zipFiles.get("aam/bootstrap.properties")
+                .contains("server.ssl.key-password=" + sslKeyPassword));
+
+        // Checking PlatformAAMCertificateKeyStoreFactory
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String coreAAMAddress = \"" + coreInterfaceAddress + "\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String platformOwnerUsername = \"" + username + "\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String platformOwnerPassword = \"" + password + "\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String platformId = \"" + platformId + "\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String keyStoreFileName = \"" + aamKeystoreName + "\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String keyStorePassword = \"" + aamKeystorePassword + "\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String aamCertificateAlias = \"paam\";"));
+        assertTrue(zipFiles.get("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java")
+                .contains("        String rootCACertificateAlias = \"caam\";"));
+
     }
 
 

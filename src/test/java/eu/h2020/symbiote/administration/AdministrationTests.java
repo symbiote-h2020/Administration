@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.Description;
+import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
@@ -46,15 +47,18 @@ import java.util.*;
 public abstract class AdministrationTests {
 
     @Value("${aam.deployment.owner.username}")
-    private String AAMOwnerUsername;
+    protected String AAMOwnerUsername;
     @Value("${aam.deployment.owner.password}")
-    private String AAMOwnerPassword;
-
+    protected String AAMOwnerPassword;
+    @Value("${paam.deployment.token.validityMillis}")
+    protected String paamValidityMillis;
+    @Value("${aam.environment.coreInterfaceAddress}")
+    protected String coreInterfaceAddress;
 
     // ===== Helper Values & Methods ====
 
     protected String username = "Test1";
-    protected String password = "Test1";
+    protected String password = "Test1$";
     protected String mail = "test@mail.com";
 
     protected String platformId = "test1Plat";
@@ -72,6 +76,15 @@ public abstract class AdministrationTests {
     protected String resourcelId = "resource_id";
 
     protected String federationRuleId = "federation_rule_id";
+
+    protected String componentsKeystorePassword = "comp_pass";
+    protected String aamKeystoreName = "keystore";
+    protected String aamKeystorePassword = "aampass";
+    protected String aamPrivateKeyPassword = "private_key_pass";
+    protected String sslKeystore = "ssl_keystore";
+    protected String sslKeystorePassword = "ssl_keystore_pass";
+    protected String sslKeyPassword = "ssl_key_pass";
+    protected Boolean useBuiltInRapPlugin = true;
 
     public String serialize(Object o) throws Exception {
 
@@ -93,7 +106,7 @@ public abstract class AdministrationTests {
         return grantedAuths;
     }
 
-    public CoreUser sampleCoreUser(UserRole role) throws Exception {
+    public CoreUser sampleCoreUser(UserRole role) {
 
 
         CoreUser user = new CoreUser(username, password, role, true, true,
@@ -106,7 +119,7 @@ public abstract class AdministrationTests {
         return user;
     }
 
-    public CoreUser sampleAdminUser(UserRole role) throws Exception {
+    public CoreUser sampleAdminUser(UserRole role) {
 
 
         CoreUser user = new CoreUser(username, password, role, true, true,
@@ -119,12 +132,12 @@ public abstract class AdministrationTests {
         return user;
     }
 
-    public Authentication sampleUserAuth(UserRole role) throws Exception {
+    public Authentication sampleUserAuth(UserRole role) {
 
         return new UsernamePasswordAuthenticationToken(sampleCoreUser(role), null, sampleUserAuthorities());
     }
 
-    public Authentication sampleAdminAuth(UserRole role) throws Exception {
+    public Authentication sampleAdminAuth(UserRole role) {
 
         return new UsernamePasswordAuthenticationToken(sampleAdminUser(role), null, sampleAdminAuthorities());
     }
@@ -147,8 +160,8 @@ public abstract class AdministrationTests {
         Platform platform = new Platform();
         platform.setId(platformId);
         platform.setName(platformName);
-        platform.setDescription(Arrays.asList(platformDescription));
-        platform.setInterworkingServices(Arrays.asList(interworkingService));
+        platform.setDescription(Collections.singletonList(platformDescription));
+        platform.setInterworkingServices(Collections.singletonList(interworkingService));
 
         return platform;
     }
@@ -164,7 +177,7 @@ public abstract class AdministrationTests {
 
         PlatformDetails platformDetails = new PlatformDetails();
         platformDetails.setId(platformId);
-        platformDetails.setInterworkingServices(Arrays.asList(interworkingService));
+        platformDetails.setInterworkingServices(Collections.singletonList(interworkingService));
         platformDetails.setName(platformName);
         platformDetails.setDescription(descriptions);
         platformDetails.setIsEnabler(false);
@@ -200,6 +213,13 @@ public abstract class AdministrationTests {
         platformResponse.setMessage("Fail");
         platformResponse.setBody(null);
         return platformResponse;
+    }
+
+    public PlatformConfigurationMessage samplePlatformConfigurationMessage() {
+
+        return new PlatformConfigurationMessage(platformId, username, password, componentsKeystorePassword,
+                aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword, sslKeystore,
+                sslKeystorePassword, sslKeyPassword, useBuiltInRapPlugin);
     }
 
     public InformationModelListResponse sampleInformationModelListResponseSuccess() {
@@ -259,13 +279,13 @@ public abstract class AdministrationTests {
         return new ResourceListResponse(400, "Fail!", null);
     }
 
-    public Credentials sampleCredentials() throws Exception {
+    public Credentials sampleCredentials() {
 
         CoreUser user = sampleCoreUser(UserRole.PLATFORM_OWNER);
         return new Credentials(user.getValidUsername(), user.getValidPassword());
     }
 
-    public UserManagementRequest sampleUserManagementRequest(UserRole role) throws Exception {
+    public UserManagementRequest sampleUserManagementRequest(UserRole role) {
 
         return new UserManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
@@ -293,7 +313,7 @@ public abstract class AdministrationTests {
         ));
     }
 
-    public PlatformManagementRequest samplePlatformManagementRequest(OperationType operationType) throws Exception {
+    public PlatformManagementRequest samplePlatformManagementRequest(OperationType operationType) {
 
         return new PlatformManagementRequest(
                 new Credentials(AAMOwnerUsername, AAMOwnerPassword),
@@ -304,7 +324,7 @@ public abstract class AdministrationTests {
             );
     }
 
-    public PlatformManagementResponse samplePlatformManagementResponse(ManagementStatus status) throws Exception {
+    public PlatformManagementResponse samplePlatformManagementResponse(ManagementStatus status) {
 
         return new PlatformManagementResponse(
                 platformId,
@@ -328,7 +348,7 @@ public abstract class AdministrationTests {
     }
 
     public FederationRuleManagementRequest sampleFederationRuleManagementRequest(
-            FederationRuleManagementRequest.OperationType type) throws Exception {
+            FederationRuleManagementRequest.OperationType type) {
         return new FederationRuleManagementRequest(sampleCredentials(), federationRuleId, type);
     }
 
