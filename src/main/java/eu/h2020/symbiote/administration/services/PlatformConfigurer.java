@@ -227,7 +227,7 @@ public class PlatformConfigurer {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
                 "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(paamValidityMillis));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store=).*$",
-                "server.ssl.key-store=" + Matcher.quoteReplacement(sslKeystore));
+                "server.ssl.key-store=classpath:" + Matcher.quoteReplacement(sslKeystore));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store-password=).*$",
                 "server.ssl.key-store-password=" + Matcher.quoteReplacement(sslKeystorePassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-password=).*$",

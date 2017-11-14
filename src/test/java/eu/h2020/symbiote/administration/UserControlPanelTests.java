@@ -582,7 +582,7 @@ public class UserControlPanelTests extends AdministrationTests {
         assertTrue(zipFiles.get("aam/bootstrap.properties")
                 .contains("aam.deployment.token.validityMillis=" + paamValidityMillis));
         assertTrue(zipFiles.get("aam/bootstrap.properties")
-                .contains("server.ssl.key-store=" + sslKeystore));
+                .contains("server.ssl.key-store=classpath:" + sslKeystore));
         assertTrue(zipFiles.get("aam/bootstrap.properties")
                 .contains("server.ssl.key-store-password=" + sslKeystorePassword));
         assertTrue(zipFiles.get("aam/bootstrap.properties")
