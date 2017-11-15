@@ -84,6 +84,7 @@ public abstract class AdministrationTests {
     protected String sslKeystore = "ssl_keystore";
     protected String sslKeystorePassword = "ssl_keystore_pass";
     protected String sslKeyPassword = "ssl_key_pass";
+    protected Long tokenValidity = 100L;
     protected Boolean useBuiltInRapPlugin = true;
 
     public String serialize(Object o) throws Exception {
@@ -219,7 +220,7 @@ public abstract class AdministrationTests {
 
         return new PlatformConfigurationMessage(platformId, username, password, componentsKeystorePassword,
                 aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword, sslKeystore,
-                sslKeystorePassword, sslKeyPassword, useBuiltInRapPlugin);
+                sslKeystorePassword, sslKeyPassword, tokenValidity, useBuiltInRapPlugin);
     }
 
     public InformationModelListResponse sampleInformationModelListResponseSuccess() {

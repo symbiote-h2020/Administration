@@ -40,7 +40,7 @@ function Platform(id, name, description, interworkingServices, isEnabler) {
 function PlatformConfigurationMessage(platformId, platformOwnerUsername, platformOwnerPassword,
                                       componentsKeystorePassword, aamKeystoreName, aamKeystorePassword,
                                       aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword,
-                                      useBuiltInRapPlugin) {
+                                      tokenValidity, useBuiltInRapPlugin) {
     this.platformId = platformId;
     this.platformOwnerUsername = platformOwnerUsername;
     this.platformOwnerPassword = platformOwnerPassword;
@@ -51,6 +51,7 @@ function PlatformConfigurationMessage(platformId, platformOwnerUsername, platfor
     this.sslKeystore = sslKeystore;
     this.sslKeystorePassword = sslKeystorePassword;
     this.sslKeyPassword = sslKeyPassword;
+    this.tokenValidity = tokenValidity;
     this.useBuiltInRapPlugin = useBuiltInRapPlugin;
 }
 
@@ -659,9 +660,9 @@ $(document).ready(function () {
             $modal.find('.aam-keystore-name').val(), $modal.find('.aam-keystore-password').val(),
             $modal.find('.aam-private-key-password').val(), $modal.find('.ssl-keystore').val(),
             $modal.find('.ssl-keystore-password').val(), $modal.find('.ssl-key-password').val(),
+            $modal.find('.token-validity').val()?$modal.find('.token-validity').val():0,
             $modal.find('#built-in-plugin-' + platformId).val());
         xhr.send(JSON.stringify(message));
-
     });
 
     $(document).on('shown.bs.modal', '.platform-config-modal', function(e) {

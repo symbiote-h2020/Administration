@@ -65,11 +65,13 @@ public class PlatformConfigurer {
                 configurationMessage.getAamKeystoreName();
         String aamKeystorePassword = configurationMessage.getAamKeystorePassword().isEmpty() ?
                 "pass" : configurationMessage.getAamKeystorePassword();
-        String aamPrivateKeyPassword = configurationMessage.getAamPrivateKeyPassword().isEmpty() ?
-                "pass" : configurationMessage.getAamPrivateKeyPassword();
+        String aamPrivateKeyPassword = configurationMessage.getAamKeystorePassword().isEmpty() ?
+                "pass" : configurationMessage.getAamKeystorePassword(); // ToDo: Fix that to getAaaKeyPassword when jdk fix is published
         String sslKeystore = configurationMessage.getSslKeystore();
         String sslKeystorePassword = configurationMessage.getSslKeystorePassword();
         String sslKeyPassword = configurationMessage.getSslKeyPassword();
+        String tokenValidity = configurationMessage.getTokenValidity() == 0 ? paamValidityMillis.toString() :
+                configurationMessage.getTokenValidity().toString();
         Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
 
         // Create .zip output stream
@@ -90,7 +92,8 @@ public class PlatformConfigurer {
                 platformOwnerPassword, componentKeystorePassword);
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
-                aamKeystorePassword, aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword);
+                aamKeystorePassword, aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword,
+                tokenValidity);
         configurePlatformAAMCertificateKeyStoreFactory(zipOutputStream, platformId, platformOwnerUsernameInCore,
                 platformOwnerPasswordInCore, aamKeystoreName, aamKeystorePassword, this.coreInterfaceAddress);
 
@@ -99,7 +102,7 @@ public class PlatformConfigurer {
     }
 
     private void configureCloudConfigProperties(OwnedPlatformDetails platformDetails, ZipOutputStream zipOutputStream,
-                                               Boolean useBuiltInRapPlugin)
+                                                Boolean useBuiltInRapPlugin)
             throws Exception {
 
         // Loading application.properties
@@ -199,7 +202,8 @@ public class PlatformConfigurer {
     private void configureAAMProperties(ZipOutputStream zipOutputStream, String platformOwnerUsername,
                                         String platformOwnerPassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword,
-                                        String sslKeystore, String sslKeystorePassword, String sslKeyPassword)
+                                        String sslKeystore, String sslKeystorePassword, String sslKeyPassword,
+                                        String tokenValidity)
             throws Exception {
 
         // Loading AAM bootstrap.properties
@@ -225,7 +229,7 @@ public class PlatformConfigurer {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.PV_KEY_PASSWORD=).*$",
                 "aam.security.PV_KEY_PASSWORD=" + Matcher.quoteReplacement(aamPrivateKeyPassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
-                "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(paamValidityMillis));
+                "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(tokenValidity));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store=).*$",
                 "server.ssl.key-store=classpath:" + Matcher.quoteReplacement(sslKeystore));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store-password=).*$",

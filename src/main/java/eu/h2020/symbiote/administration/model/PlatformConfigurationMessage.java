@@ -7,43 +7,47 @@ public class PlatformConfigurationMessage {
 
     @NotNull
     @Size(min=4, max=30)
-    String platformId;
+    private String platformId;
 
     @NotNull
     @Size(min=1)
-    String platformOwnerUsername;
+    private String platformOwnerUsername;
 
     @NotNull
     @Size(min=1)
-    String platformOwnerPassword;
+    private String platformOwnerPassword;
 
     @NotNull
-    String componentsKeystorePassword;
+    private String componentsKeystorePassword;
 
     @NotNull
-    String aamKeystoreName;
+    private String aamKeystoreName;
 
     @NotNull
     @Size(max=7)
-    String aamKeystorePassword;
+    private String aamKeystorePassword;
 
-    @NotNull
-    String aamPrivateKeyPassword;
-
-    @NotNull
-    @Size(min=1)
-    String sslKeystore;
+    // @NotNull
+    private String aamPrivateKeyPassword;
 
     @NotNull
     @Size(min=1)
-    String sslKeystorePassword;
+    private String sslKeystore;
 
     @NotNull
     @Size(min=1)
-    String sslKeyPassword;
+    private String sslKeystorePassword;
 
     @NotNull
-    Boolean useBuiltInRapPlugin;
+    @Size(min=1)
+    private String sslKeyPassword;
+
+    @NotNull
+    private Long tokenValidity;
+
+    @NotNull
+    private Boolean useBuiltInRapPlugin;
+
 
     public PlatformConfigurationMessage() {
     }
@@ -51,7 +55,8 @@ public class PlatformConfigurationMessage {
     public PlatformConfigurationMessage(String platformId, String platformOwnerUsername, String platformOwnerPassword,
                                         String componentsKeystorePassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword, String sslKeystore,
-                                        String sslKeystorePassword, String sslKeyPassword, Boolean useBuiltInRapPlugin) {
+                                        String sslKeystorePassword, String sslKeyPassword, Long tokenValidity,
+                                        Boolean useBuiltInRapPlugin) {
         this.platformId = platformId;
         this.platformOwnerUsername = platformOwnerUsername;
         this.platformOwnerPassword = platformOwnerPassword;
@@ -62,8 +67,10 @@ public class PlatformConfigurationMessage {
         this.sslKeystore = sslKeystore;
         this.sslKeystorePassword = sslKeystorePassword;
         this.sslKeyPassword = sslKeyPassword;
+        this.tokenValidity = tokenValidity;
         this.useBuiltInRapPlugin = useBuiltInRapPlugin;
     }
+
 
     public String getPlatformId() {
         return platformId;
@@ -141,9 +148,14 @@ public class PlatformConfigurationMessage {
         this.sslKeyPassword = sslKeyPassword;
     }
 
+    public Long getTokenValidity() { return tokenValidity; }
+
+    public void setTokenValidity(Long tokenValidity) { this.tokenValidity = tokenValidity; }
+
     public Boolean getUseBuiltInRapPlugin() { return useBuiltInRapPlugin; }
 
     public void setUseBuiltInRapPlugin(Boolean useBuiltInRapPlugin) { this.useBuiltInRapPlugin = useBuiltInRapPlugin; }
+
 
     @Override
     public String toString() {
@@ -158,6 +170,7 @@ public class PlatformConfigurationMessage {
                 ", sslKeystore='" + sslKeystore + '\'' +
                 ", sslKeystorePassword='" + sslKeystorePassword + '\'' +
                 ", sslKeyPassword='" + sslKeyPassword + '\'' +
+                ", tokenValidity=" + tokenValidity +
                 ", useBuiltInRapPlugin=" + useBuiltInRapPlugin +
                 '}';
     }

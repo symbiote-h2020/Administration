@@ -178,7 +178,7 @@
                                                         <div class="col-sm-8 form-group has-feedback">
                                                             <input type="url" class="form-control platformRegField interworking-service-url"
                                                                    placeholder="Enter a valid https url" data-pattern-error="Please enter a valid https url"
-                                                                   data-error="Not valid url" required="required" data-required-error="A valid https url is required"
+                                                                   data-error="Not valid https url" required="required" data-required-error="A valid https url is required"
                                                                    pattern="^(https:\/\/www\.|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$"/>
                                                             <span class="glyphicon form-control-feedback sub-element" aria-hidden="true"></span>
                                                             <div class="help-block with-errors"></div>
@@ -371,31 +371,31 @@
 
                                                 <div class="row">
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>Platform Owner Username</label>
+                                                        <label>Platform Admin Username</label>
                                                         <input type="text" class="form-control paam-username"
                                                                placeholder="Mandatory Field" required="required"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The Platform Owner Username in your PAAM deployment</div>
+                                                        <div class="help-block with-errors">The Platform Owner Username in your Cloud deployment</div>
                                                     </div>
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>Platform Owner Password</label>
+                                                        <label>Platform Admin Password</label>
                                                         <input type="text" class="form-control paam-password"
                                                                required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The Platform Owner Password in your PAAM deployment</div>
+                                                        <div class="help-block with-errors">The Platform Owner Password in your Cloud deployment</div>
                                                     </div>
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>SSL Keystore File Name</label>
+                                                        <label>Host SSL Keystore File Name</label>
                                                         <input type="text" class="form-control ssl-keystore"
                                                                required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
                                                         <div class="help-block with-errors">The name of the keystore containing the letsencrypt
-                                                            (or other) certificate and key pair for your AAM host's SSL</div>
+                                                            (or other) certificate and key pair for your AAM host's SSL (including any suffixes e.g. .p12</div>
                                                     </div>
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>SSL Keystore Password</label>
+                                                        <label>Host SSL Keystore Password</label>
                                                         <input type="text" class="form-control ssl-keystore-password"
                                                                required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
@@ -404,7 +404,7 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>SSL Key Password</label>
+                                                        <label>Host SSL Key Password</label>
                                                         <input type="text" class="form-control ssl-key-password"
                                                                required="required" placeholder="Mandatory Field"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
@@ -440,13 +440,13 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-sm-6 form-group has-feedback">
-                                                        <label>AAM Private Key Password</label>
-                                                        <input type="text" class="form-control aam-private-key-password"
-                                                               placeholder="Optional"
-                                                               maxlength="7"/>
+                                                        <label>Token Validity in milliseconds</label>
+                                                        <input type="" class="form-control token-validity"
+                                                               pattern="^[0-9]+$" data-pattern-error="Only digits are permitted"
+                                                               placeholder="Optional"/>
                                                         <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
-                                                        <div class="help-block with-errors">The password to access the AAM private key. MUST NOT be longer than 7 chars<br/>
-                                                            <strong>Default:</strong> 'pass'</div>
+                                                        <div class="help-block with-errors">How long the tokens issued to your users (apps) are valid in ms. Think maybe of an hour, day, week?<br/>
+                                                            <strong>Default:</strong> 600000 (10 mins)</div>
                                                     </div>
                                                     <div class="col-sm-6 form-group">
                                                         <label>Use built-in RAP plugin</label>
@@ -458,6 +458,15 @@
                                                         <div class="help-block with-errors">Use built-in plugin provided by rap.<br/>
                                                             <strong>Default:</strong> No</div>
                                                     </div>
+                                                    <!--<div class="col-sm-6 form-group has-feedback">-->
+                                                        <!--<label>AAM Private Key Password</label>-->
+                                                        <!--<input type="text" class="form-control aam-private-key-password"-->
+                                                               <!--placeholder="Optional"-->
+                                                               <!--maxlength="7"/>-->
+                                                        <!--<span class="glyphicon form-control-feedback" aria-hidden="true"></span>-->
+                                                        <!--<div class="help-block with-errors">The password to access the AAM private key. MUST NOT be longer than 7 chars<br/>-->
+                                                            <!--<strong>Default:</strong> 'pass'</div>-->
+                                                    <!--</div>-->
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
