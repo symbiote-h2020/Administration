@@ -288,12 +288,15 @@ public class UserCpanel {
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
+        // Remove ending slashed from platformDetails interworking services
+        platformDetails.getInterworkingServices().get(0)
+                .setUrl(platformDetails.getInterworkingServices().get(0).getUrl().replaceFirst("/$", ""));
 
         // If form is valid, construct the PlatformManagementResponse to the AAM
         PlatformManagementRequest aamRequest = new PlatformManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword), new Credentials(user.getUsername(), password),
-                platformDetails.getInterworkingServices().get(0).getUrl(), platformDetails.getName(),
-                platformDetails.getId(), OperationType.CREATE);
+                platformDetails.getInterworkingServices().get(0).getUrl(),
+                platformDetails.getName(), platformDetails.getId(), OperationType.CREATE);
         try {
             PlatformManagementResponse aamResponse = rabbitManager.sendManagePlatformRequest(aamRequest);
             if(aamResponse != null) {
