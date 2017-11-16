@@ -290,7 +290,7 @@ public class UserCpanel {
 
         // Remove ending slashed from platformDetails interworking services
         platformDetails.getInterworkingServices().get(0)
-                .setUrl(platformDetails.getInterworkingServices().get(0).getUrl().replaceFirst("/$", ""));
+                .setUrl(platformDetails.getInterworkingServices().get(0).getUrl().replaceFirst("\\/+$", ""));
 
         // If form is valid, construct the PlatformManagementResponse to the AAM
         PlatformManagementRequest aamRequest = new PlatformManagementRequest(
