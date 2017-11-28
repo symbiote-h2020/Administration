@@ -1,32 +1,32 @@
 package eu.h2020.symbiote.administration.controllers;
 
 
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
+import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
+import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.util.Assert;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.validation.BindingResult;
-import org.springframework.ui.Model;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.validation.Valid;
-
-import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
-import eu.h2020.symbiote.security.communication.payloads.UserDetails;
-import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,20 +59,20 @@ public class Register {
     }
 
     // The CoreUser argument is needed so that the template can associate form attributes with a CoreUser
-	@GetMapping("/register")
+	@GetMapping("/administration/register")
 	public String coreUserRegisterForm(CoreUser coreUser, Model model) {
-		log.debug("GET request on /register");
+		log.debug("GET request on /administration/register");
 
 		model.addAttribute("allRoles", UserRoleValueTextMapping.getList());
 	    return "register";
 	}
 
-	@PostMapping("/register")
+	@PostMapping("/administration/register")
 	public String coreUserRegister(@Valid CoreUser coreUser, BindingResult bindingResult, Model model) {
 
-        log.debug("POST request on /register");
+        log.debug("POST request on /administration/register");
 
-        boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL)?true:false;
+        boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL);
 
 		if (bindingResult.hasErrors() || invalidUserRole) {
             model.addAllAttributes(getAllAttributes(coreUser, bindingResult));

@@ -90,10 +90,10 @@ public class AdminCpanel {
      * Gets the default view. If the user is a platform owner, tries to fetch their details.
      * Registry is first polled and, if the platform isn't activated there, AAM is polled for them.
      */
-    @GetMapping("/admin/cpanel")
+    @GetMapping("/administration/admin/cpanel")
     public String userCPanel(Model model, Principal principal) {
 
-        log.debug("GET request on /admin/cpanel");
+        log.debug("GET request on /administration/admin/cpanel");
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -105,10 +105,10 @@ public class AdminCpanel {
         return "admincontrolpanel";
     }
 
-    @PostMapping("/admin/cpanel/delete_platform_resources")
+    @PostMapping("/administration/admin/cpanel/delete_platform_resources")
     public ResponseEntity<?> deletePlatformResources(@RequestParam String platformId) {
 
-        log.debug("POST request on /admin/cpanel/delete_platform_resources for info model with id = " + platformId);
+        log.debug("POST request on /administration/admin/cpanel/delete_platform_resources for info model with id = " + platformId);
 
         // Ask Registry
         try {
@@ -133,10 +133,10 @@ public class AdminCpanel {
         return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
     }
 
-    @PostMapping("/admin/cpanel/delete_information_model")
+    @PostMapping("/administration/admin/cpanel/delete_information_model")
     public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete) {
 
-        log.debug("POST request on /admin/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
+        log.debug("POST request on /administration/admin/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
 
         // Get InformationModelList from Registry
         ResponseEntity<?> responseEntity = getInformationModels();
@@ -181,7 +181,7 @@ public class AdminCpanel {
 
     }
 
-    @PostMapping("/admin/cpanel/create_federation")
+    @PostMapping("/administration/admin/cpanel/create_federation")
     public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
                                               BindingResult bindingResult) {
 
@@ -255,10 +255,10 @@ public class AdminCpanel {
 
     }
 
-    @PostMapping("/admin/cpanel/list_federations")
+    @PostMapping("/administration/admin/cpanel/list_federations")
     public ResponseEntity<?> listFederations() {
 
-        log.debug("POST request on /user/cpanel/list_federations");
+        log.debug("POST request on /administration/user/cpanel/list_federations");
 
         Map<String, Object> responseBody = new HashMap<>();
 
@@ -296,10 +296,10 @@ public class AdminCpanel {
     }
 
 
-    @PostMapping("/admin/cpanel/delete_federation")
+    @PostMapping("/administration/admin/cpanel/delete_federation")
     public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete) {
 
-        log.debug("POST request on /user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+        log.debug("POST request on /administration/user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
 
         Map<String, Object> responseBody = new HashMap<>();
 

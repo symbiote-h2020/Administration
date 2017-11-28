@@ -4,12 +4,12 @@
 		<title>SymbIoTe Core</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 
-		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
-		<link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
-        <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="css/bootstrap-select.min.css" />
+		<link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
+		<link rel="stylesheet" th:href="@{/css/home.css}" href="../static/css/home.css" />
+        <link rel="stylesheet" th:href="@{/css/bootstrap-select.min.css}" href="../static/css/bootstrap-select.min.css" />
 
-        <script type="text/javascript" src="webjars/jquery/3.2.1/jquery.min.js"></script>
-        <script type="text/javascript" src="webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/webjars/jquery/3.2.1/jquery.min.js"></script>
+        <script type="text/javascript" src="/webjars/bootstrap/3.3.7-1/js/bootstrap.min.js"></script>
         <script type="text/javascript" th:src="@{/js/home.js}" src="js/home.js"></script>
         <script type="text/javascript" th:src="@{/js/bootstrap-select.min.js}" src="js/bootstrap-select.min.js"></script>
         <script>
@@ -23,7 +23,7 @@
 		<div class="header">
 			<img class="logo" th:src="@{/images/logo-1.1.png}" src="images/logo-1.1.png"></img>
 			<span class="title">Administration</span>
-			<a class="admin button" href="/admin/login">SymbIoTe Admin</a>
+			<a class="admin button" href="/administration/admin/login">SymbIoTe Admin</a>
 		</div>
 		<div class="content">
 			<div class="wrapper platform">
@@ -31,8 +31,8 @@
 				<div class="icon">
 					<img th:src="@{/images/suitcase.png}" src="images/suitcase.png"></img>
 				</div>
-				<a class="login button" href="/user/login">Sign In</a>
-				<a class="register button" href="/register">Register</a>
+				<a class="login button" href="/administration/user/login">Sign In</a>
+				<a class="register button" href="/administration/register">Register</a>
 			</div>
 		</div>
 		<div class="footer">

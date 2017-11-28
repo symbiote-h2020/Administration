@@ -91,7 +91,7 @@ $(document).on('click', '.del-platform-btn', function (e) {
 
 
     $.ajax({
-        url: "/user/cpanel/delete_platform",
+        url: "/administration/user/cpanel/delete_platform",
         type: "POST",
         data: {platformIdToDelete : platformIdToDelete},
         success: function() {
@@ -102,7 +102,7 @@ $(document).on('click', '.del-platform-btn', function (e) {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/user/login";
+                window.location.href = "/administration/user/login";
             } else {
                 var message = document.createElement('p');
                 message.innerHTML = xhr.responseText;
@@ -120,7 +120,7 @@ $(document).on('click', '.del-info-model-btn', function (e) {
 
 
     $.ajax({
-        url: "/user/cpanel/delete_information_model",
+        url: "/administration/user/cpanel/delete_information_model",
         type: "POST",
         data: {infoModelIdToDelete : infoModelIdToDelete},
         success: function() {
@@ -136,7 +136,7 @@ $(document).on('click', '.del-info-model-btn', function (e) {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/user/login";
+                window.location.href = "/administration/user/login";
             } else {
                 var message = document.createElement('p');
                 message.innerHTML = xhr.responseText;
@@ -205,7 +205,7 @@ function storeNecessaryPlatformElements() {
 function buildPlatformRegistrationForm() {
 
     $.ajax({
-        url: "/user/cpanel/list_all_info_models",
+        url: "/administration/user/cpanel/list_all_info_models",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
@@ -231,7 +231,7 @@ function buildPlatformRegistrationForm() {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/user/login";
+                window.location.href = "/administration/user/login";
             } else {
                 var message = document.createElement('p');
                 message.innerHTML = xhr.responseText;
@@ -247,7 +247,7 @@ function buildPlatformPanels() {
 
 
     $.ajax({
-        url: "/user/cpanel/list_user_platforms",
+        url: "/administration/user/cpanel/list_user_platforms",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
@@ -275,7 +275,7 @@ function buildPlatformPanels() {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/user/login";
+                window.location.href = "/administration/user/login";
             } else {
                 var message = document.createElement('p');
                 message.innerHTML = JSON.parse(xhr.responseText).message;
@@ -360,7 +360,7 @@ function buildInfoModelsPanels() {
     var $infoModelTab = $('#information-models');
 
     $.ajax({
-        url: "/user/cpanel/list_user_info_models",
+        url: "/administration/user/cpanel/list_user_info_models",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
@@ -373,7 +373,7 @@ function buildInfoModelsPanels() {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/user/login";
+                window.location.href = "/administration/user/login";
             } else {
                 var message = document.createElement('p');
                 message.innerHTML = xhr.responseText;
@@ -432,7 +432,7 @@ $(document).ready(function () {
 
         $.ajax({
             type : "POST",
-            url : "/user/cpanel/register_platform",
+            url : "/administration/user/cpanel/administration/register_platform",
             dataType: "json",
             contentType: "application/json",
             data : JSON.stringify(newPlatform),
@@ -453,7 +453,7 @@ $(document).ready(function () {
             },
             error : function(xhr) {
                 if (xhr.status === 405) {
-                    window.location.href = "/user/login";
+                    window.location.href = "/administration/user/login";
                 } else {
                     $('#platform-registration-modal-body').find('.alert-danger').hide();
                     var message = JSON.parse(xhr.responseText);
@@ -519,7 +519,7 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             enctype: 'multipart/form-data',
-            url: "/user/cpanel/register_information_model",
+            url: "/administration/user/cpanel/administration/register_information_model",
             data: data,
             //http://api.jquery.com/jQuery.ajax/
             //https://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects
@@ -599,7 +599,7 @@ $(document).ready(function () {
         var platformId = $modal.attr('id').split('platform-configuration-modal-').pop();
 
         var xhr = new XMLHttpRequest();
-        xhr.open('POST', "/user/cpanel/get_platform_config", true);
+        xhr.open('POST', "/administration/user/cpanel/get_platform_config", true);
         xhr.responseType = 'arraybuffer';
         xhr.onload = function () {
             if (this.status === 200) {

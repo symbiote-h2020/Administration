@@ -73,15 +73,15 @@ public class AdminControlPanelTests extends AdministrationTests {
     @Test
     public void getControlPanelDenied() throws Exception {
 
-        mockMvc.perform(get("/admin/cpanel"))
+        mockMvc.perform(get("/administration/admin/cpanel"))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("http://localhost/admin/login"));
+            .andExpect(redirectedUrl("http://localhost/administration/admin/login"));
     }
 
     @Test
     public void getControlPanelSuccess() throws Exception {
 
-        mockMvc.perform(get("/admin/cpanel")
+        mockMvc.perform(get("/administration/admin/cpanel")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER))) )
             .andExpect(status().isOk());
 
@@ -100,7 +100,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         doReturn(sampleFederationRuleManagementResponse()).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
 
-        mockMvc.perform(post("/admin/cpanel/create_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/create_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
@@ -110,7 +110,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // Not both platforms ids are present in AAM response
         request.setPlatform2Id(platformId + "3");
 
-        mockMvc.perform(post("/admin/cpanel/create_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/create_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
@@ -124,7 +124,7 @@ public class AdminControlPanelTests extends AdministrationTests {
 
         doReturn(responseWith2Rules).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/create_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/create_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
@@ -134,7 +134,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // AAM responds with null
         doReturn(null).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/create_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/create_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
@@ -144,7 +144,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // AAM throws CommunicationException
         doThrow(new CommunicationException("error")).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/create_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/create_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
@@ -156,7 +156,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         request.setPlatform1Id("a");
         request.setPlatform2Id("b");
 
-        mockMvc.perform(post("/admin/cpanel/create_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/create_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
@@ -177,7 +177,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // Successfully listing Federations
         doReturn(sampleFederationRuleManagementResponse()).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/list_federations")
+        mockMvc.perform(post("/administration/admin/cpanel/list_federations")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader()))
                 .andExpect(status().isOk())
@@ -187,7 +187,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // AAM responds with null
         doReturn(null).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/list_federations")
+        mockMvc.perform(post("/administration/admin/cpanel/list_federations")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader()))
                 .andExpect(status().isInternalServerError())
@@ -196,7 +196,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // AAM throws CommunicationException
         doThrow(new CommunicationException("error")).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/list_federations")
+        mockMvc.perform(post("/administration/admin/cpanel/list_federations")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader()))
                 .andExpect(status().isInternalServerError())
@@ -211,7 +211,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // Successfully deleted Federation
         doReturn(sampleFederationRuleManagementResponse()).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/delete_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/delete_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationIdToDelete", federationRuleId))
@@ -222,7 +222,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // AAM responds with null
         doReturn(null).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/delete_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/delete_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationIdToDelete", federationRuleId))
@@ -232,7 +232,7 @@ public class AdminControlPanelTests extends AdministrationTests {
         // AAM throws CommunicationException
         doThrow(new CommunicationException("error")).when(mockRabbitManager).sendFederationRuleManagementRequest(any());
 
-        mockMvc.perform(post("/admin/cpanel/delete_federation")
+        mockMvc.perform(post("/administration/admin/cpanel/delete_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationIdToDelete", federationRuleId))

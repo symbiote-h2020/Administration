@@ -82,10 +82,10 @@ public class UserCpanel {
      * Gets the default view. If the user is a platform owner, tries to fetch their details.
      * Registry is first polled and, if the platform isn't activated there, AAM is polled for them.
      */
-    @GetMapping("/user/cpanel")
+    @GetMapping("/administration/user/cpanel")
     public String userCPanel(Model model, Principal principal) {
 
-        log.debug("GET request on /user/cpanel");
+        log.debug("GET request on /administration/user/cpanel");
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -97,10 +97,10 @@ public class UserCpanel {
         return "usercontrolpanel";
     }
 
-    @PostMapping("/user/cpanel/list_user_platforms")
+    @PostMapping("/administration/user/cpanel/list_user_platforms")
     public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Principal principal) {
 
-        log.debug("POST request on /user/cpanel/list_user_platforms");
+        log.debug("POST request on /administration/user/cpanel/list_user_platforms");
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -204,11 +204,11 @@ public class UserCpanel {
         }
     }
 
-    @PostMapping("/user/cpanel/register_platform")
+    @PostMapping("/administration/user/cpanel/administration/register_platform")
     public ResponseEntity<?> registerPlatform(@Valid @RequestBody PlatformDetails platformDetails,
                                               BindingResult bindingResult, Principal principal) {
 
-        log.debug("POST request on /user/cpanel/register_platform");
+        log.debug("POST request on /administration/user/cpanel/administration/register_platform");
         boolean invalidInfoModel = false;
         List<String> validInfoModelIds = new ArrayList<>();
         Map<String, Object> responseBody = new HashMap<>();
@@ -394,10 +394,10 @@ public class UserCpanel {
     }
 
 
-    @PostMapping("/user/cpanel/delete_platform")
+    @PostMapping("/administration/user/cpanel/delete_platform")
     public ResponseEntity<?> deletePlatform(@RequestParam String platformIdToDelete, Principal principal) {
 
-        log.debug("POST request on /user/cpanel/delete_platform for platform with id: " +
+        log.debug("POST request on /administration/user/cpanel/delete_platform for platform with id: " +
                 platformIdToDelete);
 
         // Checking if the user owns the platform
@@ -467,12 +467,12 @@ public class UserCpanel {
     }
 
 
-    @PostMapping(value = "/user/cpanel/get_platform_config", produces="application/zip")
+    @PostMapping(value = "/administration/user/cpanel/get_platform_config", produces="application/zip")
     public void getPlatformConfig(@Valid @RequestBody PlatformConfigurationMessage configurationMessage,
                                   BindingResult bindingResult, Principal principal,
                                   HttpServletResponse response) throws Exception {
 
-        log.debug("POST request on /user/cpanel/get_platform_config: " + configurationMessage);
+        log.debug("POST request on /administration/user/cpanel/get_platform_config: " + configurationMessage);
 
         Map<String, Object> responseBody = new HashMap<>();
 
@@ -517,20 +517,20 @@ public class UserCpanel {
     }
 
 
-    @PostMapping("/user/cpanel/list_all_info_models")
+    @PostMapping("/administration/user/cpanel/list_all_info_models")
     public ResponseEntity<?> listAllInformationModels() {
 
-        log.debug("POST request on /user/cpanel/list_all_info_models");
+        log.debug("POST request on /administration/user/cpanel/list_all_info_models");
 
         // Get InformationModelList from Registry
         return getInformationModels();
 
     }
 
-    @PostMapping("/user/cpanel/list_user_info_models")
+    @PostMapping("/administration/user/cpanel/list_user_info_models")
     public ResponseEntity<?> listUserInformationModels(Principal principal) {
 
-        log.debug("POST request on /user/cpanel/list_user_info_models");
+        log.debug("POST request on /administration/user/cpanel/list_user_info_models");
 
         // Checking if the user owns the platform
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
@@ -551,13 +551,13 @@ public class UserCpanel {
         }
     }
 
-    @PostMapping("/user/cpanel/register_information_model")
+    @PostMapping("/administration/user/cpanel/administration/register_information_model")
     public ResponseEntity<?> registerInformationModel(@RequestParam("info-model-name") String name,
                                                       @RequestParam("info-model-uri") String uri,
                                                       @RequestParam("info-model-rdf") MultipartFile rdfFile,
                                                       Principal principal) {
 
-        log.debug("POST request on /user/cpanel/register_information_model");
+        log.debug("POST request on /administration/user/cpanel/administration/register_information_model");
 
         UrlValidator urlValidator = new UrlValidator();
 
@@ -628,11 +628,11 @@ public class UserCpanel {
     }
 
 
-    @PostMapping("/user/cpanel/delete_information_model")
+    @PostMapping("/administration/user/cpanel/delete_information_model")
     public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete,
                                                     Principal principal) {
 
-        log.debug("POST request on /user/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
+        log.debug("POST request on /administration/user/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
 
         // Checking if the user owns the information model
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;

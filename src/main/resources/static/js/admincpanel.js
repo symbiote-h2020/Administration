@@ -48,7 +48,7 @@ $(document).on('click', '.del-federation-btn', function (e) {
 
 
     $.ajax({
-        url: "/admin/cpanel/delete_federation",
+        url: "/administration/admin/cpanel/delete_federation",
         type: "POST",
         data: {federationIdToDelete : federationIdToDelete},
         success: function() {
@@ -61,7 +61,7 @@ $(document).on('click', '.del-federation-btn', function (e) {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/admin/login";
+                window.location.href = "/administration/admin/login";
             } else {
                 var message = document.createElement('p');
                 message.innerHTML = JSON.parse(xhr.responseText).error;
@@ -150,7 +150,7 @@ function buildFederationPanels() {
     var $federationListTab = $('#federation_list');
 
     $.ajax({
-        url: "/admin/cpanel/list_federations",
+        url: "/administration/admin/cpanel/list_federations",
         type: "POST",
         dataType: "json",
         contentType: "application/json",
@@ -163,7 +163,7 @@ function buildFederationPanels() {
         },
         error : function(xhr) {
             if (xhr.status === 405) {
-                window.location.href = "/admin/login";
+                window.location.href = "/administration/admin/login";
             }
             else {
                 var message = document.createElement('p');
@@ -213,7 +213,7 @@ $(document).ready(function () {
         var platformId = $('#admin-delete-platform-resources-input').val();
 
         $.ajax({
-            url: "/admin/cpanel/delete_platform_resources",
+            url: "/administration/admin/cpanel/delete_platform_resources",
             type: "POST",
             data: {platformId : platformId},
             success: function() {
@@ -221,7 +221,7 @@ $(document).ready(function () {
             },
             error : function(xhr) {
                 if (xhr.status === 405) {
-                    window.location.href = "/admin/login";
+                    window.location.href = "/administration/admin/login";
                 } else {
                     var message = document.createElement('p');
                     message.innerHTML = xhr.responseText;
@@ -236,7 +236,7 @@ $(document).ready(function () {
         var infoModelIdToDelete = $('#admin-delete-info-model-input').val();
 
         $.ajax({
-            url: "/admin/cpanel/delete_information_model",
+            url: "/administration/admin/cpanel/delete_information_model",
             type: "POST",
             data: {infoModelIdToDelete : infoModelIdToDelete},
             success: function() {
@@ -244,7 +244,7 @@ $(document).ready(function () {
             },
             error : function(xhr) {
                 if (xhr.status === 405) {
-                    window.location.href = "/admin/login";
+                    window.location.href = "/administration/admin/login";
                 } else {
                     var message = document.createElement('p');
                     message.innerHTML = xhr.responseText;
@@ -266,7 +266,7 @@ $(document).ready(function () {
 
         $.ajax({
             type : "POST",
-            url : "/admin/cpanel/create_federation",
+            url : "/administration/admin/cpanel/create_federation",
             dataType: "json",
             contentType: "application/json",
             data : JSON.stringify(newFederation),
@@ -286,7 +286,7 @@ $(document).ready(function () {
             },
             error : function(xhr) {
                 if (xhr.status === 405) {
-                    window.location.href = "/admin/login";
+                    window.location.href = "/administration/admin/login";
                 } else {
                     $('#federation-registration-modal-body').find('.alert-danger').hide();
                     var message = JSON.parse(xhr.responseText);

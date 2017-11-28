@@ -80,14 +80,14 @@
 //    @Test
 //    public void getRegisterPage() throws Exception {
 //
-//        mockMvc.perform(get("/register"))
+//        mockMvc.perform(get("/administration/register"))
 //            .andExpect(status().isOk());
 //    }
 //
 //    @Test
 //    public void postPlatformRegisterErrors() throws Exception {
 //
-//        mockMvc.perform(post("/register"))
+//        mockMvc.perform(post("/administration/register"))
 //            .andExpect(status().isOk())
 //            .andExpect(model().hasErrors());
 //    }
@@ -95,7 +95,7 @@
 //    @Test
 //    public void postPlatformRegisterUnreachable() throws Exception {
 //
-//        mockMvc.perform(post("/register")
+//        mockMvc.perform(post("/administration/register")
 //                .param("validUsername", username)
 //                .param("validPassword", password)
 //                .param("recoveryMail", mail)
@@ -109,7 +109,7 @@
 //
 //        when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
 //
-//        mockMvc.perform(post("/register")
+//        mockMvc.perform(post("/administration/register")
 //                .param("validUsername", username)
 //                .param("validPassword", password)
 //                .param("recoveryMail", mail)
@@ -121,16 +121,16 @@
 //    @Test
 //    public void getLoginPage() throws Exception {
 //
-//        mockMvc.perform(get("/user/login"))
+//        mockMvc.perform(get("/administration/user/login"))
 //            .andExpect(status().isOk());
 //    }
 //
 //    @Test
 //    public void getLoginPageAsUser() throws Exception {
 //
-//        mockMvc.perform(get("/user/login").with(authentication(sampleUserAuth(UserRole.USER))) )
+//        mockMvc.perform(get("/administration/user/login").with(authentication(sampleUserAuth(UserRole.USER))) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"));
+//            .andExpect(redirectedUrl("/administration/user/cpanel"));
 //    }
 //
 //    @Test
@@ -138,19 +138,19 @@
 //
 //        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
 //
-//        mockMvc.perform(post("/user/login")
+//        mockMvc.perform(post("/administration/user/login")
 //            .with(csrf().asHeader())
 //                .param("username", username)
 //                .param("password", password) )
 //            .andExpect(status().is3xxRedirection());
 //            // Todo: Fix it
-//        // .andExpect(redirectedUrl("/user/cpanel"));
+//        // .andExpect(redirectedUrl("/administration/user/cpanel"));
 //    }
 //
 //    @Test
 //    public void getLogoutPage() throws Exception {
 //
-//        mockMvc.perform(get("/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+//        mockMvc.perform(get("/administration/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 //            .andExpect(status().is3xxRedirection());
 //    }
 //
@@ -170,9 +170,9 @@
 //    @Test
 //    public void getControlPanelDenied() throws Exception {
 //
-//        mockMvc.perform(get("/user/cpanel"))
+//        mockMvc.perform(get("/administration/user/cpanel"))
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("http://localhost/user/login"));
+//            .andExpect(redirectedUrl("http://localhost/administration/user/login"));
 //    }
 //
 ////    @Test
@@ -181,7 +181,7 @@
 ////        when(mockRabbitManager.sendPlatformModificationRequest(any())).thenReturn(samplePlatformResponseSuccess());
 ////        when(mockRabbitManager.sendDetailsRequest(any())).thenReturn(sampleOwnerDetails());
 ////
-////        mockMvc.perform(get("/user/cpanel")
+////        mockMvc.perform(get("/administration/user/cpanel")
 ////                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 ////            .andExpect(status().isOk());
 ////            // .andExpect(model().attributeExists("user"))
@@ -194,7 +194,7 @@
 ////        when(mockRabbitManager.sendPlatformModificationRequest(any())).thenReturn(samplePlatformResponseFail());
 ////        when(mockRabbitManager.sendDetailsRequest(any())).thenReturn(sampleOwnerDetails());
 ////
-////        mockMvc.perform(get("/user/cpanel")
+////        mockMvc.perform(get("/administration/user/cpanel")
 ////                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 ////            .andExpect(status().isOk())
 ////            .andExpect(model().attributeExists("user"))
@@ -204,7 +204,7 @@
 //    @Test
 //    public void getControlPanelAsUserCommunicationError() throws Exception {
 //
-//        mockMvc.perform( get("/user/cpanel").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+//        mockMvc.perform( get("/administration/user/cpanel").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
 //            .andExpect(model().attribute("user", hasProperty("state", is(0))) );
 //    }
 //
@@ -213,12 +213,12 @@
 //    @Test
 //    public void postActivatePlatformWithErrors() throws Exception {
 //
-//        mockMvc.perform( post("/user/cpanel/register_platform")
+//        mockMvc.perform( post("/administration/user/cpanel/administration/register_platform")
 //                .param("description", "ER")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("page", "activate") )
 //            .andExpect(flash().attribute("error_description", "Size must be between 3 and 300") );
 //    }
@@ -226,11 +226,11 @@
 //    @Test
 //    public void postActivatePlatformTimeout() throws Exception {
 //
-//        mockMvc.perform( post("/user/cpanel/register_platform")
+//        mockMvc.perform( post("/administration/user/cpanel/administration/register_platform")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("error", "Error During Activation!") );
 //    }
 //
@@ -239,13 +239,13 @@
 //
 //        when(mockRabbitManager.sendPlatformCreationRequest(any())).thenReturn(samplePlatformResponseSuccess());
 //
-//        mockMvc.perform( post("/user/cpanel/register_platform")
+//        mockMvc.perform( post("/administration/user/cpanel/administration/register_platform")
 //                .param("description", description)
 //                .param("informationModelId", informationModelId)
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("error", nullValue() ) )
 //            .andExpect(flash().attribute("error_description", nullValue() ) )
 //            .andExpect(flash().attribute("error_informationModelId", nullValue() ) );
@@ -255,12 +255,12 @@
 //    @Test
 //    public void postModifyPlatformWithErrors() throws Exception {
 //
-//        mockMvc.perform( post("/user/cpanel/modify")
+//        mockMvc.perform( post("/administration/user/cpanel/modify")
 //                .param("description", "ER")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("page", "modify") )
 //            .andExpect(flash().attribute("error_description", "Size must be between 3 and 300") );
 //    }
@@ -268,11 +268,11 @@
 //    @Test
 //    public void postModifyPlatformTimeout() throws Exception {
 //
-//        mockMvc.perform( post("/user/cpanel/modify")
+//        mockMvc.perform( post("/administration/user/cpanel/modify")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("error", "Error During Activation!") );
 //    }
 //
@@ -281,12 +281,12 @@
 //
 //        when(mockRabbitManager.sendPlatformModificationRequest(any())).thenReturn(samplePlatformResponseSuccess());
 //
-//        mockMvc.perform( post("/user/cpanel/modify")
+//        mockMvc.perform( post("/administration/user/cpanel/modify")
 //                .param("description", "Modified Description")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("error", nullValue() ) )
 //            .andExpect(flash().attribute("error_description", nullValue() ) );
 //    }
@@ -294,11 +294,11 @@
 //    @Test
 //    public void postDisablePlatformTimeout() throws Exception {
 //
-//        mockMvc.perform( post("/user/cpanel/disable")
+//        mockMvc.perform( post("/administration/user/cpanel/disable")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("error", "Registry is unreachable!") );
 //    }
 //
@@ -307,12 +307,12 @@
 //
 //        when(mockRabbitManager.sendPlatformRemovalRequest(any())).thenReturn(samplePlatformResponseSuccess());
 //
-//        mockMvc.perform( post("/user/cpanel/disable")
+//        mockMvc.perform( post("/administration/user/cpanel/disable")
 //                .param("description", "Modified Description")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
-//            .andExpect(redirectedUrl("/user/cpanel"))
+//            .andExpect(redirectedUrl("/administration/user/cpanel"))
 //            .andExpect(flash().attribute("error", nullValue() ) );
 //    }
 //}

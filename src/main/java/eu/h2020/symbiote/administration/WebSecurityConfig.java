@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
  * During login, CustomAuthenticationProvider is used
  *
  * @author Tilemachos Pechlivanoglou (ICOM)
+ * @author Vasileios Glykantzis (ICOM)
  */
 @Configuration
 @EnableWebSecurity
@@ -38,25 +39,25 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http
-                .antMatcher("/user/**")
+                .antMatcher("/administration/user/**")
                 .authorizeRequests()
                     .anyRequest().authenticated()
                     .and()
                 .formLogin()
-                    .loginPage("/user/login")
-                    .defaultSuccessUrl("/user/cpanel")
+                    .loginPage("/administration/user/login")
+                    .defaultSuccessUrl("/administration/user/cpanel")
                     .permitAll()
                     .and()
                 .logout()
-                    .logoutUrl("/")
-                    .logoutSuccessUrl("/")
+                    .logoutUrl("/administration")
+                    .logoutSuccessUrl("/administration")
                     .permitAll()
                     .and()
                 .exceptionHandling()
-                    .accessDeniedPage("/denied")
+                    .accessDeniedPage("/administration/denied")
                     .and()
                 .sessionManagement()
-                    .invalidSessionUrl("/user/login");
+                    .invalidSessionUrl("/administration/user/login");
         }
     }
 
@@ -66,25 +67,25 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http
-                .antMatcher("/admin/**")
+                .antMatcher("/administration/admin/**")
                 .authorizeRequests()
                     .anyRequest().hasRole("ADMIN")
                     .and()
                 .formLogin()
-                    .loginPage("/admin/login")
-                    .defaultSuccessUrl("/admin/cpanel")
+                    .loginPage("/administration/admin/login")
+                    .defaultSuccessUrl("/administration/admin/cpanel")
                     .permitAll()
                     .and()
                 .logout()
-                    .logoutUrl("/admin/logout")
-                    .logoutSuccessUrl("/")
+                    .logoutUrl("/administration/admin/logout")
+                    .logoutSuccessUrl("/administration")
                     .permitAll()
                     .and()
                 .exceptionHandling()
-                    .accessDeniedPage("/denied")
+                    .accessDeniedPage("/administration/denied")
                     .and()
                 .sessionManagement()
-                    .invalidSessionUrl("/admin/login");
+                    .invalidSessionUrl("/administration/admin/login");
         }
     }
 }

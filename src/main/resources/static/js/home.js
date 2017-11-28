@@ -4,18 +4,18 @@ $(document).ready( function() {
 
 	$(".admin.button" ).click(function(e) {
 
-		getPopup( "/admin/login" );
+		getPopup( "/administration/admin/login" );
 		e.preventDefault();
 	});
 
 	$(".app .login.button" ).click(function(e) {
 
-		getPopup( "/user/login" );
+		getPopup( "/administration/user/login" );
 		e.preventDefault();
 	});
 	$(".platform .login.button").click(function(e) {
 
-		getPopup( "/user/login" );
+		getPopup( "/administration/user/login" );
 		e.preventDefault();
 	});
 
@@ -62,14 +62,14 @@ $(document).ready( function() {
 	}
 
 
-	// Handle login/register form submission
+	// Handle login/administration/register form submission
 
 	function handlePopupForm() {
 
 
 		$(".popup .login.btn").click(function(e) {
 
-			getPopup("/user/login");
+			getPopup("/administration/user/login");
 			e.preventDefault();
 		});
 

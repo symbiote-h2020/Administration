@@ -4,21 +4,22 @@
 	<head>
 		<title>Sign In</title>
 
-		<link rel='stylesheet' href='webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
-		<link rel="stylesheet" th:href="@{/css/home.css}" href="css/home.css" />
+		<link rel='stylesheet' href='/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
+		<link rel="stylesheet" th:href="@{/css/home.css}" href="../static/css/home.css" />
 	</head>
 	<body>
 		<div class="popup" style="margin-top:113px;">
 			<div class="popupContent success">
 				<div class="title">Registration Successful!</div>
 
-				<div class="alert alert-warning">Please login with your new account.</div>
+				<div class="alert alert-warning">Pleas
+					e login with your new account.</div>
 
 				<div class="form-group">
 					<!-- Button -->
 
 					<div class="col-sm-12 controls">
-						<a href="/user/login" class="btn btn-success login">Login</a>
+						<a href="/administration/user/login" class="btn btn-success login">Login</a>
 					</div>
 				</div>
 			</div>

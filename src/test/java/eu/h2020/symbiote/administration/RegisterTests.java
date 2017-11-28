@@ -64,7 +64,7 @@ public class RegisterTests extends AdministrationTests {
     @Test
     public void getHomePage() throws Exception {
 
-        mockMvc.perform(get("/"))
+        mockMvc.perform(get("/administration"))
             .andExpect(status().isOk());
             // .andDo(MockMvcResultHandlers.print());
     }
@@ -72,7 +72,7 @@ public class RegisterTests extends AdministrationTests {
     @Test
     public void getRegisterPage() throws Exception {
 
-        mockMvc.perform(get("/register"))
+        mockMvc.perform(get("/administration/register"))
             .andExpect(status().isOk());
     }
 
@@ -80,7 +80,7 @@ public class RegisterTests extends AdministrationTests {
     public void postRegisterErrors() throws Exception {
 
         // Everything is NULL
-        mockMvc.perform(post("/register"))
+        mockMvc.perform(post("/administration/register"))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeHasFieldErrorCode("coreUser", "validUsername", "NotNull"))
                 .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "NotNull"))
@@ -89,7 +89,7 @@ public class RegisterTests extends AdministrationTests {
 
 
         // Username and password are only 3 characters
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", "val")
                 .param("validPassword", "val")
                 .param("recoveryMail", mail)
@@ -99,7 +99,7 @@ public class RegisterTests extends AdministrationTests {
                 .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "Size"));
 
         // Username and password are 31 characters
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("validPassword", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("recoveryMail", mail)
@@ -109,7 +109,7 @@ public class RegisterTests extends AdministrationTests {
                 .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "Size"));
 
         // Wrong role
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
@@ -118,7 +118,7 @@ public class RegisterTests extends AdministrationTests {
                 .andExpect(model().attributeHasFieldErrorCode("coreUser", "role", "typeMismatch"));
 
         // NULL role
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
@@ -130,7 +130,7 @@ public class RegisterTests extends AdministrationTests {
     @Test
     public void postRegisterUnreachable() throws Exception {
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
@@ -144,7 +144,7 @@ public class RegisterTests extends AdministrationTests {
 
         when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
@@ -158,7 +158,7 @@ public class RegisterTests extends AdministrationTests {
 
         when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.USERNAME_EXISTS);
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
@@ -172,7 +172,7 @@ public class RegisterTests extends AdministrationTests {
 
         when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.ERROR);
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
@@ -186,7 +186,7 @@ public class RegisterTests extends AdministrationTests {
 
         when(mockRabbitManager.sendUserManagementRequest(any())).thenThrow(sampleCommunicationException());
 
-        mockMvc.perform(post("/register")
+        mockMvc.perform(post("/administration/register")
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)

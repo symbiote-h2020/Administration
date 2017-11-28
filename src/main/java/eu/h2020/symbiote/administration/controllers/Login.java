@@ -24,7 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 public class Login {
     private static Log log = LogFactory.getLog(Login.class);
 
-	@GetMapping("/user/login")
+	@GetMapping("/administration/user/login")
 	public String userLogin() {
 
 	    log.debug("A user tries to login");
@@ -37,19 +37,19 @@ public class Login {
 			log.debug("User authorities = " + auth.getAuthorities());
 
 			if (auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"))) {
-				log.debug("Redirecting to /admin/cpanel");
-				return "redirect:/admin/cpanel";
+				log.debug("Redirecting to /administration/admin/cpanel");
+				return "redirect:/administration/admin/cpanel";
 			}
 			else {
-				log.debug("Redirecting to /user/cpanel");
-				return "redirect:/user/cpanel";
+				log.debug("Redirecting to /administration/user/cpanel");
+				return "redirect:/administration/user/cpanel";
 			}
 		} else {
 			return "login";
 		}
 	}
 
-	@GetMapping("/admin/login")
+	@GetMapping("/administration/admin/login")
 	public String adminLogin() {
 
         log.debug("An admin tries to login");
@@ -58,28 +58,28 @@ public class Login {
 
 		if (!(auth instanceof AnonymousAuthenticationToken)) {
 			log.debug("User is already logged in");
-			log.debug("Redirecting to /admin/cpanel");
-			return "redirect:/admin/cpanel";
+			log.debug("Redirecting to /administration/admin/cpanel");
+			return "redirect:/administration/admin/cpanel";
 		} else {
 			return "login";
 		}
 	}
 
-    @GetMapping("/user/logout")
+    @GetMapping("/administration/user/logout")
     public String userLogout(HttpServletRequest request, HttpServletResponse response) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null){
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
-        return "redirect:/";
+        return "redirect:/administration";
     }
 
-    @GetMapping("/admin/logout")
+    @GetMapping("/administration/admin/logout")
     public String adminLogout(HttpServletRequest request, HttpServletResponse response) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null){
             new SecurityContextLogoutHandler().logout(request, response, auth);
         }
-        return "redirect:/";
+        return "redirect:/administration";
     }
 }

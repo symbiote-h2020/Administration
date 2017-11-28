@@ -72,16 +72,16 @@ public class LoginTests extends AdministrationTests {
     @Test
     public void getLoginPage() throws Exception {
 
-        mockMvc.perform(get("/user/login"))
+        mockMvc.perform(get("/administration/user/login"))
             .andExpect(status().isOk());
     }
 
     @Test
     public void getLoginPageAsUser() throws Exception {
 
-        mockMvc.perform(get("/user/login").with(authentication(sampleUserAuth(UserRole.USER))) )
+        mockMvc.perform(get("/administration/user/login").with(authentication(sampleUserAuth(UserRole.USER))) )
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/user/cpanel"));
+            .andExpect(redirectedUrl("/administration/user/cpanel"));
     }
 
     @Test
@@ -89,34 +89,34 @@ public class LoginTests extends AdministrationTests {
 
         when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
 
-        mockMvc.perform(post("/user/login")
+        mockMvc.perform(post("/administration/user/login")
             .with(csrf().asHeader())
                 .param("username", username)
                 .param("password", password) )
             .andExpect(status().is3xxRedirection());
             // Todo: Fix it
-        // .andExpect(redirectedUrl("/user/cpanel"));
+        // .andExpect(redirectedUrl("/administration/user/cpanel"));
     }
 
     @Test
     public void getLogoutPage() throws Exception {
 
-        mockMvc.perform(get("/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+        mockMvc.perform(get("/administration/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
             .andExpect(status().is3xxRedirection());
     }
 
     @Test
     public void getDeniedPage() throws Exception {
 
-        mockMvc.perform(get("/denied"))
+        mockMvc.perform(get("/administration/denied"))
             .andExpect(status().isOk());
     }
 
     @Test
     public void getControlPanelDenied() throws Exception {
 
-        mockMvc.perform(get("/user/cpanel"))
+        mockMvc.perform(get("/administration/user/cpanel"))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("http://localhost/user/login"));
+            .andExpect(redirectedUrl("http://localhost/administration/user/login"));
     }
 }
