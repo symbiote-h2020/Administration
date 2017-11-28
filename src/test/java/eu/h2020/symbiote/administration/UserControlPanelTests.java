@@ -547,6 +547,14 @@ public class UserControlPanelTests extends AdministrationTests {
                 .contains("symbIoTe.component.password=" + password));
         assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
                 .contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("symbIoTe.core.interface.url=" + coreInterfaceAddress));
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("symbIoTe.localaam.url=" + platformUrl + "/paam"));
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("platform.id=" + platformId));
+        assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")
+                .contains("symbIoTe.interworking.interface.url=" + platformUrl));
 
         // Checking bootstrap.properties of RAP
         assertTrue(zipFiles.get("rap/bootstrap.properties")
@@ -555,6 +563,14 @@ public class UserControlPanelTests extends AdministrationTests {
                 .contains("symbIoTe.component.password=" + password));
         assertTrue(zipFiles.get("rap/bootstrap.properties")
                 .contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("symbIoTe.core.interface.url=" + coreInterfaceAddress));
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("symbIoTe.localaam.url=" + platformUrl + "/paam"));
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("platform.id=" + platformId));
+        assertTrue(zipFiles.get("rap/bootstrap.properties")
+                .contains("symbiote.notification.url=" + cloudCoreInterfaceAddress + "/accessNotifications"));
 
         // Checking bootstrap.properties of Monitoring
         assertTrue(zipFiles.get("monitoring/bootstrap.properties")
@@ -563,6 +579,14 @@ public class UserControlPanelTests extends AdministrationTests {
                 .contains("symbIoTe.component.password=" + password));
         assertTrue(zipFiles.get("monitoring/bootstrap.properties")
                 .contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("symbIoTe.core.interface.url=" + coreInterfaceAddress));
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("symbIoTe.localaam.url=" + platformUrl + "/paam"));
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("platform.id=" + platformId));
+        assertTrue(zipFiles.get("monitoring/bootstrap.properties")
+                .contains("symbIoTe.interworking.interface.url=" + platformUrl));
 
         // Checking bootstrap.properties of AAM
         assertTrue(zipFiles.get("aam/bootstrap.properties")

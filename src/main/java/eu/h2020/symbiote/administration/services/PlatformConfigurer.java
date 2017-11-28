@@ -85,11 +85,11 @@ public class PlatformConfigurer {
         configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
         configureNginx(zipOutputStream);
         configureComponentProperties(zipOutputStream, "registrationHandler", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
         configureComponentProperties(zipOutputStream, "rap", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
         configureComponentProperties(zipOutputStream, "monitoring", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
                 aamKeystorePassword, aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword,
@@ -174,7 +174,8 @@ public class PlatformConfigurer {
 
     private void configureComponentProperties(ZipOutputStream zipOutputStream, String componentFolder,
                                               String platformOwnerUsername, String platformOwnerPassword,
-                                              String keystorePassword) throws Exception {
+                                              String keystorePassword, String platformId,
+                                              OwnedPlatformDetails platformDetails) throws Exception {
 
         // Loading component properties
         InputStream bootstrapPropertiesAsStream = resourceLoader
@@ -190,6 +191,18 @@ public class PlatformConfigurer {
                 "symbIoTe.component.password=" + Matcher.quoteReplacement(platformOwnerPassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.keystore.password=).*$",
                 "symbIoTe.component.keystore.password=" + Matcher.quoteReplacement(keystorePassword));
+
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.core.interface.url=).*$",
+                "symbIoTe.core.interface.url=" + Matcher.quoteReplacement(this.coreInterfaceAddress));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.localaam.url=).*$",
+                "symbIoTe.localaam.url=" + Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()) +
+                        "/paam");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(platform.id=).*$",
+                "platform.id=" + Matcher.quoteReplacement(platformId));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbiote.notification.url=).*$",
+                "symbiote.notification.url=" + Matcher.quoteReplacement(this.cloudCoreInterfaceAddress) + "/accessNotifications");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.interworking.interface.url=).*$",
+                "symbIoTe.interworking.interface.url=" + Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry(componentFolder + "/bootstrap.properties"));
