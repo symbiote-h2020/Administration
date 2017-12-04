@@ -539,6 +539,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Checking nginx.conf
         assertTrue(zipFiles.get("nginx.conf").contains("proxy_pass  " + coreInterfaceAddress + "/;"));
         assertTrue(zipFiles.get("nginx.conf").contains("proxy_pass  " + cloudCoreInterfaceAddress + "/;"));
+        assertTrue(zipFiles.get("nginx.conf").contains("listen " + platformPort + " ssl"));
 
         // Checking bootstrap.properties of Registration Handler
         assertTrue(zipFiles.get("registrationHandler/bootstrap.properties")

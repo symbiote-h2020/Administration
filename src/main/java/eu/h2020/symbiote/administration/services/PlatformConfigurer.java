@@ -4,6 +4,8 @@ import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +21,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
 public class PlatformConfigurer {
+
+    private static Log log = LogFactory.getLog(PlatformConfigurer.class);
 
     private ResourceLoader resourceLoader;
     private String coreInterfaceAddress;
@@ -49,9 +54,9 @@ public class PlatformConfigurer {
 
 
     public void returnPlatformConfiguration(HttpServletResponse response,
-                                         CoreUser user,
-                                         OwnedPlatformDetails platformDetails,
-                                         PlatformConfigurationMessage configurationMessage) throws Exception {
+                                            CoreUser user,
+                                            OwnedPlatformDetails platformDetails,
+                                            PlatformConfigurationMessage configurationMessage) throws Exception {
 
         String platformId = configurationMessage.getPlatformId();
         String platformOwnerUsername = configurationMessage.getPlatformOwnerUsername();
@@ -83,7 +88,7 @@ public class PlatformConfigurer {
         response.addHeader("Content-Type", "application/zip");
 
         configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
-        configureNginx(zipOutputStream);
+        configureNginx(zipOutputStream, platformDetails);
         configureComponentProperties(zipOutputStream, "registrationHandler", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
         configureComponentProperties(zipOutputStream, "rap", platformOwnerUsername,
@@ -149,13 +154,26 @@ public class PlatformConfigurer {
     }
 
 
-    private void configureNginx(ZipOutputStream zipOutputStream) throws Exception {
+    private void configureNginx(ZipOutputStream zipOutputStream, OwnedPlatformDetails platformDetails)
+            throws Exception {
 
         // Loading nginx.conf
         InputStream nginxConfAsStream = resourceLoader
                 .getResource("classpath:files/nginx.conf").getInputStream();
         String nginxConf = new BufferedReader(new InputStreamReader(nginxConfAsStream))
                 .lines().collect(Collectors.joining("\n"));
+
+        Pattern p = Pattern.compile(":(\\d)+(\\/)?");   // the pattern to search for
+        Matcher m = p.matcher(platformDetails.getPlatformInterworkingInterfaceAddress());
+
+        // if we find a match, get the group
+        if (m.find()) {
+            // we are only looking for the first occurrence
+            String platformPort = m.group(0).replaceAll(":", "").replaceAll("/", "");
+            log.debug("The platform used the port: " + m.group(0));
+            nginxConf = nginxConf.replaceFirst("(?m)^.*(listen 443 ssl;).*$",
+                    "        listen " + platformPort + " ssl;  ## HTTPS");
+        }
 
         // Modify the nginx.conf file accordingly
         // AMQP Configuration

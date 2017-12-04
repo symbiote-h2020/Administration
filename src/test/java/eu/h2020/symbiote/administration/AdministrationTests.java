@@ -62,8 +62,9 @@ public abstract class AdministrationTests {
     protected String mail = "test@mail.com";
 
     protected String platformId = "test1Plat";
+    protected String platformPort = "8102";
     protected String platformName = "Test Platform 1";
-    protected String platformUrl = "https://platform.test";
+    protected String platformUrl = "https://platform.test:" + platformPort + "/paam";
     protected String platformDescription = "This is a test platform.";
 
     protected String informationModelId = "model_id";
