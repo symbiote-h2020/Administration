@@ -5,6 +5,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <!--<meta name="_csrf" content="_csrf.token"/>-->
+    <!--<meta name="_csrf_header" content="_csrf.headerName"/>-->
 
     <link rel='stylesheet' href='/administration/webjars/bootstrap/3.3.7-1/css/bootstrap.min.css'/>
     <link rel="stylesheet" th:href="@{/administration/css/cpanel.css}" href="../static/css/cpanel.css" />
@@ -37,7 +39,7 @@
         <div class="btn-group logout">
 
             <button class="btn top" th:text="${user.username}">Username</button>
-            <button data-toggle="dropdown" class="btn dropdown-toggle">
+            <button data-toggle="dropdown" mainclass="btn dropdown-toggle">
                 <span class="caret"></span>
             </button>
             <ul class="dropdown-menu dropdown-menu-right">

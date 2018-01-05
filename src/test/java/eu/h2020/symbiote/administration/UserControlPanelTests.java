@@ -210,7 +210,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Could not get Information modes from Registry
         doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -226,7 +226,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
                 .sendPlatformCreationRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -239,7 +239,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
                 .sendPlatformCreationRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -252,7 +252,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(null).when(mockRabbitManager)
                 .sendPlatformCreationRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -265,7 +265,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doThrow(new CommunicationException("error")).when(mockRabbitManager)
                 .sendPlatformCreationRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -278,7 +278,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(samplePlatformManagementResponse(ManagementStatus.PLATFORM_EXISTS)).when(mockRabbitManager)
                 .sendManagePlatformRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -291,7 +291,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(mockRabbitManager)
                 .sendManagePlatformRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -304,7 +304,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(null).when(mockRabbitManager)
                 .sendManagePlatformRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -317,7 +317,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doThrow(new CommunicationException("error")).when(mockRabbitManager)
                 .sendManagePlatformRequest(any());
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -338,7 +338,7 @@ public class UserControlPanelTests extends AdministrationTests {
         doReturn(informationModelListResponse).when(mockRabbitManager)
                 .sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(platformDetails)))
@@ -681,7 +681,7 @@ public class UserControlPanelTests extends AdministrationTests {
         MockMultipartFile invalidFile = new MockMultipartFile("info-model-rdf", "mock.ff",
                 "text/plain", "dummy content".getBytes());
 
-        mockMvc.perform(fileUpload("/administration/user/cpanel/administration/register_information_model")
+        mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(invalidFile)
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
@@ -700,7 +700,7 @@ public class UserControlPanelTests extends AdministrationTests {
         MockMultipartFile validFile = new MockMultipartFile("info-model-rdf", "mock.ttl",
                 "text/plain", informationModelRdf.getBytes());
 
-        mockMvc.perform(fileUpload("/administration/user/cpanel/administration/register_information_model")
+        mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
@@ -711,7 +711,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Registry returns error
         doReturn(sampleInformationModelResponseFail()).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
 
-        mockMvc.perform(fileUpload("/administration/user/cpanel/administration/register_information_model")
+        mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
@@ -722,7 +722,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Registry returns null
         doReturn(null).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
 
-        mockMvc.perform(fileUpload("/administration/user/cpanel/administration/register_information_model")
+        mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
@@ -733,7 +733,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Registry returns null
         doThrow(new CommunicationException("error")).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
 
-        mockMvc.perform(fileUpload("/administration/user/cpanel/administration/register_information_model")
+        mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
@@ -818,7 +818,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Failed response
         doReturn(sampleInformationModelListResponseFail()).when(mockRabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -829,7 +829,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Registry returns null
         doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
@@ -839,7 +839,7 @@ public class UserControlPanelTests extends AdministrationTests {
         // Registry throws CommunicationException
         doThrow(new CommunicationException("error")).when(mockRabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/administration/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))

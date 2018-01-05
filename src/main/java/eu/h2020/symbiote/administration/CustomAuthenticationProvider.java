@@ -60,8 +60,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) 
       throws AuthenticationException {
-  
 
+        log.debug("A user tries to login");
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
 
@@ -117,7 +117,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             } else
                 throw new AAMProblemException();
         } catch(CommunicationException e){
-            log.debug(e.getMessage());
+            log.info(e.getMessage());
         }
         return null;
     }

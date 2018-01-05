@@ -432,7 +432,7 @@ $(document).ready(function () {
 
         $.ajax({
             type : "POST",
-            url : "/administration/user/cpanel/administration/register_platform",
+            url : "/administration/user/cpanel/register_platform",
             dataType: "json",
             contentType: "application/json",
             data : JSON.stringify(newPlatform),
@@ -519,7 +519,7 @@ $(document).ready(function () {
         $.ajax({
             type: "POST",
             enctype: 'multipart/form-data',
-            url: "/administration/user/cpanel/administration/register_information_model",
+            url: "/administration/user/cpanel/register_information_model",
             data: data,
             //http://api.jquery.com/jQuery.ajax/
             //https://developer.mozilla.org/en-US/docs/Web/API/FormData/Using_FormData_Objects

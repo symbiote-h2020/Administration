@@ -1,12 +1,19 @@
 package eu.h2020.symbiote.administration;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 
 /**
@@ -39,6 +46,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http
+                .cors().and()
                 .antMatcher("/administration/user/**")
                 .authorizeRequests()
                     .anyRequest().authenticated()
@@ -57,7 +65,10 @@ public class WebSecurityConfig {
                     .accessDeniedPage("/administration/denied")
                     .and()
                 .sessionManagement()
-                    .invalidSessionUrl("/administration/user/login");
+                    .invalidSessionUrl("/administration/user/login")
+                    .and()
+                .csrf()
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
         }
     }
 
@@ -67,6 +78,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http
+                 .cors().and()
                 .antMatcher("/administration/admin/**")
                 .authorizeRequests()
                     .anyRequest().hasRole("ADMIN")
@@ -85,7 +97,24 @@ public class WebSecurityConfig {
                     .accessDeniedPage("/administration/denied")
                     .and()
                 .sessionManagement()
-                    .invalidSessionUrl("/administration/admin/login");
+                    .invalidSessionUrl("/administration/admin/login")
+                    .and()
+                .csrf()
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
         }
+    }
+
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(Arrays.asList("*", "http://localhost:8080"));
+        configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "OPTIONS", "DELETE"));
+        configuration.setAllowedHeaders(Arrays.asList("Origin", "X-Requested-With", "Content-Type", "Accept", "x-xsrf-token"));
+        configuration.setMaxAge(3600L);
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

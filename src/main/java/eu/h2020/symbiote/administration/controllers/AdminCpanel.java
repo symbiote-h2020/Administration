@@ -30,10 +30,7 @@ import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -46,6 +43,7 @@ import java.util.*;
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
 @Controller
+@CrossOrigin
 public class AdminCpanel {
     private static Log log = LogFactory.getLog(AdminCpanel.class);
 

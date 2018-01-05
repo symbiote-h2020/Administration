@@ -33,10 +33,7 @@ import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
@@ -52,6 +49,7 @@ import java.util.*;
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
 @Controller
+@CrossOrigin
 public class UserCpanel {
     private static Log log = LogFactory.getLog(UserCpanel.class);
 
@@ -92,6 +90,9 @@ public class UserCpanel {
 
         log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
 
+//        CoreUser user = new CoreUser();
+//        user.setValidUsername("validPlatformOwner2");
+//        user.setRole(UserRole.PLATFORM_OWNER);
         model.addAttribute("user", user);
 
         return "usercontrolpanel";
@@ -204,11 +205,11 @@ public class UserCpanel {
         }
     }
 
-    @PostMapping("/administration/user/cpanel/administration/register_platform")
+    @PostMapping("/administration/user/cpanel/register_platform")
     public ResponseEntity<?> registerPlatform(@Valid @RequestBody PlatformDetails platformDetails,
                                               BindingResult bindingResult, Principal principal) {
 
-        log.debug("POST request on /administration/user/cpanel/administration/register_platform");
+        log.debug("POST request on /administration/user/cpanel/register_platform");
         boolean invalidInfoModel = false;
         List<String> validInfoModelIds = new ArrayList<>();
         Map<String, Object> responseBody = new HashMap<>();
@@ -551,13 +552,13 @@ public class UserCpanel {
         }
     }
 
-    @PostMapping("/administration/user/cpanel/administration/register_information_model")
+    @PostMapping("/administration/user/cpanel/register_information_model")
     public ResponseEntity<?> registerInformationModel(@RequestParam("info-model-name") String name,
                                                       @RequestParam("info-model-uri") String uri,
                                                       @RequestParam("info-model-rdf") MultipartFile rdfFile,
                                                       Principal principal) {
 
-        log.debug("POST request on /administration/user/cpanel/administration/register_information_model");
+        log.debug("POST request on /administration/user/cpanel/register_information_model");
 
         UrlValidator urlValidator = new UrlValidator();
 

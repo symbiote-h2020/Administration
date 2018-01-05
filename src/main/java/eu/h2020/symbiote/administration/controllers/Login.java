@@ -5,6 +5,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import org.springframework.security.core.Authentication;
@@ -21,13 +22,14 @@ import javax.servlet.http.HttpServletResponse;
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
 @Controller
+@CrossOrigin
 public class Login {
     private static Log log = LogFactory.getLog(Login.class);
 
 	@GetMapping("/administration/user/login")
 	public String userLogin() {
 
-	    log.debug("A user tries to login");
+	    log.debug("GET on /administration/user/login");
 
 	    // Checking if the Principal == null also works
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -52,7 +54,7 @@ public class Login {
 	@GetMapping("/administration/admin/login")
 	public String adminLogin() {
 
-        log.debug("An admin tries to login");
+        log.debug("GET on /administration/admin/login");
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 

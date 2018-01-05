@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration.model;
 
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
@@ -9,6 +10,7 @@ import javax.validation.constraints.Size;
  */
 public class Description {
 
+    @NotNull
     @Size(min=4, max=300)
     private String description;
 

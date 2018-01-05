@@ -213,7 +213,7 @@
 //    @Test
 //    public void postActivatePlatformWithErrors() throws Exception {
 //
-//        mockMvc.perform( post("/administration/user/cpanel/administration/register_platform")
+//        mockMvc.perform( post("/administration/user/cpanel/register_platform")
 //                .param("description", "ER")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
@@ -226,7 +226,7 @@
 //    @Test
 //    public void postActivatePlatformTimeout() throws Exception {
 //
-//        mockMvc.perform( post("/administration/user/cpanel/administration/register_platform")
+//        mockMvc.perform( post("/administration/user/cpanel/register_platform")
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
 //                .with(csrf().asHeader()) )
 //            .andExpect(status().is3xxRedirection())
@@ -239,7 +239,7 @@
 //
 //        when(mockRabbitManager.sendPlatformCreationRequest(any())).thenReturn(samplePlatformResponseSuccess());
 //
-//        mockMvc.perform( post("/administration/user/cpanel/administration/register_platform")
+//        mockMvc.perform( post("/administration/user/cpanel/register_platform")
 //                .param("description", description)
 //                .param("informationModelId", informationModelId)
 //                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
