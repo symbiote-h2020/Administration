@@ -66,22 +66,4 @@ public class Login {
 			return "login";
 		}
 	}
-
-    @GetMapping("/administration/user/logout")
-    public String userLogout(HttpServletRequest request, HttpServletResponse response) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null){
-            new SecurityContextLogoutHandler().logout(request, response, auth);
-        }
-        return "redirect:/administration";
-    }
-
-    @GetMapping("/administration/admin/logout")
-    public String adminLogout(HttpServletRequest request, HttpServletResponse response) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null){
-            new SecurityContextLogoutHandler().logout(request, response, auth);
-        }
-        return "redirect:/administration";
-    }
 }

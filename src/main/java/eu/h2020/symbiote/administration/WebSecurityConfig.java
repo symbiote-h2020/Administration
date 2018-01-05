@@ -57,7 +57,7 @@ public class WebSecurityConfig {
                     .permitAll()
                     .and()
                 .logout()
-                    .logoutUrl("/administration")
+                    .logoutUrl("/administration/user/logout")
                     .logoutSuccessUrl("/administration")
                     .permitAll()
                     .and()
@@ -69,6 +69,9 @@ public class WebSecurityConfig {
                     .and()
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+
+            http.antMatcher("/**").cors();
+
         }
     }
 
@@ -78,7 +81,7 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
             http
-                 .cors().and()
+                .cors().and()
                 .antMatcher("/administration/admin/**")
                 .authorizeRequests()
                     .anyRequest().hasRole("ADMIN")
@@ -101,13 +104,15 @@ public class WebSecurityConfig {
                     .and()
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+
+            http.antMatcher("/**").cors();
         }
     }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*", "http://localhost:8080"));
+        configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "OPTIONS", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Origin", "X-Requested-With", "Content-Type", "Accept", "x-xsrf-token"));
         configuration.setMaxAge(3600L);
