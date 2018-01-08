@@ -45,8 +45,9 @@ public class WebSecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
+            http.antMatcher("/**").cors();
+
             http
-                .cors().and()
                 .antMatcher("/administration/user/**")
                 .authorizeRequests()
                     .anyRequest().authenticated()
@@ -70,8 +71,6 @@ public class WebSecurityConfig {
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
 
-            http.antMatcher("/**").cors();
-
         }
     }
 
@@ -80,8 +79,10 @@ public class WebSecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
+
+            http.antMatcher("/**").cors();
+
             http
-                .cors().and()
                 .antMatcher("/administration/admin/**")
                 .authorizeRequests()
                     .anyRequest().hasRole("ADMIN")

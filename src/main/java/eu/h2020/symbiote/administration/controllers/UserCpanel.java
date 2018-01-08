@@ -324,7 +324,7 @@ public class UserCpanel {
                                 // Platform registered successfully
                                 log.info("Platform " + registryRequest.getId() + " registered successfully!");
                                 responseBody.put("platform-registration-success", "Successful Registration!");
-                                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
+                                return new ResponseEntity<>(new PlatformDetails(registryRequest), new HttpHeaders(), HttpStatus.CREATED);
 
                             } else {
                                 log.warn("Registration Failed: " + registryResponse.getMessage());
