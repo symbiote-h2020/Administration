@@ -580,7 +580,7 @@ public class UserCpanel {
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-
+        InformationModelResponse registryResponse;
         try {
             InformationModel informationModel = new InformationModel();
             informationModel.setName(name);
@@ -595,7 +595,7 @@ public class UserCpanel {
             InformationModelRequest request = new InformationModelRequest();
             request.setBody(informationModel);
 
-            InformationModelResponse registryResponse = rabbitManager.sendRegisterInfoModelRequest(request);
+            registryResponse = rabbitManager.sendRegisterInfoModelRequest(request);
             if (registryResponse != null) {
                 if (registryResponse.getStatus() != HttpStatus.OK.value()) {
                     String message = "Registry responded with: " + registryResponse.getStatus();
@@ -625,7 +625,7 @@ public class UserCpanel {
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.CREATED);
+        return new ResponseEntity<>(registryResponse.getBody(), new HttpHeaders(), HttpStatus.CREATED);
     }
 
 
