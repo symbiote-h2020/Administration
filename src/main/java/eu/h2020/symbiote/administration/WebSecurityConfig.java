@@ -45,9 +45,8 @@ public class WebSecurityConfig {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
-            http.antMatcher("/**").cors();
 
-            http
+            http.cors().and()
                 .antMatcher("/administration/user/**")
                 .authorizeRequests()
                     .anyRequest().authenticated()
@@ -74,15 +73,14 @@ public class WebSecurityConfig {
         }
     }
 
-    @Configuration                                                   
+    @Configuration
+    @Order(2)
     public static class AdminWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
 
-            http.antMatcher("/**").cors();
-
-            http
+            http.cors().and()
                 .antMatcher("/administration/admin/**")
                 .authorizeRequests()
                     .anyRequest().hasRole("ADMIN")
@@ -105,6 +103,15 @@ public class WebSecurityConfig {
                     .and()
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+        }
+    }
+
+    @Configuration
+    @Order(3)
+    public static class GeneralWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
 
             http.antMatcher("/**").cors();
         }
@@ -116,6 +123,7 @@ public class WebSecurityConfig {
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "OPTIONS", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Origin", "X-Requested-With", "Content-Type", "Accept", "x-xsrf-token"));
+        configuration.setExposedHeaders(Arrays.asList("Content-Disposition"));
         configuration.setMaxAge(3600L);
         configuration.setAllowCredentials(true);
 

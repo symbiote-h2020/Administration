@@ -575,6 +575,12 @@ public class UserCpanel {
         if (!rdfFile.getOriginalFilename().matches("^[\\w]+\\.(ttl|nt|rdf|xml|n3|jsonld)$"))
             response.put("info_model_reg_error_rdf", "This format is not supported");
 
+        try {
+            log.debug("The size of the file is " + rdfFile.getBytes().length + "bytes");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         if (response.size() > 0) {
             response.put("error", "Invalid Arguments");
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
