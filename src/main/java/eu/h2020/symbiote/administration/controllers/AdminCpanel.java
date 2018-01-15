@@ -223,6 +223,7 @@ public class AdminCpanel {
                     if (entry.getValue().containPlatform(createFederationRequest.getPlatform1Id()) &&
                             entry.getValue().containPlatform(createFederationRequest.getPlatform2Id())) {
                         responseBody.put("message", "Federation Registration was successful!");
+                        responseBody.put("federationRule", entry.getValue());
                         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
 
                     } else {
