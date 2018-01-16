@@ -100,7 +100,7 @@ public class AdminCpanel {
 
         model.addAttribute("user", user);
 
-        return "admincontrolpanel";
+        return "index";
     }
 
     @PostMapping("/administration/admin/cpanel/delete_platform_resources")

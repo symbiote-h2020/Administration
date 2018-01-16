@@ -3,6 +3,9 @@ package eu.h2020.symbiote.administration.controllers;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -14,6 +17,8 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.HashMap;
+import java.util.Map;
 
 
 /**
@@ -47,7 +52,7 @@ public class Login {
 				return "redirect:/administration/user/cpanel";
 			}
 		} else {
-			return "login";
+			return "redirect:/administration";
 		}
 	}
 
@@ -63,7 +68,35 @@ public class Login {
 			log.debug("Redirecting to /administration/admin/cpanel");
 			return "redirect:/administration/admin/cpanel";
 		} else {
-			return "login";
+			return "redirect:/administration";
 		}
 	}
+
+    @GetMapping("/administration/isAuthenticated")
+    public ResponseEntity<?> isAuthenticated() {
+
+        log.debug("GET on /administration/isAuthenticated");
+
+        // Checking if the Principal == null also works
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (!(auth instanceof AnonymousAuthenticationToken)) {
+            log.debug("User is already logged in");
+            log.debug("User authorities = " + auth.getAuthorities());
+
+            Map<String, String> response = new HashMap<>();
+
+            if (auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"))) {
+                log.debug("The user is an admin");
+                response.put("role", "ADMIN");
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+            } else {
+                log.debug("The user is a normal user");
+                response.put("role", "USER");
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+            }
+        } else {
+            return new ResponseEntity<>(new HttpHeaders(), HttpStatus.UNAUTHORIZED);
+        }
+    }
 }

@@ -19,9 +19,9 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
     public void addViewControllers(ViewControllerRegistry registry) {
 
         // These are added because there are no controllers for these urls
-        registry.addViewController("/administration/home").setViewName("home");
-        registry.addViewController("/administration").setViewName("home");
-        registry.addViewController("/administration/").setViewName("home");
+        registry.addViewController("/administration/home").setViewName("index");
+        registry.addViewController("/administration").setViewName("index");
+        registry.addViewController("/administration/").setViewName("index");
         registry.addViewController("/administration/denied").setViewName("denied");
     }
 

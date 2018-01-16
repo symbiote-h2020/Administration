@@ -73,7 +73,8 @@ public class LoginTests extends AdministrationTests {
     public void getLoginPage() throws Exception {
 
         mockMvc.perform(get("/administration/user/login"))
-            .andExpect(status().isOk());
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/administration"));
     }
 
     @Test
@@ -93,23 +94,16 @@ public class LoginTests extends AdministrationTests {
             .with(csrf().asHeader())
                 .param("username", username)
                 .param("password", password) )
-            .andExpect(status().is3xxRedirection());
-            // Todo: Fix it
-        // .andExpect(redirectedUrl("/administration/user/cpanel"));
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl("/administration")); // React-router takes care of redirecting to "/administration/user/cpanel"
     }
 
     @Test
-    public void getLogoutPage() throws Exception {
+    public void postLogoutPage() throws Exception {
 
-        mockMvc.perform(get("/administration/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
-            .andExpect(status().is3xxRedirection());
-    }
-
-    @Test
-    public void getDeniedPage() throws Exception {
-
-        mockMvc.perform(get("/administration/denied"))
-            .andExpect(status().isOk());
+        mockMvc.perform(post("/administration/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/administration"));
     }
 
     @Test

@@ -53,19 +53,21 @@ public class WebSecurityConfig {
                     .and()
                 .formLogin()
                     .loginPage("/administration/user/login")
-                    .defaultSuccessUrl("/administration/user/cpanel")
+                    .defaultSuccessUrl("/administration")
                     .permitAll()
                     .and()
                 .logout()
                     .logoutUrl("/administration/user/logout")
                     .logoutSuccessUrl("/administration")
+                    .invalidateHttpSession(true)
+                    .deleteCookies("JSESSIONID")
                     .permitAll()
                     .and()
                 .exceptionHandling()
-                    .accessDeniedPage("/administration/denied")
+                    .accessDeniedPage("/administration")
                     .and()
                 .sessionManagement()
-                    .invalidSessionUrl("/administration/user/login")
+                    .invalidSessionUrl("/administration")
                     .and()
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
@@ -87,19 +89,21 @@ public class WebSecurityConfig {
                     .and()
                 .formLogin()
                     .loginPage("/administration/admin/login")
-                    .defaultSuccessUrl("/administration/admin/cpanel")
+                    .defaultSuccessUrl("/administration")
                     .permitAll()
                     .and()
                 .logout()
                     .logoutUrl("/administration/admin/logout")
                     .logoutSuccessUrl("/administration")
+                    .invalidateHttpSession(true)
+                    .deleteCookies("JSESSIONID")
                     .permitAll()
                     .and()
                 .exceptionHandling()
-                    .accessDeniedPage("/administration/denied")
+                    .accessDeniedPage("/administration")
                     .and()
                 .sessionManagement()
-                    .invalidSessionUrl("/administration/admin/login")
+                    .invalidSessionUrl("/administration")
                     .and()
                 .csrf()
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
@@ -113,8 +117,10 @@ public class WebSecurityConfig {
         @Override
         protected void configure(HttpSecurity http) throws Exception {
 
-            http.antMatcher("/**").cors();
-        }
+            http.antMatcher("/**").cors().and()
+                    .csrf()
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+            }
     }
 
     @Bean

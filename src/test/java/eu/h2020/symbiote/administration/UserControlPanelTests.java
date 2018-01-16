@@ -231,8 +231,8 @@ public class UserControlPanelTests extends AdministrationTests {
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.platform-registration-success")
-                        .value("Successful Registration!"));
+                .andExpect(jsonPath("$.name")
+                        .value(platformName));
 
 
         // Registry responds with error

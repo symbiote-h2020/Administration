@@ -71,7 +71,7 @@ public class Register {
 		log.debug("GET request on /administration/register");
 
 		model.addAttribute("allRoles", UserRoleValueTextMapping.getList());
-	    return "register";
+	    return "index";
 	}
 
     @GetMapping("/administration/register/roles")
@@ -81,71 +81,11 @@ public class Register {
         return new ResponseEntity<>(UserRoleValueTextMapping.getList(), new HttpHeaders(), HttpStatus.OK);
     }
 
-	@PostMapping("/administration/register/v1")
-	public String coreUserRegisterV1(@Valid CoreUser coreUser, BindingResult bindingResult, Model model) {
-
-        log.debug("POST request on /administration/register/v1");
-
-        boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL);
-
-		if (bindingResult.hasErrors() || invalidUserRole) {
-            model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
-			return "register";
-		}
-
-		log.debug(ReflectionToStringBuilder.toString(coreUser));
-
-		// Construct the UserManagementRequest
-        // Todo: Change the federatedId in R4
-
-		UserManagementRequest userRegistrationRequest = new UserManagementRequest(
-				new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-				new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
-				new UserDetails(
-				        new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
-                        "",
-                        coreUser.getRecoveryMail(),
-                        UserRole.PLATFORM_OWNER,
-                        new HashMap<>(),
-                        new HashMap<>()
-				),
-				OperationType.CREATE
-			);
-
-        try {
-            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userRegistrationRequest);
-
-            if (managementStatus == null) {
-                model.addAttribute("error","Authorization Manager is unreachable!");
-                model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
-                return "register";
-
-            } else if(managementStatus == ManagementStatus.OK ){
-                return "success";
-
-            } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
-                model.addAttribute("error","Username exist!");
-                model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
-                return "register";
-
-            } else {
-                model.addAttribute("error","Authorization Manager responded with ERROR!");
-                model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
-                return "register";
-            }
-        } catch (CommunicationException e) {
-            model.addAttribute("error",e.getMessage());
-            model.addAllAttributes(getAllAttributes(coreUser, bindingResult));
-            return "register";
-        }
-	}
-
     @PostMapping("/administration/register")
-    public ResponseEntity<Map<String, Object>> coreUserRegister(@RequestBody @Valid CoreUser coreUser,
+    public ResponseEntity<Map<String, Object>> coreUserRegister(@Valid CoreUser coreUser,
                                                                 BindingResult bindingResult) {
 
         log.debug("POST request on /administration/register");
-
         boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL);
 
         if (bindingResult.hasErrors() || invalidUserRole) {

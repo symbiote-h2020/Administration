@@ -20,8 +20,10 @@ import javax.servlet.Filter;
 
 import java.util.Collections;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -80,64 +82,70 @@ public class RegisterTests extends AdministrationTests {
     public void postRegisterErrors() throws Exception {
 
         // Everything is NULL
-        mockMvc.perform(post("/administration/register"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validUsername", "NotNull"))
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "NotNull"))
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "recoveryMail", "NotNull"))
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "role", "NotNull"));
+        mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.validUsername").value("may not be null"))
+                .andExpect(jsonPath("$.validationErrors.validPassword").value("may not be null"))
+                .andExpect(jsonPath("$.validationErrors.recoveryMail").value("may not be null"))
+                .andExpect(jsonPath("$.validationErrors.role").value("may not be null"));
 
 
         // Username and password are only 3 characters
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", "val")
                 .param("validPassword", "val")
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validUsername", "Pattern"))
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "Size"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.validUsername").value("must match \"^[\\w-][\\w-][\\w-][\\w-]+$\""))
+                .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
 
         // Username and password are 31 characters
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("validPassword", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validUsername", "Size"))
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "validPassword", "Size"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.validUsername").value("Length must be between 0 and 30 characters"))
+                .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
 
         // Wrong role
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrorCode("coreUser", "role", "typeMismatch"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.role").value(containsString("Failed to convert property value of type")));
 
         // NULL role
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "NULL"))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("error_role", "Choose a valid User Role"));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.validationErrors.role").value("Invalid User Role"));
     }
 
     @Test
     public void postRegisterUnreachable() throws Exception {
 
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("error", "Authorization Manager is unreachable!"));
-    }
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorMessage").value("Authorization Manager is unreachable!"));
+        }
 
     @Test
     public void postRegisterSuccess() throws Exception {
@@ -145,12 +153,12 @@ public class RegisterTests extends AdministrationTests {
         when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
 
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("success"));
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -159,13 +167,14 @@ public class RegisterTests extends AdministrationTests {
         when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.USERNAME_EXISTS);
 
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("error", "Username exist!"));
-    }
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage").value("Username exist!"));
+        }
 
     @Test
     public void postRegisterAAMError() throws Exception {
@@ -173,13 +182,14 @@ public class RegisterTests extends AdministrationTests {
         when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.ERROR);
 
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("error", "Authorization Manager responded with ERROR!"));
-    }
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage").value("Authorization Manager responded with ERROR!"));
+        }
 
     @Test
     public void postRegisterCommunicationException() throws Exception {
@@ -187,11 +197,12 @@ public class RegisterTests extends AdministrationTests {
         when(mockRabbitManager.sendUserManagementRequest(any())).thenThrow(sampleCommunicationException());
 
         mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("error", "SAMPLE_ERROR"));
-    }
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage").value("SAMPLE_ERROR"));
+        }
 }

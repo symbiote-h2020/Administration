@@ -95,7 +95,7 @@ public class UserCpanel {
 //        user.setRole(UserRole.PLATFORM_OWNER);
         model.addAttribute("user", user);
 
-        return "usercontrolpanel";
+        return "index";
     }
 
     @PostMapping("/administration/user/cpanel/list_user_platforms")
@@ -323,7 +323,6 @@ public class UserCpanel {
                             if (registryResponse.getStatus() == HttpStatus.OK.value()) {
                                 // Platform registered successfully
                                 log.info("Platform " + registryRequest.getId() + " registered successfully!");
-                                responseBody.put("platform-registration-success", "Successful Registration!");
                                 return new ResponseEntity<>(new PlatformDetails(registryRequest), new HttpHeaders(), HttpStatus.CREATED);
 
                             } else {
