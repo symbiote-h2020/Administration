@@ -7,6 +7,7 @@ import eu.h2020.symbiote.administration.controllers.Register;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
+import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.security.commons.Certificate;
@@ -95,6 +96,9 @@ public class UserControlPanelTests extends AdministrationTests {
 
         UserCpanel userCpanelController = appContext.getBean(UserCpanel.class);
         userCpanelController.setRabbitManager(mockRabbitManager);
+
+        PlatformService platformService = appContext.getBean(PlatformService.class);
+        platformService.setRabbitManager(mockRabbitManager);
     }
 
 
@@ -207,7 +211,7 @@ public class UserControlPanelTests extends AdministrationTests {
     @Test
     public void registerPlatform() throws Exception {
 
-        // Could not get Information modes from Registry
+        // Could not get Information models from Registry
         doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -356,6 +360,168 @@ public class UserControlPanelTests extends AdministrationTests {
 
     }
 
+
+    @Test
+    public void updatePlatformTest() throws Exception {
+
+        // The user does not own the platform which tries to delete
+        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+                .sendOwnedPlatformDetailsRequest(any());
+        PlatformDetails notOwningPlatform = samplePlatformDetails();
+        notOwningPlatform.setId("dummy");
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(notOwningPlatform)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("You do not own the platform with id dummy"));
+
+        // Could not get Information models from Registry
+        doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Could not retrieve the information models from registry"));
+
+        // Register platform successfully
+        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+                .sendListInfoModelsRequest();
+        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(mockRabbitManager)
+                .sendManagePlatformRequest(any());
+        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+                .sendPlatformModificationRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name")
+                        .value(platformName));
+
+        // Registry responds with error
+        doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
+                .sendPlatformModificationRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value(samplePlatformResponseFail().getMessage()));
+
+
+        // Registry responds with null
+        doReturn(null).when(mockRabbitManager)
+                .sendPlatformModificationRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("Registry unreachable!"));
+
+
+        // Registry throws CommunicationException
+        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+                .sendPlatformModificationRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("Registry threw CommunicationException"));
+
+
+        // AAM responds with PLATFORM_EXISTS
+        doReturn(samplePlatformManagementResponse(ManagementStatus.PLATFORM_EXISTS)).when(mockRabbitManager)
+                .sendManagePlatformRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("AAM says that the Platform exists!"));
+
+
+        // AAM responds with other ERROR
+        doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(mockRabbitManager)
+                .sendManagePlatformRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("AAM says that there was an ERROR"));
+
+
+        // AAM responds with null
+        doReturn(null).when(mockRabbitManager)
+                .sendManagePlatformRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("AAM unreachable!"));
+
+
+        // AAM throws CommunicationException
+        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+                .sendManagePlatformRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("AAM threw CommunicationException: error"));
+
+        // Invalid Arguments Check
+        InformationModelListResponse informationModelListResponse = sampleInformationModelListResponseSuccess();
+        informationModelListResponse.getBody().get(0).setId("dummy");
+
+        PlatformDetails platformDetails = samplePlatformDetails();
+        platformDetails.setName("aa");
+        platformDetails.getDescription().add(new Description("aa"));
+        platformDetails.getDescription().add(new Description("aaaa"));
+        platformDetails.getDescription().add(new Description("aa"));
+
+        doReturn(informationModelListResponse).when(mockRabbitManager)
+                .sendListInfoModelsRequest();
+
+        mockMvc.perform(post("/administration/user/cpanel/update_platform")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(platformDetails)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.platformUpdateError")
+                        .value("Invalid Arguments"))
+                .andExpect(jsonPath("$.pl_update_error_name")
+                        .value("Length must be between 3 and 30 characters"))
+                .andExpect(jsonPath("$.pl_update_error_description_description.length()")
+                        .value(4))
+                .andExpect(jsonPath("$.pl_update_error_description_description[1]")
+                        .value("Length must be between 4 and 300 characters"))
+                .andExpect(jsonPath("$.pl_update_error_description_description[3]")
+                        .value("Length must be between 4 and 300 characters"));
+    }
 
     @Test
     public void deletePlatforms() throws Exception {

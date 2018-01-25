@@ -207,7 +207,7 @@ public class RabbitManager {
                     null);
 
         } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
+            log.info("", e);
         }
     }
 
@@ -222,7 +222,7 @@ public class RabbitManager {
             if (this.connection != null && this.connection.isOpen())
                 this.connection.close();
         } catch (IOException | TimeoutException e) {
-            e.printStackTrace();
+            log.info("", e);
         }
     }
 
@@ -279,7 +279,7 @@ public class RabbitManager {
             // log.debug("Received response: " + responseMsg);
             return responseMsg;
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            log.info("", e);
         } finally {
             try {
                 this.channel.basicCancel(consumer.getConsumerTag());
