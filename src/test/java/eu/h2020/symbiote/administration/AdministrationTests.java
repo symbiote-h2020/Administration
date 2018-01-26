@@ -150,8 +150,12 @@ public abstract class AdministrationTests {
         return platform;
     }
 
+    public ChangePasswordRequest sampleChangePasswordRequest() {
+        return new ChangePasswordRequest("newPassword", "newPassword");
+    }
+
     public ChangeEmailRequest sampleChangeEmailRequest() {
-        return new ChangeEmailRequest("a@a.com", "a@a.com");
+        return new ChangeEmailRequest("new@email.com", "new@email.com");
     }
 
     public Platform samplePlatform() {

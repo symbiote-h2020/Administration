@@ -4,10 +4,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.controllers.UserCpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
-import eu.h2020.symbiote.administration.model.ChangeEmailRequest;
-import eu.h2020.symbiote.administration.model.Description;
-import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
-import eu.h2020.symbiote.administration.model.PlatformDetails;
+import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
@@ -138,6 +135,71 @@ public class UserControlPanelTests extends AdministrationTests {
     }
 
     @Test
+    public void changePasswordTimeout() throws Exception {
+        doReturn(null).when(mockRabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_password")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangePasswordRequest())))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void changePasswordBadRequest() throws Exception {
+        doThrow(sampleCommunicationException()).when(mockRabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_password")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangePasswordRequest())))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void changePasswordInvalidPasswords() throws Exception {
+        ChangePasswordRequest invalidPasswords = new ChangePasswordRequest("a", "b");
+
+        mockMvc.perform(post("/administration/user/change_password")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidPasswords)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.changePasswordError")
+                        .value("Invalid Arguments"))
+                .andExpect(jsonPath("$.error_newPassword")
+                        .value("Enter a valid password"))
+                .andExpect(jsonPath("$.error_newPasswordRetyped")
+                        .value("Enter a valid password"));
+    }
+
+    @Test
+    public void changePasswordDifferentPasswords() throws Exception {
+        ChangePasswordRequest differentPasswords = new ChangePasswordRequest("newPassword", "newPass");
+
+        mockMvc.perform(post("/administration/user/change_password")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(differentPasswords)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.changePasswordError")
+                        .value("Invalid Arguments"))
+                .andExpect(jsonPath("$.error_newPasswordRetyped")
+                        .value("The provided passwords do not match"));
+    }
+
+    @Test
+    public void changePasswordSuccess() throws Exception {
+        doReturn(ManagementStatus.OK).when(mockRabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_password")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangePasswordRequest())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     public void changeEmailTimeout() throws Exception {
         doReturn(null).when(mockRabbitManager).sendUserManagementRequest(any());
 
@@ -178,12 +240,12 @@ public class UserControlPanelTests extends AdministrationTests {
 
     @Test
     public void changeEmailDifferentEmails() throws Exception {
-        ChangeEmailRequest invalidEmails = new ChangeEmailRequest("a@a.com", "b@a.com");
+        ChangeEmailRequest differentEmails = new ChangeEmailRequest("a@a.com", "b@a.com");
 
         mockMvc.perform(post("/administration/user/change_email")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidEmails)))
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(differentEmails)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.changeEmailError")
                         .value("Invalid Arguments"))

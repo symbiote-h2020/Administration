@@ -181,6 +181,82 @@ public class UserCpanel {
         return new ResponseEntity<>(new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
+    @PostMapping("/administration/user/change_password")
+    public ResponseEntity<?> changeEmail(@Valid @RequestBody ChangePasswordRequest message,
+                                         BindingResult bindingResult,
+                                         Principal principal) {
+        log.debug("POST request on /administration/user/change_password");
+
+        Map<String, String> errorsResponse = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = "Enter a valid password";
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+        }
+
+        if (errorsResponse.get("error_newPasswordRetyped") == null &&
+                !message.getNewPassword().equals(message.getNewPasswordRetyped())) {
+            String errorField = "error_newPasswordRetyped";
+            String errorMessage = "The provided passwords do not match";
+            log.debug(errorField + ": " + errorMessage);
+            errorsResponse.put(errorField, errorMessage);
+
+        }
+
+        if (errorsResponse.size() > 0) {
+            errorsResponse.put("changePasswordError", "Invalid Arguments");
+            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
+        // Construct the UserManagementRequest
+        // Todo: Change the federatedId in R4
+
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), message.getNewPassword()),
+                        "",
+                        user.getRecoveryMail(),
+                        user.getRole(),
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.UPDATE
+        );
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
+
+            if (managementStatus == null) {
+                response.put("changePasswordError","Authorization Manager is unreachable!");
+                return new ResponseEntity<>(response, new HttpHeaders(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+
+            } else if(managementStatus == ManagementStatus.OK ){
+                return new ResponseEntity<>(response, new HttpHeaders(),
+                        HttpStatus.OK);
+            }
+        } catch (CommunicationException e) {
+            response.put("changePasswordError",e.getMessage());
+            return  new ResponseEntity<>(response, new HttpHeaders(),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
     @PostMapping("/administration/user/cpanel/list_user_platforms")
     public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Principal principal) {
 
