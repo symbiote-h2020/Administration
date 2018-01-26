@@ -3,10 +3,7 @@ package eu.h2020.symbiote.administration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.administration.model.Description;
-import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
-import eu.h2020.symbiote.administration.model.PlatformDetails;
+import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -151,6 +148,10 @@ public abstract class AdministrationTests {
         platform.setId(platformId);
 
         return platform;
+    }
+
+    public ChangeEmailRequest sampleChangeEmailRequest() {
+        return new ChangeEmailRequest("a@a.com", "a@a.com");
     }
 
     public Platform samplePlatform() {

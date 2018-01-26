@@ -135,7 +135,7 @@ public class RabbitManager {
     @Value("${rabbit.routingKey.manage.platform.request}")
     private String platformManageRequestRoutingKey;
     @Value("${rabbit.routingKey.manage.user.request}")
-    private String appRegisterRequestRoutingKey;
+    private String userManageRequestRoutingKey;
     @Value("${rabbit.routingKey.get.user.details}")
     private String getUserDetailsRoutingKey;
     @Value("${rabbit.routingKey.ownedplatformdetails.request}")

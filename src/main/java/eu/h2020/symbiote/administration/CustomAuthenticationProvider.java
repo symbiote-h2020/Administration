@@ -101,6 +101,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                             true, true, true, true,
                             grantedAuths);
 
+                    user.setRecoveryMail(response.getUserDetails().getRecoveryMail());
+                    user.setRole(response.getUserDetails().getRole());
                     // We clear the credential so that they are not shown anywhere
                     user.clearPassword();
                     return new UsernamePasswordAuthenticationToken(user, password, grantedAuths);

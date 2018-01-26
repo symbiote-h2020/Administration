@@ -4,6 +4,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.controllers.UserCpanel;
 import eu.h2020.symbiote.administration.controllers.Register;
+import eu.h2020.symbiote.administration.model.ChangeEmailRequest;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
@@ -26,6 +27,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,9 +49,7 @@ import java.util.zip.ZipInputStream;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
@@ -120,6 +120,87 @@ public class UserControlPanelTests extends AdministrationTests {
 
     }
 
+    @Test
+    public void getUserInformationDenied() throws Exception {
+
+        mockMvc.perform(get("/administration/user/information"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/administration/user/login"));
+    }
+
+    @Test
+    public void getUserInformationSuccess() throws Exception {
+
+        mockMvc.perform(get("/administration/user/information")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .andExpect(status().isOk());
+
+    }
+
+    @Test
+    public void changeEmailTimeout() throws Exception {
+        doReturn(null).when(mockRabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_email")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void changeEmailBadRequest() throws Exception {
+        doThrow(sampleCommunicationException()).when(mockRabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_email")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void changeEmailInvalidEmails() throws Exception {
+        ChangeEmailRequest invalidEmails = new ChangeEmailRequest("a", "b");
+
+        mockMvc.perform(post("/administration/user/change_email")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidEmails)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.changeEmailError")
+                        .value("Invalid Arguments"))
+                .andExpect(jsonPath("$.error_newEmail")
+                        .value("Enter a valid email"))
+                .andExpect(jsonPath("$.error_newEmailRetyped")
+                        .value("Enter a valid email"));
+    }
+
+    @Test
+    public void changeEmailDifferentEmails() throws Exception {
+        ChangeEmailRequest invalidEmails = new ChangeEmailRequest("a@a.com", "b@a.com");
+
+        mockMvc.perform(post("/administration/user/change_email")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidEmails)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.changeEmailError")
+                        .value("Invalid Arguments"))
+                .andExpect(jsonPath("$.error_newEmailRetyped")
+                        .value("The provided emails do not match"));
+    }
+
+    @Test
+    public void changeEmailSuccess() throws Exception {
+        doReturn(ManagementStatus.OK).when(mockRabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_email")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
+                .andExpect(status().isOk());
+    }
 
     @Test
     public void getListUserPlatforms() throws Exception {

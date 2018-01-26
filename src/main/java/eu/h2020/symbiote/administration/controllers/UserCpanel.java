@@ -3,7 +3,6 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
-import eu.h2020.symbiote.administration.services.PlatformConfigurer;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
@@ -11,7 +10,6 @@ import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.model.mim.InformationModel;
-import eu.h2020.symbiote.model.mim.InterworkingService;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
@@ -94,6 +92,93 @@ public class UserCpanel {
         model.addAttribute("user", user);
 
         return "index";
+    }
+
+    @GetMapping("/administration/user/information")
+    public ResponseEntity<?> getUserInformation(Principal principal) {
+        log.debug("GET request on /administration/user/information");
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        UserDetailsDDO userDetails = new UserDetailsDDO(user.getUsername(), user.getRecoveryMail(), user.getRole().toString());
+        return new ResponseEntity<>(userDetails, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    @PostMapping("/administration/user/change_email")
+    public ResponseEntity<?> changeEmail(@Valid @RequestBody ChangeEmailRequest message,
+                                         BindingResult bindingResult,
+                                         Principal principal) {
+        log.debug("POST request on /administration/user/change_email");
+
+        Map<String, String> errorsResponse = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = "Enter a valid email";
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+        }
+
+        if (errorsResponse.get("error_newEmailRetyped") == null &&
+                !message.getNewEmail().equals(message.getNewEmailRetyped())) {
+            String errorField = "error_newEmailRetyped";
+            String errorMessage = "The provided emails do not match";
+            log.debug(errorField + ": " + errorMessage);
+            errorsResponse.put(errorField, errorMessage);
+
+        }
+
+        if (errorsResponse.size() > 0) {
+            errorsResponse.put("changeEmailError", "Invalid Arguments");
+            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
+        // Construct the UserManagementRequest
+        // Todo: Change the federatedId in R4
+
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), password),
+                        "",
+                        message.getNewEmail(),
+                        user.getRole(),
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.UPDATE
+        );
+
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
+
+            if (managementStatus == null) {
+                response.put("changeEmailError","Authorization Manager is unreachable!");
+                return new ResponseEntity<>(response, new HttpHeaders(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+
+            } else if(managementStatus == ManagementStatus.OK ){
+                return new ResponseEntity<>(response, new HttpHeaders(),
+                        HttpStatus.OK);
+            }
+        } catch (CommunicationException e) {
+            response.put("changeEmailError",e.getMessage());
+            return  new ResponseEntity<>(response, new HttpHeaders(),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/administration/user/cpanel/list_user_platforms")
