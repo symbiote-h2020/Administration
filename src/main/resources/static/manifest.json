@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Administration",
+  "name": "Administration GUI for H2020 symbIoTe",
   "icons": [
     {
       "src": "favicon.ico",
