@@ -212,6 +212,13 @@ public class UserCpanel {
 
         }
 
+        if (!password.equals(message.getOldPassword())) {
+            String errorMessage = "Your old password is not correct";
+            String errorField = "error_oldPassword";
+            log.debug(errorField + ": " + errorMessage);
+            errorsResponse.put(errorField, errorMessage);
+        }
+
         if (errorsResponse.size() > 0) {
             errorsResponse.put("changePasswordError", "Invalid Arguments");
             return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);

@@ -158,7 +158,7 @@ public class UserControlPanelTests extends AdministrationTests {
 
     @Test
     public void changePasswordInvalidPasswords() throws Exception {
-        ChangePasswordRequest invalidPasswords = new ChangePasswordRequest("a", "b");
+        ChangePasswordRequest invalidPasswords = new ChangePasswordRequest("wrongPassword","a", "b");
 
         mockMvc.perform(post("/administration/user/change_password")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -167,6 +167,8 @@ public class UserControlPanelTests extends AdministrationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.changePasswordError")
                         .value("Invalid Arguments"))
+                .andExpect(jsonPath("$.error_oldPassword")
+                        .value("Your old password is not correct"))
                 .andExpect(jsonPath("$.error_newPassword")
                         .value("Enter a valid password"))
                 .andExpect(jsonPath("$.error_newPasswordRetyped")
@@ -175,7 +177,7 @@ public class UserControlPanelTests extends AdministrationTests {
 
     @Test
     public void changePasswordDifferentPasswords() throws Exception {
-        ChangePasswordRequest differentPasswords = new ChangePasswordRequest("newPassword", "newPass");
+        ChangePasswordRequest differentPasswords = new ChangePasswordRequest(password, "newPassword", "newPass");
 
         mockMvc.perform(post("/administration/user/change_password")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))

@@ -133,7 +133,7 @@ public abstract class AdministrationTests {
 
     public Authentication sampleUserAuth(UserRole role) {
 
-        return new UsernamePasswordAuthenticationToken(sampleCoreUser(role), null, sampleUserAuthorities());
+        return new UsernamePasswordAuthenticationToken(sampleCoreUser(role), password, sampleUserAuthorities());
     }
 
     public Authentication sampleAdminAuth(UserRole role) {
@@ -151,7 +151,7 @@ public abstract class AdministrationTests {
     }
 
     public ChangePasswordRequest sampleChangePasswordRequest() {
-        return new ChangePasswordRequest("newPassword", "newPassword");
+        return new ChangePasswordRequest(password,"newPassword", "newPassword");
     }
 
     public ChangeEmailRequest sampleChangeEmailRequest() {

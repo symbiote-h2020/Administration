@@ -8,6 +8,8 @@ import javax.validation.constraints.Size;
 
 public class ChangePasswordRequest {
 
+    private String oldPassword;
+
     @NotNull
     @Size(min=4, max=30)
     private String newPassword;
@@ -17,11 +19,16 @@ public class ChangePasswordRequest {
     private String newPasswordRetyped;
 
     @JsonCreator
-    public ChangePasswordRequest(@JsonProperty("newPassword") String newPassword,
+    public ChangePasswordRequest(@JsonProperty("oldPassword") String oldPassword,
+                                 @JsonProperty("newPassword") String newPassword,
                                  @JsonProperty("newPasswordRetyped") String newPasswordRetyped) {
+        setOldPassword(oldPassword);
         setNewPassword(newPassword);
         setNewPasswordRetyped(newPasswordRetyped);
     }
+
+    public String getOldPassword() { return oldPassword; }
+    public void setOldPassword(String oldPassword) { this.oldPassword = oldPassword; }
 
     public String getNewPassword() { return newPassword; }
     public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
@@ -32,7 +39,8 @@ public class ChangePasswordRequest {
     @Override
     public String toString() {
         return "ChangePasswordRequest{" +
-                "newPassword='" + newPassword + '\'' +
+                "oldPassword='" + oldPassword + '\'' +
+                ", newPassword='" + newPassword + '\'' +
                 ", newPasswordRetyped='" + newPasswordRetyped + '\'' +
                 '}';
     }
