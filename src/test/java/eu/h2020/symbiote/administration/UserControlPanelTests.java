@@ -126,12 +126,30 @@ public class UserControlPanelTests extends AdministrationTests {
     }
 
     @Test
+    public void getUserInformationAAMTimeout() throws Exception {
+        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(null);
+
+        mockMvc.perform(get("/administration/user/information")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void getUserInformationError() throws Exception {
+        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST));
+
+        mockMvc.perform(get("/administration/user/information")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     public void getUserInformationSuccess() throws Exception {
+        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
                 .andExpect(status().isOk());
-
     }
 
     @Test

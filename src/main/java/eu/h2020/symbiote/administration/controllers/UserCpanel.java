@@ -2,6 +2,10 @@ package eu.h2020.symbiote.administration.controllers;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.authentication.AAMProblemException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
@@ -27,6 +31,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
@@ -100,8 +106,29 @@ public class UserCpanel {
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
 
-        UserDetailsDDO userDetails = new UserDetailsDDO(user.getUsername(), user.getRecoveryMail(), user.getRole().toString());
+        UserDetailsResponse response = null;
+        try {
+            response = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
+
+            if(response != null) {
+                if (response.getHttpStatus() != HttpStatus.OK) {
+                    log.debug("Could not get the userDetails");
+                    return new ResponseEntity<>(new HttpHeaders(), response.getHttpStatus());
+                }
+            } else {
+                return new ResponseEntity<>(new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch(CommunicationException e){
+            log.info(e.getMessage());
+            return new ResponseEntity<>(e.getErrorMessage(), new HttpHeaders(), e.getStatusCode());
+
+        }
+
+        String recoveryMail = response.getUserDetails().getRecoveryMail();
+        String role = response.getUserDetails().getRole().toString();
+        UserDetailsDDO userDetails = new UserDetailsDDO(user.getUsername(), recoveryMail, role);
         return new ResponseEntity<>(userDetails, new HttpHeaders(), HttpStatus.OK);
     }
 
