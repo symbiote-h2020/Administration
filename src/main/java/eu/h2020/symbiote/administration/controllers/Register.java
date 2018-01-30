@@ -86,6 +86,7 @@ public class Register {
                                                                 BindingResult bindingResult) {
 
         log.debug("POST request on /administration/register");
+        log.debug("CoreUser = " + ReflectionToStringBuilder.toString(coreUser));
         boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL);
 
         if (bindingResult.hasErrors() || invalidUserRole) {
