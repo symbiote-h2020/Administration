@@ -1,13 +1,11 @@
 package eu.h2020.symbiote.administration;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
 import eu.h2020.symbiote.model.mim.Platform;
@@ -17,20 +15,21 @@ import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
 import org.junit.Test;
 import org.mockito.Spy;
-
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
-
-import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import org.springframework.http.HttpStatus;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 
 /**
  * Test class for use in testing Rabbit Manager methods.
  */
-public class RabbitManagerTests extends AdministrationTests {
+public class RabbitManagerTests extends AdministrationBaseTestClass {
 
     @Spy
     private RabbitManager rabbitManager;
@@ -76,7 +75,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendRegistryPlatformMessage("exchangeName",
+            rabbitManager.sendRegistryPlatformMessage("exchangeName",
                     "routingKey", samplePlatform());
         } catch (CommunicationException e) {
             communicationCaught = true;
@@ -128,7 +127,7 @@ public class RabbitManagerTests extends AdministrationTests {
     public void sendPlatformModificationRequest() throws Exception {
         
         Platform newPlatform = samplePlatform();
-        newPlatform.setDescription(Arrays.asList("Changed description"));
+        newPlatform.setDescription(Collections.singletonList("Changed description"));
         PlatformRegistryResponse newResponse = samplePlatformResponseSuccess();
         newResponse.setBody(newPlatform);
         String serializedResponse = serialize(newResponse);
@@ -197,7 +196,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("text/plain"));
         try {
-            response = rabbitManager.sendGetPlatformDetailsMessage("platformId");
+            rabbitManager.sendGetPlatformDetailsMessage("platformId");
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -244,7 +243,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("text/plain"));
         try {
-            response = rabbitManager.sendListInfoModelsRequest();
+            rabbitManager.sendListInfoModelsRequest();
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -296,7 +295,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendInfoModelRequest("", sampleInformationModelRequest());
+            rabbitManager.sendInfoModelRequest("", sampleInformationModelRequest());
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -383,7 +382,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendRegistryResourcesRequest(sampleCoreResourceRegistryRequest());
+            rabbitManager.sendRegistryResourcesRequest(sampleCoreResourceRegistryRequest());
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -422,7 +421,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
         try {
-            response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+            rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -441,7 +440,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+            rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -493,7 +492,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendManagePlatformRequest(samplePlatformManagementRequest(OperationType.CREATE));
+            rabbitManager.sendManagePlatformRequest(samplePlatformManagementRequest(OperationType.CREATE));
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -544,7 +543,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendLoginRequest(sampleCredentials());
+            rabbitManager.sendLoginRequest(sampleCredentials());
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -594,7 +593,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+            rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
         }
             catch (CommunicationException e) {
             communicationCaught = true;
@@ -650,7 +649,7 @@ public class RabbitManagerTests extends AdministrationTests {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            response = rabbitManager.sendFederationRuleManagementRequest(
+            rabbitManager.sendFederationRuleManagementRequest(
                     sampleFederationRuleManagementRequest(FederationRuleManagementRequest.OperationType.CREATE));
         }
         catch (CommunicationException e) {

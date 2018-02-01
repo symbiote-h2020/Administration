@@ -41,7 +41,7 @@ import java.util.*;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
-public abstract class AdministrationTests {
+public abstract class AdministrationBaseTestClass {
 
     @Value("${aam.deployment.owner.username}")
     protected String AAMOwnerUsername;
@@ -345,6 +345,14 @@ public abstract class AdministrationTests {
         Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
         ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, platformUrl, platformName, new Certificate(), componentCertificates));
         return ownedPlatformDetails;
+    }
+
+    public CreateFederationRequest sampleCreateFederationRequest() {
+        CreateFederationRequest request = new CreateFederationRequest();
+        request.setId(federationRuleId);
+        request.setPlatform1Id(platformId);
+        request.setPlatform2Id(platformId + '2');
+        return request;
     }
 
     public FederationRule sampleFederationRule() {

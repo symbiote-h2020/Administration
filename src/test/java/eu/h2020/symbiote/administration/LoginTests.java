@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Test class for use in testing MVC and form validation.
  */
-public class LoginTests extends AdministrationTests {
+public class LoginTests extends AdministrationBaseTestClass {
 
     @Autowired
     private ApplicationContext appContext;

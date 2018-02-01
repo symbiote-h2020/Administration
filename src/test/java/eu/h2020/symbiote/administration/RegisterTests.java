@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Test class for use in testing MVC and form validation.
  */
-public class RegisterTests extends AdministrationTests {
+public class RegisterTests extends AdministrationBaseTestClass {
 
     @Autowired
     private ApplicationContext appContext;
@@ -78,10 +78,7 @@ public class RegisterTests extends AdministrationTests {
             .andExpect(status().isOk());
     }
 
-    @Test
-    public void postRegisterErrors() throws Exception {
-
-        // Everything is NULL
+    @Test public void everythingIsNull() throws Exception {
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader()))
                 .andExpect(status().isBadRequest())
@@ -89,8 +86,10 @@ public class RegisterTests extends AdministrationTests {
                 .andExpect(jsonPath("$.validationErrors.validPassword").value("may not be null"))
                 .andExpect(jsonPath("$.validationErrors.recoveryMail").value("may not be null"))
                 .andExpect(jsonPath("$.validationErrors.role").value("may not be null"));
+    }
 
-
+    @Test
+    public void credentialsFewerThanMinLength() throws Exception {
         // Username and password are only 3 characters
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -101,7 +100,10 @@ public class RegisterTests extends AdministrationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.validUsername").value("must match \"^[\\w-][\\w-][\\w-][\\w-]+$\""))
                 .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
+    }
 
+    @Test
+    public void credentialsFewerThanMaxLength() throws Exception {
         // Username and password are 31 characters
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -112,8 +114,10 @@ public class RegisterTests extends AdministrationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.validUsername").value("Length must be between 0 and 30 characters"))
                 .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
+    }
 
-        // Wrong role
+    @Test
+    public void wrongRole() throws Exception {
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
                 .param("validUsername", username)
@@ -122,8 +126,10 @@ public class RegisterTests extends AdministrationTests {
                 .param("role", "PLATFORM"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.role").value(containsString("Failed to convert property value of type")));
+    }
 
-        // NULL role
+    @Test
+    public void nullRole() throws Exception {
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
                 .param("validUsername", username)
@@ -136,7 +142,6 @@ public class RegisterTests extends AdministrationTests {
 
     @Test
     public void postRegisterUnreachable() throws Exception {
-
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
                 .param("validUsername", username)
