@@ -2,10 +2,7 @@ package eu.h2020.symbiote.administration.services;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.administration.model.Description;
-import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
-import eu.h2020.symbiote.administration.model.PlatformDetails;
+import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
@@ -15,7 +12,6 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
-
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +36,7 @@ public class PlatformService {
 
     private RabbitManager rabbitManager;
     private PlatformConfigurer platformConfigurer;
+    private ValidationService validationService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
 
@@ -49,6 +46,7 @@ public class PlatformService {
 
     @Autowired
     public PlatformService(RabbitManager rabbitManager, PlatformConfigurer platformConfigurer,
+                           ValidationService validationService,
                            @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                            @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
@@ -58,11 +56,118 @@ public class PlatformService {
         Assert.notNull(platformConfigurer,"PlatformConfigurer can not be null!");
         this.platformConfigurer = platformConfigurer;
 
+        Assert.notNull(validationService,"ValidationService can not be null!");
+        this.validationService = validationService;
+
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
 
         Assert.notNull(aaMOwnerPassword,"aaMOwnerPassword can not be null!");
         this.aaMOwnerPassword = aaMOwnerPassword;
+    }
+
+    public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Principal principal) {
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        ArrayList<String> unavailablePlatforms = new ArrayList<>();
+        ArrayList<Platform> availablePlatforms = new ArrayList<>();
+        ListUserPlatformsResponse response = new ListUserPlatformsResponse();
+
+        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), ""),
+                new UserDetails(
+                        new Credentials(user.getUsername(), ""),
+                        "",
+                        "",
+                        UserRole.NULL,
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.CREATE
+        );
+
+        // Get OwnedPlatformDetails from AAM
+        try {
+            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
+                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
+            if (ownedPlatformDetailsSet != null) {
+                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
+                    log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(platformDetails));
+
+                    // Get Platform information from Registry
+                    try {
+                        PlatformRegistryResponse registryResponse = rabbitManager.sendGetPlatformDetailsMessage(
+                                platformDetails.getPlatformInstanceId());
+                        if (registryResponse != null) {
+                            if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                                log.debug(registryResponse.getMessage());
+                                unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
+                            } else {
+                                availablePlatforms.add(registryResponse.getBody());
+                            }
+                        } else {
+                            String message = "Registry unreachable!";
+                            log.warn(message);
+                            response.setMessage(message);
+                            return new ResponseEntity<>(response,
+                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                        }
+                    } catch (CommunicationException e) {
+                        String message = "Registry threw CommunicationException";
+
+                        log.warn(message, e);
+                        response.setMessage(message + ": " + e.getMessage());
+                        return new ResponseEntity<>(response,
+                                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
+
+                ArrayList<PlatformDetails> availablePlatformDetails = new ArrayList<>();
+                for (Platform platform : availablePlatforms) {
+                    PlatformDetails platformDetails = new PlatformDetails(platform);
+                    availablePlatformDetails.add(platformDetails);
+                }
+                response.setAvailablePlatforms(availablePlatformDetails);
+
+                if (unavailablePlatforms.size() == 0) {
+                    String message = "All the owned platform details were successfully received";
+                    log.debug(message);
+                    response.setMessage(message);
+                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+                }
+                else {
+                    String message = "Could NOT retrieve information from Registry for the following platform that you own:";
+                    StringBuilder stringBuilder = new StringBuilder(message);
+
+                    for (String unavailablePlatform : unavailablePlatforms) {
+                        stringBuilder.append(" ").append(unavailablePlatform).append(",");
+
+                    }
+
+                    message = stringBuilder.toString();
+                    message = message.substring(0, message.length() - 1);
+                    log.debug(message);
+
+                    response.setMessage(message);
+                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
+                }
+            } else {
+                String message = "AAM responded with null";
+                log.warn(message);
+                response.setMessage(message);
+                return new ResponseEntity<>(response,
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            String message = "AAM threw CommunicationException";
+            log.warn(message, e);
+            response.setMessage(message + ": " + e.getMessage());
+            return new ResponseEntity<>(response,
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+
+        }
     }
 
     public ResponseEntity<?> registerPlatform(PlatformDetails platformDetails, BindingResult bindingResult,
@@ -88,7 +193,7 @@ public class PlatformService {
         }
 
         if (isPlatformRequestInvalid(bindingResult, platformDetails, validInfoModelIds))
-            return getRequestErrors(bindingResult, RequestType.REGISTER);
+            return validationService.getRequestErrors(bindingResult);
 
         Map<String, Object> responseBody = new HashMap<>();
 
@@ -207,7 +312,7 @@ public class PlatformService {
         }
 
         if (isPlatformRequestInvalid(bindingResult, platformDetails, validInfoModelIds))
-            return getRequestErrors(bindingResult, RequestType.UPDATE);
+            return validationService.getRequestErrors(bindingResult);
 
 
         Map<String, Object> responseBody = new HashMap<>();
@@ -497,7 +602,7 @@ public class PlatformService {
         }
     }
 
-    private ResponseEntity<?> checkIfUserOwnsPlatform(String platformId, CoreUser user) {
+    public ResponseEntity<?> checkIfUserOwnsPlatform(String platformId, CoreUser user) {
 
         UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
@@ -566,67 +671,5 @@ public class PlatformService {
         }
 
         return bindingResult.hasErrors() || invalidInfoModel;
-    }
-
-    private ResponseEntity<?> getRequestErrors(BindingResult bindingResult, RequestType requestType) {
-        Map<String, Object> responseBody = new HashMap<>();
-        String errorPrefix = "";
-        String mainErrorMessage = "";
-
-        switch (requestType) {
-            case REGISTER:
-                errorPrefix = "pl_reg_error_";
-                mainErrorMessage = "platformRegistrationError";
-                break;
-            case UPDATE:
-                errorPrefix = "pl_update_error_";
-                mainErrorMessage = "platformUpdateError";
-                break;
-        }
-
-        List<FieldError> errors = bindingResult.getFieldErrors();
-        for (FieldError fieldError : errors) {
-            String errorField;
-            String errorMessage = fieldError.getDefaultMessage();
-            String[] parts = fieldError.getField().split("\\[");
-
-            if (parts.length > 1){
-
-                int errorFieldIndex = Integer.parseInt(parts[1].split("]")[0]);
-                log.debug("errorFieldIndex = " + errorFieldIndex);
-                errorField = errorPrefix + parts[0] + parts[1].replace(".", "_").split("]")[1];
-                ArrayList<String> errorList;
-
-                if (responseBody.get(errorField) == null) {
-                    errorList = new ArrayList<>();
-                    for (int i = 0; i < errorFieldIndex; i++)
-                        errorList.add("");
-                    errorList.add(errorMessage);
-                } else {
-                    errorList = (ArrayList<String>) responseBody.get(errorField);
-
-                    if (errorFieldIndex < errorList.size())
-                        errorList.set(errorFieldIndex, errorMessage);
-                    else {
-                        for (int i = errorList.size(); i < errorFieldIndex; i++)
-                            errorList.add("");
-                        errorList.add(errorMessage);
-                    }
-                }
-
-                responseBody.put(errorField, errorList);
-                log.debug(responseBody);
-            }
-            else {
-                errorField = errorPrefix + fieldError.getField();
-                responseBody.put(errorField, errorMessage);
-            }
-            log.debug(errorField + ": " + errorMessage);
-
-        }
-
-        responseBody.put(mainErrorMessage, "Invalid Arguments");
-
-        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 }

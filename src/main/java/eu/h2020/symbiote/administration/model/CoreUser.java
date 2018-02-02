@@ -28,7 +28,7 @@ public class CoreUser extends User {
     /* -------- Properties -------- */
     
     @NotNull
-    @Pattern(regexp="^[\\w-][\\w-][\\w-][\\w-]+$")
+    @Pattern(regexp="^[\\w-]{4,}$")
     @Size(max=30)
     private String validUsername;
 

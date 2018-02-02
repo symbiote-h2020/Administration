@@ -1,9 +1,13 @@
 package eu.h2020.symbiote.administration.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-
+import java.util.List;
 
 
 /**
@@ -14,35 +18,26 @@ import javax.validation.constraints.Size;
 public class CreateFederationRequest {
 
     @NotNull
-    @Pattern(regexp="^([\\w-][\\w-][\\w-][\\w-]+)")
+    @Pattern(regexp="^[\\w-]{4,}$")
     @Size(max=30)
     private String id;
 
     @NotNull
-    @Pattern(regexp="^([\\w-][\\w-][\\w-][\\w-]+)")
-    @Size(max=30)
-    private String platform1Id;
+    @Valid
+    private List<PlatformId> platforms;
 
-    @NotNull
-    @Pattern(regexp="^([\\w-][\\w-][\\w-][\\w-]+)")
-    @Size(max=30)
-    private String platform2Id;
-
-    public CreateFederationRequest() {
-    }
-
-    public CreateFederationRequest(String id, String platform1Id, String platform2Id) {
+    @JsonCreator
+    public CreateFederationRequest(@JsonProperty("id") String id,
+                                   @JsonProperty("platforms") List<PlatformId> platforms) {
         setId(id);
-        setPlatform1Id(platform1Id);
-        setPlatform2Id(platform2Id);
+        setPlatforms(platforms);
     }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public String getPlatform1Id() { return platform1Id; }
-    public void setPlatform1Id(String platform1Id) { this.platform1Id = platform1Id; }
-
-    public String getPlatform2Id() { return platform2Id; }
-    public void setPlatform2Id(String platform2Id) { this.platform2Id = platform2Id; }
+    public List<PlatformId> getPlatforms() { return platforms; }
+    public void setPlatforms(List<PlatformId> platforms) {
+        this.platforms = platforms;
+    }
 }

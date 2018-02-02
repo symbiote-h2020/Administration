@@ -199,15 +199,15 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(platformDetails)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.platformRegistrationError")
+                .andExpect(jsonPath("$.error")
                         .value("Invalid Arguments"))
-                .andExpect(jsonPath("$.pl_reg_error_name")
+                .andExpect(jsonPath("$.error_name")
                         .value("Length must be between 3 and 30 characters"))
-                .andExpect(jsonPath("$.pl_reg_error_description_description.length()")
+                .andExpect(jsonPath("$.error_description_description.length()")
                         .value(4))
-                .andExpect(jsonPath("$.pl_reg_error_description_description[1]")
+                .andExpect(jsonPath("$.error_description_description[1]")
                         .value("Length must be between 4 and 300 characters"))
-                .andExpect(jsonPath("$.pl_reg_error_description_description[3]")
+                .andExpect(jsonPath("$.error_description_description[3]")
                         .value("Length must be between 4 and 300 characters"));
     }
 }

@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.mockito.Matchers.eq;
@@ -28,7 +29,11 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
     @Test
     public void getAllPlatformInformation() throws Exception {
         // Get all platform information from Registry
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        Map<String, Certificate> componentCertificates = new HashMap<>();
+        Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
+        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, platformUrl, platformName, new Certificate(), componentCertificates));
+
+        doReturn(ownedPlatformDetails).when(mockRabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
         doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
                 .sendGetPlatformDetailsMessage(platformId);

@@ -7,6 +7,7 @@ import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPass
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
 import eu.h2020.symbiote.administration.model.*;
+import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
@@ -60,11 +61,12 @@ public class UserCpanel {
 
     private RabbitManager rabbitManager;
     private PlatformService platformService;
+    private FederationService federationService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
 
     @Autowired
-    public UserCpanel(RabbitManager rabbitManager, PlatformService platformService,
+    public UserCpanel(RabbitManager rabbitManager, PlatformService platformService, FederationService federationService,
                       @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                       @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
@@ -73,6 +75,9 @@ public class UserCpanel {
 
         Assert.notNull(platformService,"PlatformService can not be null!");
         this.platformService = platformService;
+
+        Assert.notNull(federationService,"FederationService can not be null!");
+        this.federationService = federationService;
 
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
@@ -295,107 +300,7 @@ public class UserCpanel {
     public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/list_user_platforms");
-
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        ArrayList<String> unavailablePlatforms = new ArrayList<>();
-        ArrayList<Platform> availablePlatforms = new ArrayList<>();
-        ListUserPlatformsResponse response = new ListUserPlatformsResponse();
-
-        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), ""),
-                new UserDetails(
-                        new Credentials(user.getUsername(), ""),
-                        "",
-                        "",
-                        UserRole.NULL,
-                        new HashMap<>(),
-                        new HashMap<>()
-                ),
-                OperationType.CREATE
-        );
-
-        // Get OwnedPlatformDetails from AAM
-        try {
-            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
-                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
-            if (ownedPlatformDetailsSet != null) {
-                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
-                    log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(platformDetails));
-
-                    // Get Platform information from Registry
-                    try {
-                        PlatformRegistryResponse registryResponse = rabbitManager.sendGetPlatformDetailsMessage(
-                                platformDetails.getPlatformInstanceId());
-                        if (registryResponse != null) {
-                            if (registryResponse.getStatus() != HttpStatus.OK.value()) {
-                                log.debug(registryResponse.getMessage());
-                                unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
-                            } else {
-                                availablePlatforms.add(registryResponse.getBody());
-                            }
-                        } else {
-                            String message = "Registry unreachable!";
-                            log.warn(message);
-                            response.setMessage(message);
-                            return new ResponseEntity<>(response,
-                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                        }
-                    } catch (CommunicationException e) {
-                        String message = "Registry threw CommunicationException";
-
-                        log.warn(message, e);
-                        response.setMessage(message + ": " + e.getMessage());
-                        return new ResponseEntity<>(response,
-                                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-                }
-
-                ArrayList<PlatformDetails> availablePlatformDetails = new ArrayList<>();
-                for (Platform platform : availablePlatforms) {
-                    PlatformDetails platformDetails = new PlatformDetails(platform);
-                    availablePlatformDetails.add(platformDetails);
-                }
-                response.setAvailablePlatforms(availablePlatformDetails);
-
-                if (unavailablePlatforms.size() == 0) {
-                    String message = "All the owned platform details were successfully received";
-                    log.debug(message);
-                    response.setMessage(message);
-                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
-                }
-                else {
-                    String message = "Could NOT retrieve information from Registry for the following platform that you own:";
-                    StringBuilder stringBuilder = new StringBuilder(message);
-
-                    for (String unavailablePlatform : unavailablePlatforms) {
-                        stringBuilder.append(" ").append(unavailablePlatform).append(",");
-
-                    }
-
-                    message = stringBuilder.toString();
-                    message = message.substring(0, message.length() - 1);
-                    log.debug(message);
-
-                    response.setMessage(message);
-                    return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.PARTIAL_CONTENT);
-                }
-            } else {
-                String message = "AAM responded with null";
-                log.warn(message);
-                response.setMessage(message);
-                return new ResponseEntity<>(response,
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "AAM threw CommunicationException";
-            log.warn(message, e);
-            response.setMessage(message + ": " + e.getMessage());
-            return new ResponseEntity<>(response,
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        }
+        return platformService.listUserPlatforms(principal);
     }
 
     @PostMapping("/administration/user/cpanel/register_platform")
@@ -607,6 +512,31 @@ public class UserCpanel {
                     new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
+    }
+
+    @PostMapping("/administration/user/cpanel/list_federations")
+    public ResponseEntity<?> listFederations(Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/list_federations");
+        return federationService.listFederations(principal);
+    }
+
+    @PostMapping("/administration/user/cpanel/create_federation")
+    public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
+                                              BindingResult bindingResult) {
+
+        log.debug("POST request on /administration/user/cpanel/create_federation with RequestBody: "
+                + ReflectionToStringBuilder.toString(createFederationRequest));
+        return federationService.createFederation(createFederationRequest, bindingResult);
+    }
+
+    @PostMapping("/administration/user/cpanel/leave_federation")
+    public ResponseEntity<?> createFederation(@RequestParam String federationId, @RequestParam String platformId,
+                                              Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/leave_federation for federationId = "
+                + federationId + " platformId = " + platformId);
+        return federationService.leaveFederation(federationId, platformId, principal, false);
     }
 
     /**

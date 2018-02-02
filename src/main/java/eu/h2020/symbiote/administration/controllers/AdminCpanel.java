@@ -3,24 +3,23 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
-
 import eu.h2020.symbiote.administration.model.CreateFederationRequest;
+import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.ClearDataRequest;
 import eu.h2020.symbiote.core.internal.ClearDataResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.FederationRule;
 import eu.h2020.symbiote.security.communication.payloads.FederationRuleManagementRequest;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,40 +47,25 @@ public class AdminCpanel {
     private static Log log = LogFactory.getLog(AdminCpanel.class);
 
     private RabbitManager rabbitManager;
-    private ResourceLoader resourceLoader;
+    private FederationService federationService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
-    private String coreInterfaceAddress;
-    private String cloudCoreInterfaceAddress;
-    private String paamValidityMillis;
-
-
 
     @Autowired
-    public AdminCpanel(RabbitManager rabbitManager, ResourceLoader resourceLoader,
+    public AdminCpanel(RabbitManager rabbitManager, FederationService federationService,
                        @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
-                       @Value("${aam.deployment.owner.password}") String aaMOwnerPassword,
-                       @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress,
-                       @Value("${paam.deployment.token.validityMillis}") String paamValidityMillis) {
+                       @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 
-        Assert.notNull(resourceLoader,"ResourceLoader can not be null!");
-        this.resourceLoader = resourceLoader;
+        Assert.notNull(federationService,"FederationService can not be null!");
+        this.federationService = federationService;
 
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
 
         Assert.notNull(aaMOwnerPassword,"aaMOwnerPassword can not be null!");
         this.aaMOwnerPassword = aaMOwnerPassword;
-
-        Assert.notNull(coreInterfaceAddress,"coreInterfaceAddress can not be null!");
-        this.coreInterfaceAddress = coreInterfaceAddress;
-
-        Assert.notNull(paamValidityMillis,"paamValidityMillis can not be null!");
-        this.paamValidityMillis = paamValidityMillis;
-
-        this.cloudCoreInterfaceAddress = this.coreInterfaceAddress.replace("8100/coreInterface", "8101/cloudCoreInterface");
     }
 
     /**
@@ -179,157 +163,20 @@ public class AdminCpanel {
 
     }
 
-    @PostMapping("/administration/admin/cpanel/create_federation")
-    public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
-                                              BindingResult bindingResult) {
-
-        Map<String, Object> responseBody = new HashMap<>();
-
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : errors) {
-                String errorMessage = fieldError.getDefaultMessage();
-
-                String errorField = "federation_reg_error_" + fieldError.getField();
-                responseBody.put(errorField, errorMessage);
-
-                log.debug(errorField + ": " + errorMessage);
-
-            }
-
-            responseBody.put("error", "Invalid Arguments");
-            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        Set<String> platformIds = new HashSet<>();
-        platformIds.add(createFederationRequest.getPlatform1Id());
-        platformIds.add(createFederationRequest.getPlatform2Id());
-        FederationRuleManagementRequest request = new FederationRuleManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                createFederationRequest.getId(),
-                platformIds,
-                FederationRuleManagementRequest.OperationType.CREATE
-        );
-
-        try {
-            Map<String, FederationRule> aamResponse =
-                    rabbitManager.sendFederationRuleManagementRequest(request);
-
-            if (aamResponse != null) {
-                if(aamResponse.size() == 1) {
-                    Map.Entry<String, FederationRule> entry = aamResponse.entrySet().iterator().next();
-
-                    if (entry.getValue().containPlatform(createFederationRequest.getPlatform1Id()) &&
-                            entry.getValue().containPlatform(createFederationRequest.getPlatform2Id())) {
-                        responseBody.put("message", "Federation Registration was successful!");
-                        responseBody.put("federationRule", entry.getValue());
-                        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
-
-                    } else {
-                        String message = "Not both platforms ids present in AAM response";
-                        responseBody.put("error", message);
-                        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-                    }
-                } else {
-                    String message = "Contains more than 1 Federation rule";
-                    log.warn(message);
-                    responseBody.put("error", message);
-                    return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-                }
-            } else {
-                String message = "AAM unreachable";
-                log.warn(message);
-                responseBody.put("error", message);
-                return new ResponseEntity<>(responseBody,
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "AAM threw communication exception";
-            log.warn(message, e);
-            responseBody.put("error", message + ": " + e.getMessage());
-            return new ResponseEntity<>(responseBody,
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
-
-    @PostMapping("/administration/admin/cpanel/list_federations")
-    public ResponseEntity<?> listFederations() {
-
-        log.debug("POST request on /administration/user/cpanel/list_federations");
-
-        Map<String, Object> responseBody = new HashMap<>();
-
-        Set<String> platformIds = new HashSet<>();
-
-        FederationRuleManagementRequest request = new FederationRuleManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                "",
-                platformIds,
-                FederationRuleManagementRequest.OperationType.READ
-        );
-
-        try {
-            Map<String, FederationRule> aamResponse =
-                    rabbitManager.sendFederationRuleManagementRequest(request);
-
-            if (aamResponse != null) {
-                return new ResponseEntity<>(aamResponse, new HttpHeaders(), HttpStatus.OK);
-
-            } else {
-                String message = "AAM unreachable during ListFederationRequest";
-                log.warn(message);
-                responseBody.put("error", message);
-                return new ResponseEntity<>(responseBody,
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "AAM threw communication exception during ListFederationRequest: " + e.getMessage();
-            log.warn(message, e);
-            responseBody.put("error", message);
-            return new ResponseEntity<>(responseBody,
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-    }
-
-
     @PostMapping("/administration/admin/cpanel/delete_federation")
     public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete) {
 
-        log.debug("POST request on /administration/user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+        log.debug("POST request on /administration/admin/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+        return federationService.deleteFederation(federationIdToDelete);
+    }
 
-        Map<String, Object> responseBody = new HashMap<>();
+    @PostMapping("/administration/admin/cpanel/leave_federation")
+    public ResponseEntity<?> createFederation(@RequestParam String federationId, @RequestParam String platformId,
+                                              Principal principal) {
 
-        FederationRuleManagementRequest request = new FederationRuleManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                federationIdToDelete,
-                new HashSet<>(),
-                FederationRuleManagementRequest.OperationType.DELETE
-        );
-
-        try {
-            Map<String, FederationRule> aamResponse =
-                    rabbitManager.sendFederationRuleManagementRequest(request);
-
-            if (aamResponse != null) {
-                return new ResponseEntity<>(aamResponse, new HttpHeaders(), HttpStatus.OK);
-
-            } else {
-                String message = "AAM unreachable during DeleteFederationRequest";
-                log.warn(message);
-                responseBody.put("error", message);
-                return new ResponseEntity<>(responseBody,
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "AAM threw communication exception during DeleteFederationRequest: " + e.getMessage();
-            log.warn(message, e);
-            responseBody.put("error", message);
-            return new ResponseEntity<>(responseBody,
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        log.debug("POST request on /administration/user/cpanel/leave_federation for federationId = "
+                + federationId + " platformId = " + platformId);
+        return federationService.leaveFederation(federationId, platformId, principal, true);
     }
 
 

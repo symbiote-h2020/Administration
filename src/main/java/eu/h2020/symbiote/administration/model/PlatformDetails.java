@@ -20,7 +20,7 @@ import java.util.List;
 public class PlatformDetails {
 
     @NotNull
-    @Pattern(regexp="^(\\Z|[\\w-][\\w-][\\w-][\\w-]+)$")
+    @Pattern(regexp="^(\\Z|[\\w-]{4,})$")
     @Size(max=30)
     private String id;
 
@@ -95,5 +95,4 @@ public class PlatformDetails {
     public String toString() {
         return ReflectionToStringBuilder.toString(this);
     }
-
 }

@@ -5,6 +5,7 @@ import eu.h2020.symbiote.administration.CustomAuthenticationProvider;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.controllers.Register;
 import eu.h2020.symbiote.administration.controllers.UserCpanel;
+import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import org.junit.Before;
 import org.mockito.Mock;
@@ -58,5 +59,8 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
 
         PlatformService platformService = appContext.getBean(PlatformService.class);
         platformService.setRabbitManager(mockRabbitManager);
+
+        FederationService federationService = appContext.getBean(FederationService.class);
+        federationService.setRabbitManager(mockRabbitManager);
     }
 }

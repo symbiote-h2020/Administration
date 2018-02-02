@@ -1,7 +1,6 @@
 package eu.h2020.symbiote.administration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
@@ -20,9 +19,7 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
-
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -344,21 +341,25 @@ public abstract class AdministrationBaseTestClass {
         Map<String, Certificate>  componentCertificates = new HashMap<>();
         Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
         ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, platformUrl, platformName, new Certificate(), componentCertificates));
+        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId + '2', platformUrl, platformName, new Certificate(), componentCertificates));
+        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId + '3', platformUrl, platformName, new Certificate(), componentCertificates));
+        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId + '4', platformUrl, platformName, new Certificate(), componentCertificates));
         return ownedPlatformDetails;
     }
 
     public CreateFederationRequest sampleCreateFederationRequest() {
-        CreateFederationRequest request = new CreateFederationRequest();
-        request.setId(federationRuleId);
-        request.setPlatform1Id(platformId);
-        request.setPlatform2Id(platformId + '2');
-        return request;
+        ArrayList<PlatformId> platformIds = new ArrayList<>();
+        platformIds.add(new PlatformId(platformId));
+        platformIds.add(new PlatformId(platformId + '2'));
+        platformIds.add(new PlatformId(platformId + '3'));
+        return new CreateFederationRequest(federationRuleId, platformIds);
     }
 
     public FederationRule sampleFederationRule() {
         Set<String> platformIds = new HashSet<>();
         platformIds.add(platformId);
         platformIds.add(platformId + '2');
+        platformIds.add(platformId + '3');
         return new FederationRule(federationRuleId, platformIds);
     }
 

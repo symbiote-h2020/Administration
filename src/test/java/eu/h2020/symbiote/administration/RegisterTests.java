@@ -98,7 +98,7 @@ public class RegisterTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", mail)
                 .param("role", "PLATFORM_OWNER"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.validUsername").value("must match \"^[\\w-][\\w-][\\w-][\\w-]+$\""))
+                .andExpect(jsonPath("$.validationErrors.validUsername").value("must match \"^[\\w-]{4,}$\""))
                 .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
     }
 

@@ -735,7 +735,47 @@ public class RabbitManager {
 
 
     /**
-     * Method used to send RPC request or federation rule management.
+     * Method used to send RPC request for federation creation.
+     *
+     * @param request  request for federation rule management
+     */
+    public Map<String, FederationRule> sendCreateFederationRequest(FederationRuleManagementRequest request)
+            throws CommunicationException {
+        return sendFederationRuleManagementRequest(request);
+    }
+
+    /**
+     * Method used to send RPC request for federation read.
+     *
+     * @param request  request for federation rule management
+     */
+    public Map<String, FederationRule> sendReadFederationRequest(FederationRuleManagementRequest request)
+            throws CommunicationException {
+        return sendFederationRuleManagementRequest(request);
+    }
+
+    /**
+     * Method used to send RPC request for federation update.
+     *
+     * @param request  request for federation rule management
+     */
+    public Map<String, FederationRule> sendUpdateFederationRequest(FederationRuleManagementRequest request)
+            throws CommunicationException {
+        return sendFederationRuleManagementRequest(request);
+    }
+
+    /**
+     * Method used to send RPC request for federation delete.
+     *
+     * @param request  request for federation rule management
+     */
+    public Map<String, FederationRule> sendDeleteFederationRequest(FederationRuleManagementRequest request)
+            throws CommunicationException {
+        return sendFederationRuleManagementRequest(request);
+    }
+
+    /**
+     * Method used to send RPC request for federation rule management.
      *
      * @param request  request for federation rule management
      */
@@ -769,6 +809,7 @@ public class RabbitManager {
         }
         return null;
     }
+
 
     // Used in testing
     public void setMapper(ObjectMapper mapper) { this.mapper = mapper; }

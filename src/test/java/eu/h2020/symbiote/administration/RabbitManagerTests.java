@@ -571,7 +571,6 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         Set<OwnedPlatformDetails> response = rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
 
         assertNotNull(response);
-        assertEquals(platformId, response.iterator().next().getPlatformInstanceId());
 
         // Return null
         doReturn(null)
