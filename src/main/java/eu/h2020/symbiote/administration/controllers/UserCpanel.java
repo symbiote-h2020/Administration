@@ -2,38 +2,31 @@ package eu.h2020.symbiote.administration.controllers;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.exceptions.authentication.AAMProblemException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
+import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.InformationModel;
-import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.*;
-
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
+import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
+import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.validator.routines.UrlValidator;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
@@ -46,7 +39,10 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Spring controller for the User control panel, handles management views and form validation.
@@ -515,19 +511,19 @@ public class UserCpanel {
     }
 
     @PostMapping("/administration/user/cpanel/list_federations")
-    public ResponseEntity<?> listFederations(Principal principal) {
+    public ResponseEntity<?> listFederations() {
 
         log.debug("POST request on /administration/user/cpanel/list_federations");
-        return federationService.listFederations(principal);
+        return federationService.listFederations();
     }
 
     @PostMapping("/administration/user/cpanel/create_federation")
-    public ResponseEntity<?> createFederation(@Valid @RequestBody CreateFederationRequest createFederationRequest,
+    public ResponseEntity<?> createFederation(@Valid @RequestBody Federation federation,
                                               BindingResult bindingResult) {
 
         log.debug("POST request on /administration/user/cpanel/create_federation with RequestBody: "
-                + ReflectionToStringBuilder.toString(createFederationRequest));
-        return federationService.createFederation(createFederationRequest, bindingResult);
+                + ReflectionToStringBuilder.toString(federation));
+        return federationService.createFederation(federation, bindingResult);
     }
 
     @PostMapping("/administration/user/cpanel/leave_federation")

@@ -3,6 +3,7 @@ package eu.h2020.symbiote.administration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
+import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -11,15 +12,15 @@ import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
 import eu.h2020.symbiote.model.cim.Resource;
-import eu.h2020.symbiote.model.mim.InformationModel;
-import eu.h2020.symbiote.model.mim.InterworkingService;
-import eu.h2020.symbiote.model.mim.Platform;
+import eu.h2020.symbiote.model.mim.*;
+import eu.h2020.symbiote.model.mim.Comparator;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -39,6 +40,9 @@ import java.util.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 public abstract class AdministrationBaseTestClass {
+
+    @Autowired
+    protected FederationRepository federationRepository;
 
     @Value("${aam.deployment.owner.username}")
     protected String AAMOwnerUsername;
@@ -70,7 +74,8 @@ public abstract class AdministrationBaseTestClass {
 
     protected String resourcelId = "resource_id";
 
-    protected String federationRuleId = "federation_rule_id";
+    protected String federationId = "federationId";
+    protected String federationName = "federationName";
 
     protected String componentsKeystorePassword = "comp_pass";
     protected String aamKeystoreName = "keystore";
@@ -347,32 +352,32 @@ public abstract class AdministrationBaseTestClass {
         return ownedPlatformDetails;
     }
 
-    public CreateFederationRequest sampleCreateFederationRequest() {
-        ArrayList<PlatformId> platformIds = new ArrayList<>();
-        platformIds.add(new PlatformId(platformId));
-        platformIds.add(new PlatformId(platformId + '2'));
-        platformIds.add(new PlatformId(platformId + '3'));
-        return new CreateFederationRequest(federationRuleId, platformIds);
-    }
+    public Federation sampleFederationRequest() {
+        Federation federation = new Federation();
+        federation.setId(federationId);
+        federation.setInformationModel(sampleInformationModel());
+        federation.setName(federationName);
+        federation.setPublic(true);
 
-    public FederationRule sampleFederationRule() {
-        Set<String> platformIds = new HashSet<>();
-        platformIds.add(platformId);
-        platformIds.add(platformId + '2');
-        platformIds.add(platformId + '3');
-        return new FederationRule(federationRuleId, platformIds);
-    }
 
-    public FederationRuleManagementRequest sampleFederationRuleManagementRequest(
-            FederationRuleManagementRequest.OperationType type) {
-        return new FederationRuleManagementRequest(sampleCredentials(), federationRuleId, type);
-    }
+        QoSConstraint qosConstraint1 = new QoSConstraint();
+        qosConstraint1.setMetric(QoSMetric.availability);
+        qosConstraint1.setComparator(Comparator.equal);
+        qosConstraint1.setThreshold(1.2);
+        QoSConstraint qosConstraint2 = new QoSConstraint();
+        qosConstraint2.setMetric(QoSMetric.load);
+        qosConstraint2.setComparator(Comparator.greaterThan);
+        qosConstraint2.setThreshold(1.2);
+        federation.setSlaConstraints(new ArrayList<>(Arrays.asList(qosConstraint1, qosConstraint2)));
 
-    public Map<String, FederationRule> sampleFederationRuleManagementResponse() {
-        Map<String, FederationRule> response = new HashMap<>();
-        response.put(federationRuleId, sampleFederationRule());
+        List<QoSConstraint> qosConstraints = new ArrayList<>(Arrays.asList(qosConstraint1, qosConstraint2));
+        federation.setSlaConstraints(qosConstraints);
+        FederationMember member1 = new FederationMember(platformId, platformUrl);
+        FederationMember member2 = new FederationMember(platformId + '2', platformUrl + "2");
+        FederationMember member3 = new FederationMember(platformId + '3', platformUrl + "3");
+        federation.setMembers(new ArrayList<>(Arrays.asList(member1, member2, member3)));
 
-        return response;
+        return federation;
     }
 
     public ErrorResponseContainer sampleErrorResponse() {

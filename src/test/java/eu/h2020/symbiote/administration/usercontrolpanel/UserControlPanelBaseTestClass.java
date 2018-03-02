@@ -60,7 +60,6 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
         PlatformService platformService = appContext.getBean(PlatformService.class);
         platformService.setRabbitManager(mockRabbitManager);
 
-        FederationService federationService = appContext.getBean(FederationService.class);
-        federationService.setRabbitManager(mockRabbitManager);
+        federationRepository.deleteAll();
     }
 }

@@ -30,7 +30,7 @@ public class ValidationService {
             String errorMessage = fieldError.getDefaultMessage();
             String[] parts = fieldError.getField().split("\\[");
 
-            if (parts.length > 1){
+            if (parts.length > 1) {
 
                 int errorFieldIndex = Integer.parseInt(parts[1].split("]")[0]);
                 log.debug("errorFieldIndex = " + errorFieldIndex);
@@ -58,7 +58,7 @@ public class ValidationService {
                 log.debug(responseBody);
             }
             else {
-                errorField = errorPrefix + fieldError.getField();
+                errorField = errorPrefix + fieldError.getField().replace(".", "_");
                 responseBody.put(errorField, errorMessage);
             }
             log.debug(errorField + ": " + errorMessage);

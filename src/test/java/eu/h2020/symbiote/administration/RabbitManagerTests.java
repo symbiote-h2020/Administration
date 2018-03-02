@@ -12,14 +12,16 @@ import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.*;
+import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
+import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
+import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
 import org.junit.Test;
 import org.mockito.Spy;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import static org.junit.Assert.*;
@@ -64,7 +66,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertNull(response);
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deseriallizing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -83,7 +85,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw JsonProcessingException while serialializing the request
+        // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendRegistryPlatformMessage("exchangeName",
@@ -185,7 +187,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertNull(response);
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -232,7 +234,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertNull(response);
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -284,7 +286,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertNull(response);
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -371,7 +373,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertNull(response);
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -389,7 +391,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw JsonProcessingException while serialializing the request
+        // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendRegistryResourcesRequest(sampleCoreResourceRegistryRequest());
@@ -428,7 +430,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         communicationCaught = false;
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
@@ -447,7 +449,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw JsonProcessingException while serialializing the request
+        // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
@@ -481,7 +483,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNull(response);
 
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -499,7 +501,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw JsonProcessingException while serialializing the request
+        // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendManagePlatformRequest(samplePlatformManagementRequest(OperationType.CREATE));
@@ -532,7 +534,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNull(response);
 
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -550,7 +552,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw JsonProcessingException while serialializing the request
+        // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendLoginRequest(sampleCredentials());
@@ -581,7 +583,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNull(response);
 
 
-        // Throw Exception while deserialializing the response
+        // Throw Exception while deserializing the response
         ObjectMapper om = spy(new ObjectMapper());
         rabbitManager.setMapper(om);
 
@@ -600,68 +602,10 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         assertEquals(true, communicationCaught);
 
-        // Throw JsonProcessingException while serialializing the request
+        // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
-        assertNull(response);
-    }
-
-
-    @Test
-    public void sendFederationRuleManagementRequest() throws Exception {
-
-        boolean communicationCaught = false;
-
-        // Successful Message
-        doReturn(serialize(sampleFederationRuleManagementResponse()))
-                .when(rabbitManager)
-                .sendRpcMessage(any(), any(), any(), eq("application/json"));
-
-        Map<String, FederationRule> response = rabbitManager.sendFederationRuleManagementRequest(
-                sampleFederationRuleManagementRequest(FederationRuleManagementRequest.OperationType.CREATE));
-
-        assertNotNull(response);
-        assertNotNull(response.get(federationRuleId));
-        assertEquals(federationRuleId, response.get(federationRuleId).getFederationId());
-        assertEquals(true, response.get(federationRuleId).getPlatformIds().contains(platformId));
-        assertEquals(true, response.get(federationRuleId).getPlatformIds().contains(platformId + '2'));
-
-        // Return null
-        doReturn(null)
-                .when(rabbitManager)
-                .sendRpcMessage(any(), any(), any(), eq("application/json"));
-
-        response = rabbitManager.sendFederationRuleManagementRequest(
-                sampleFederationRuleManagementRequest(FederationRuleManagementRequest.OperationType.CREATE));
-        assertNull(response);
-
-
-        // Throw Exception while deserialializing the response
-        ObjectMapper om = spy(new ObjectMapper());
-        rabbitManager.setMapper(om);
-
-
-        // Do not call readValue as it might fail
-        doThrow(new IOException()).when(om).readValue(any(String.class), eq(Map.class));
-        doReturn(serialize(sampleErrorResponse()))
-                .when(rabbitManager)
-                .sendRpcMessage(any(), any(), any(), eq("application/json"));
-        try {
-            rabbitManager.sendFederationRuleManagementRequest(
-                    sampleFederationRuleManagementRequest(FederationRuleManagementRequest.OperationType.CREATE));
-        }
-        catch (CommunicationException e) {
-            communicationCaught = true;
-        }
-
-        assertEquals(true, communicationCaught);
-
-        // Throw JsonProcessingException while serialializing the request
-        // Call writeValueAsString
-        when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
-        response = rabbitManager.sendFederationRuleManagementRequest(
-                sampleFederationRuleManagementRequest(FederationRuleManagementRequest.OperationType.CREATE));
         assertNull(response);
     }
 }

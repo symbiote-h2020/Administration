@@ -1,38 +1,29 @@
 package eu.h2020.symbiote.administration.communication.rabbit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.QueueingConsumer;
-
+import com.rabbitmq.client.*;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
+import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
-
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
-
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 
 
 /**
@@ -719,83 +710,6 @@ public class RabbitManager {
                 Set<OwnedPlatformDetails> response = mapper.readValue(responseMsg,
                         mapper.getTypeFactory().constructCollectionType(Set.class, OwnedPlatformDetails.class));
                 log.trace("Received platform owner details response from AAM.");
-                return response;
-
-            } catch (Exception e){
-
-                log.error("Error in owner platform details response from AAM.", e);
-                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
-                throw new CommunicationException(error.getErrorMessage());
-            }
-        } catch (IOException e) {
-            log.error("Failed (un)marshalling of rpc resource message.", e);
-        }
-        return null;
-    }
-
-
-    /**
-     * Method used to send RPC request for federation creation.
-     *
-     * @param request  request for federation rule management
-     */
-    public Map<String, FederationRule> sendCreateFederationRequest(FederationRuleManagementRequest request)
-            throws CommunicationException {
-        return sendFederationRuleManagementRequest(request);
-    }
-
-    /**
-     * Method used to send RPC request for federation read.
-     *
-     * @param request  request for federation rule management
-     */
-    public Map<String, FederationRule> sendReadFederationRequest(FederationRuleManagementRequest request)
-            throws CommunicationException {
-        return sendFederationRuleManagementRequest(request);
-    }
-
-    /**
-     * Method used to send RPC request for federation update.
-     *
-     * @param request  request for federation rule management
-     */
-    public Map<String, FederationRule> sendUpdateFederationRequest(FederationRuleManagementRequest request)
-            throws CommunicationException {
-        return sendFederationRuleManagementRequest(request);
-    }
-
-    /**
-     * Method used to send RPC request for federation delete.
-     *
-     * @param request  request for federation rule management
-     */
-    public Map<String, FederationRule> sendDeleteFederationRequest(FederationRuleManagementRequest request)
-            throws CommunicationException {
-        return sendFederationRuleManagementRequest(request);
-    }
-
-    /**
-     * Method used to send RPC request for federation rule management.
-     *
-     * @param request  request for federation rule management
-     */
-    public Map<String, FederationRule> sendFederationRuleManagementRequest(FederationRuleManagementRequest request)
-            throws CommunicationException {
-
-        log.debug("sendFederationRuleManagementRequest to AAM: " + ReflectionToStringBuilder.toString(request));
-
-        try {
-            String message = mapper.writeValueAsString(request);
-
-            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.manageFederationRuleRoutingKey, message, "application/json");
-
-            if (responseMsg == null)
-                return null;
-
-            try {
-                Map<String, FederationRule> response = mapper.readValue(responseMsg,
-                        mapper.getTypeFactory().constructMapType(Map.class, String.class, FederationRule.class));
-                log.trace("Received federation rules response from AAM.");
                 return response;
 
             } catch (Exception e){

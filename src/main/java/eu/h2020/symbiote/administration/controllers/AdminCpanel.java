@@ -3,7 +3,6 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.administration.model.CreateFederationRequest;
 import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
@@ -11,10 +10,6 @@ import eu.h2020.symbiote.core.internal.ClearDataRequest;
 import eu.h2020.symbiote.core.internal.ClearDataResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.FederationRule;
-import eu.h2020.symbiote.security.communication.payloads.FederationRuleManagementRequest;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,13 +22,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.validation.Valid;
 import java.security.Principal;
-import java.util.*;
+import java.util.List;
 
 /**
  * Spring controller for the User control panel, handles management views and form validation.
@@ -171,7 +166,7 @@ public class AdminCpanel {
     }
 
     @PostMapping("/administration/admin/cpanel/leave_federation")
-    public ResponseEntity<?> createFederation(@RequestParam String federationId, @RequestParam String platformId,
+    public ResponseEntity<?> leaveFederation(@RequestParam String federationId, @RequestParam String platformId,
                                               Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/leave_federation for federationId = "

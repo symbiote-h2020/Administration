@@ -4,7 +4,6 @@ import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
 import eu.h2020.symbiote.administration.CustomAuthenticationProvider;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.controllers.AdminCpanel;
-import eu.h2020.symbiote.administration.services.FederationService;
 import org.junit.Before;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -52,7 +51,7 @@ public abstract class AdminControlPanelBaseTestClass extends AdministrationBaseT
         AdminCpanel adminCpanelController = appContext.getBean(AdminCpanel.class);
         adminCpanelController.setRabbitManager(mockRabbitManager);
 
-        FederationService federationService = appContext.getBean(FederationService.class);
-        federationService.setRabbitManager(mockRabbitManager);
+        federationRepository.deleteAll();
+
     }
 }
