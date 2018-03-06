@@ -47,7 +47,8 @@ public class FederationService {
 
     public ResponseEntity<?> listFederations() {
         // List only the public federation
-        Map<String, Federation> federationMap = federationRepository.findAllByIsPublic(true).stream()
+        // Todo: limit the results only to public?
+        Map<String, Federation> federationMap = federationRepository.findAll().stream()
                 .collect(Collectors.toMap(Federation::getId, federation -> federation));
         return new ResponseEntity<>(federationMap, new HttpHeaders(), HttpStatus.OK);
     }
@@ -60,7 +61,7 @@ public class FederationService {
         if (bindingResult.hasErrors())
             return validationService.getRequestErrors(bindingResult);
 
-        Optional<Federation >existingFederation = federationRepository.findById(federation.getId());
+        Optional<Federation> existingFederation = federationRepository.findById(federation.getId());
         if (existingFederation.isPresent()) {
             responseBody.put("error", "The federation with id '" + federation.getId() +
                     "' already exists!");
@@ -70,8 +71,9 @@ public class FederationService {
         // Todo: check if the platforms exist
         // Todo: check if the information model exist
 
-        federationRepository.save(federation);
+        federation = federationRepository.save(federation);
         responseBody.put("message", "Federation Registration was successful!");
+        responseBody.put("federation", federation);
         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
     }
 

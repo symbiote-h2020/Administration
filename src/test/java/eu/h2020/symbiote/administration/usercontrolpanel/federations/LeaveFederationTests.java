@@ -84,6 +84,8 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
                 .param("platformId", platformId + '3'))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$." + federationId + ".members.length()").value(2))
+                .andExpect(jsonPath("$." + federationId + ".members[0].platformId").value(platformId))
+                .andExpect(jsonPath("$." + federationId + ".members[1].platformId").value(platformId + '2'))
                 .andExpect(jsonPath("$." + federationId + ".id").value(federationId));
     }
 }

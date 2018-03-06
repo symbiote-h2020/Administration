@@ -31,7 +31,8 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("Federation Registration was successful!"));
+                .andExpect(jsonPath("$.message").value("Federation Registration was successful!"))
+                .andExpect(jsonPath("$.federation.id").value(federationId));
 
         List<Federation> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
@@ -92,7 +93,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Invalid Arguments"))
                 .andExpect(jsonPath("$.error_id")
-                        .value("must match \"^[\\w-]{4,}$\""))
+                        .value("must match \"^(\\Z|[\\w-]{4,})$\""))
                 .andExpect(jsonPath("$.error_name")
                         .value("Length must be between 3 and 30 characters"))
                 .andExpect(jsonPath("$.error_informationModel_id")
