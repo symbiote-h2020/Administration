@@ -1,8 +1,8 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.controllers.UserCpanel;
-import eu.h2020.symbiote.administration.controllers.Register;
+import eu.h2020.symbiote.administration.controllers.UserCpanelController;
+import eu.h2020.symbiote.administration.controllers.RegisterController;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 
 import org.junit.Before;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Test class for use in testing MVC and form validation.
  */
-public class LoginTests extends AdministrationBaseTestClass {
+public class LoginControllerTests extends AdministrationBaseTestClass {
 
     @Autowired
     private ApplicationContext appContext;
@@ -62,10 +62,10 @@ public class LoginTests extends AdministrationBaseTestClass {
         CustomAuthenticationProvider provider = appContext.getBean(CustomAuthenticationProvider.class);
         provider.setRabbitManager(mockRabbitManager);
 
-        Register registerController = appContext.getBean(Register.class);
+        RegisterController registerController = appContext.getBean(RegisterController.class);
         registerController.setRabbitManager(mockRabbitManager);
 
-        UserCpanel userCpanelController = appContext.getBean(UserCpanel.class);
+        UserCpanelController userCpanelController = appContext.getBean(UserCpanelController.class);
         userCpanelController.setRabbitManager(mockRabbitManager);
     }
 

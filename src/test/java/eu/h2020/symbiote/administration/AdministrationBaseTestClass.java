@@ -175,6 +175,21 @@ public abstract class AdministrationBaseTestClass {
         return platform;
     }
 
+    public Platform samplePlatform(String platformId) {
+
+        InterworkingService interworkingService = new InterworkingService();
+        interworkingService.setInformationModelId(informationModelId);
+        interworkingService.setUrl(platformUrl + "/" + platformId);
+
+        Platform platform = new Platform();
+        platform.setId(platformId);
+        platform.setName(platformName);
+        platform.setDescription(Collections.singletonList(platformDescription));
+        platform.setInterworkingServices(Collections.singletonList(interworkingService));
+
+        return platform;
+    }
+
     public PlatformDetails samplePlatformDetails() {
 
         InterworkingService interworkingService = new InterworkingService();
@@ -212,6 +227,15 @@ public abstract class AdministrationBaseTestClass {
         platformResponse.setStatus(200);
         platformResponse.setMessage("Success");
         platformResponse.setBody(samplePlatform());
+        return platformResponse;
+    }
+
+    public PlatformRegistryResponse samplePlatformResponseSuccess(String platformId) {
+
+        PlatformRegistryResponse platformResponse = new PlatformRegistryResponse();
+        platformResponse.setStatus(200);
+        platformResponse.setMessage("Success");
+        platformResponse.setBody(samplePlatform(platformId));
         return platformResponse;
     }
 
@@ -372,9 +396,9 @@ public abstract class AdministrationBaseTestClass {
 
         List<QoSConstraint> qosConstraints = new ArrayList<>(Arrays.asList(qosConstraint1, qosConstraint2));
         federation.setSlaConstraints(qosConstraints);
-        FederationMember member1 = new FederationMember(platformId, platformUrl);
-        FederationMember member2 = new FederationMember(platformId + '2', platformUrl + "2");
-        FederationMember member3 = new FederationMember(platformId + '3', platformUrl + "3");
+        FederationMember member1 = new FederationMember(platformId, null);
+        FederationMember member2 = new FederationMember(platformId + '2', null);
+        FederationMember member3 = new FederationMember(platformId + '3', null);
         federation.setMembers(new ArrayList<>(Arrays.asList(member1, member2, member3)));
 
         return federation;

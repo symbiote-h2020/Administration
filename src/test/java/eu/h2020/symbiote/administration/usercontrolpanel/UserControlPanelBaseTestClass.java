@@ -3,9 +3,9 @@ package eu.h2020.symbiote.administration.usercontrolpanel;
 import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
 import eu.h2020.symbiote.administration.CustomAuthenticationProvider;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.controllers.Register;
-import eu.h2020.symbiote.administration.controllers.UserCpanel;
-import eu.h2020.symbiote.administration.services.FederationService;
+import eu.h2020.symbiote.administration.controllers.RegisterController;
+import eu.h2020.symbiote.administration.controllers.UserCpanelController;
+import eu.h2020.symbiote.administration.services.InformationModelService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import org.junit.Before;
 import org.mockito.Mock;
@@ -33,6 +33,21 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
     @Autowired
     protected Filter springSecurityFilterChain;
 
+    @Autowired
+    protected CustomAuthenticationProvider provider;
+
+    @Autowired
+    RegisterController registerController;
+
+    @Autowired
+    UserCpanelController userCpanelController;
+
+    @Autowired
+    PlatformService platformService;
+
+    @Autowired
+    InformationModelService informationModelService;
+
     protected MockMvc mockMvc;
 
     @Mock
@@ -48,17 +63,15 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
 
         MockitoAnnotations.initMocks(this);
 
-        CustomAuthenticationProvider provider = appContext.getBean(CustomAuthenticationProvider.class);
         provider.setRabbitManager(mockRabbitManager);
 
-        Register registerController = appContext.getBean(Register.class);
         registerController.setRabbitManager(mockRabbitManager);
 
-        UserCpanel userCpanelController = appContext.getBean(UserCpanel.class);
         userCpanelController.setRabbitManager(mockRabbitManager);
 
-        PlatformService platformService = appContext.getBean(PlatformService.class);
         platformService.setRabbitManager(mockRabbitManager);
+
+        informationModelService.setRabbitManager(mockRabbitManager);
 
         federationRepository.deleteAll();
     }

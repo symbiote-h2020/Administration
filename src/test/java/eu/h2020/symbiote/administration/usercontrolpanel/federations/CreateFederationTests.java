@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
+import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -12,6 +13,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -26,6 +31,21 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void success() throws Exception {
+        String platform1Url = platformUrl + "/" + platformId;
+        String platformId2 = platformId + "2";
+        String platform2Url = platformUrl + "/" + platformId2;
+        String platformId3 = platformId + "3";
+        String platform3Url = platformUrl + "/" + platformId3;
+
+        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId));
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId2));
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+                .sendListInfoModelsRequest();
+
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
                 .with(csrf().asHeader())
@@ -37,6 +57,10 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         List<Federation> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
         assertEquals(federationId, federations.get(0).getId());
+        assertEquals(3, federations.get(0).getMembers().size());
+        assertEquals(platform1Url, federations.get(0).getMembers().get(0).getInterworkingServiceURL());
+        assertEquals(platform2Url, federations.get(0).getMembers().get(1).getInterworkingServiceURL());
+        assertEquals(platform3Url, federations.get(0).getMembers().get(2).getInterworkingServiceURL());
     }
 
     @Test
@@ -108,5 +132,122 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                         .value("must match \"^[\\w-]{4,}$\""));
 
         assertEquals(0, federationRepository.findAll().size());
+    }
+
+    @Test
+    public void memberDoesNotExist() throws Exception {
+        String platformId2 = platformId + "2";
+        String platformId3 = platformId + "3";
+
+        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId));
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId2));
+        doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId3));
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error")
+                        .value("The platform with id " + platformId3 + " was not found"));
+
+        List<Federation> federations = federationRepository.findAll();
+        assertEquals(0, federations.size());
+    }
+
+    @Test
+    public void getPlatformDetailsRegistryUnreachable() throws Exception {
+
+        doReturn(null).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error")
+                        .value("Registry unreachable!"));
+
+        List<Federation> federations = federationRepository.findAll();
+        assertEquals(0, federations.size());
+    }
+
+    @Test
+    public void getPlatformDetailsCommunicationException() throws Exception {
+
+        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error")
+                        .value("Registry threw CommunicationException: error"));
+
+        List<Federation> federations = federationRepository.findAll();
+        assertEquals(0, federations.size());
+    }
+
+    @Test
+    public void informationModelDoesNotExist() throws Exception {
+        String platformId2 = platformId + "2";
+        String platformId3 = platformId + "3";
+        String dummyInfoModelId = "dummy";
+
+        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId));
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId2));
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+                .sendListInfoModelsRequest();
+
+        Federation federationRequest = sampleFederationRequest();
+        federationRequest.getInformationModel().setId(dummyInfoModelId);
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(federationRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error")
+                        .value("The information model with id " + dummyInfoModelId + " was not found"));
+
+        List<Federation> federations = federationRepository.findAll();
+        assertEquals(0, federations.size());
+    }
+
+    @Test
+    public void informationModelRequestRegistryUnreachable() throws Exception {
+        String platformId2 = platformId + "2";
+        String platformId3 = platformId + "3";
+
+        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId));
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId2));
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(mockRabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(null).when(mockRabbitManager)
+                .sendListInfoModelsRequest();
+
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error")
+                        .value("Could not retrieve the information models from registry"));
+
+        List<Federation> federations = federationRepository.findAll();
+        assertEquals(0, federations.size());
     }
 }

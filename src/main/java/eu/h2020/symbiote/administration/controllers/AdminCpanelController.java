@@ -38,8 +38,8 @@ import java.util.List;
  */
 @Controller
 @CrossOrigin
-public class AdminCpanel {
-    private static Log log = LogFactory.getLog(AdminCpanel.class);
+public class AdminCpanelController {
+    private static Log log = LogFactory.getLog(AdminCpanelController.class);
 
     private RabbitManager rabbitManager;
     private FederationService federationService;
@@ -47,9 +47,9 @@ public class AdminCpanel {
     private String aaMOwnerPassword;
 
     @Autowired
-    public AdminCpanel(RabbitManager rabbitManager, FederationService federationService,
-                       @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
-                       @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
+    public AdminCpanelController(RabbitManager rabbitManager, FederationService federationService,
+                                 @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
+                                 @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 

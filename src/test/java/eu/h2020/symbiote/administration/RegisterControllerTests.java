@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.controllers.Register;
+import eu.h2020.symbiote.administration.controllers.RegisterController;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 
 import org.junit.Before;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Test class for use in testing MVC and form validation.
  */
-public class RegisterTests extends AdministrationBaseTestClass {
+public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Autowired
     private ApplicationContext appContext;
@@ -58,7 +58,7 @@ public class RegisterTests extends AdministrationBaseTestClass {
 
         MockitoAnnotations.initMocks(this);
 
-        Register registerController = appContext.getBean(Register.class);
+        RegisterController registerController = appContext.getBean(RegisterController.class);
         registerController.setRabbitManager(mockRabbitManager);
 
     }

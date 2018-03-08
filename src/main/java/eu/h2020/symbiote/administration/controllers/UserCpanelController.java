@@ -4,13 +4,9 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.services.FederationService;
+import eu.h2020.symbiote.administration.services.InformationModelService;
 import eu.h2020.symbiote.administration.services.PlatformService;
-import eu.h2020.symbiote.core.cci.InformationModelRequest;
-import eu.h2020.symbiote.core.cci.InformationModelResponse;
-import eu.h2020.symbiote.core.internal.InformationModelListResponse;
-import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.model.mim.Federation;
-import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
@@ -20,7 +16,6 @@ import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -37,9 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,25 +45,30 @@ import java.util.Map;
  */
 @Controller
 @CrossOrigin
-public class UserCpanel {
-    private static Log log = LogFactory.getLog(UserCpanel.class);
+public class UserCpanelController {
+    private static Log log = LogFactory.getLog(UserCpanelController.class);
 
     private RabbitManager rabbitManager;
     private PlatformService platformService;
+    private InformationModelService informationModelService;
     private FederationService federationService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
 
     @Autowired
-    public UserCpanel(RabbitManager rabbitManager, PlatformService platformService, FederationService federationService,
-                      @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
-                      @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
+    public UserCpanelController(RabbitManager rabbitManager, PlatformService platformService,
+                                InformationModelService informationModelService, FederationService federationService,
+                                @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
+                                @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 
         Assert.notNull(platformService,"PlatformService can not be null!");
         this.platformService = platformService;
+
+        Assert.notNull(informationModelService,"InformationModelService can not be null!");
+        this.informationModelService = informationModelService;
 
         Assert.notNull(federationService,"FederationService can not be null!");
         this.federationService = federationService;
@@ -109,7 +107,7 @@ public class UserCpanel {
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
 
-        UserDetailsResponse response = null;
+        UserDetailsResponse response;
         try {
             response = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
 
@@ -344,7 +342,7 @@ public class UserCpanel {
         log.debug("POST request on /administration/user/cpanel/list_all_info_models");
 
         // Get InformationModelList from Registry
-        return getInformationModels();
+        return informationModelService.getInformationModels();
 
     }
 
@@ -353,23 +351,7 @@ public class UserCpanel {
 
         log.debug("POST request on /administration/user/cpanel/list_user_info_models");
 
-        // Checking if the user owns the platform
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-
-        // Get InformationModelList from Registry
-        ResponseEntity<?> responseEntity = getInformationModels();
-        if (responseEntity.getStatusCode() != HttpStatus.OK)
-            return responseEntity;
-        else {
-            ArrayList<InformationModel> userInfoModels = new ArrayList<>();
-
-            for (InformationModel informationModel : (List<InformationModel>)responseEntity.getBody()) {
-                if (informationModel.getOwner().equals(user.getUsername()))
-                    userInfoModels.add(informationModel);
-            }
-            return new ResponseEntity<>(userInfoModels, new HttpHeaders(), HttpStatus.OK);
-        }
+        return informationModelService.listUserInformationModels(principal);
     }
 
     @PostMapping("/administration/user/cpanel/register_information_model")
@@ -379,79 +361,7 @@ public class UserCpanel {
                                                       Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/register_information_model");
-
-        UrlValidator urlValidator = new UrlValidator();
-
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        Map<String, String> response = new HashMap<>();
-
-        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
-
-        if (name.length() < 2 || name.length() > 30)
-            response.put("info_model_reg_error_name", "The name should have from 2 to 30 characters");
-        if (!urlValidator.isValid(uri))
-            response.put("info_model_reg_error_uri", "The uri is invalid");
-        if (!rdfFile.getOriginalFilename().matches("^[\\w]+\\.(ttl|nt|rdf|xml|n3|jsonld)$"))
-            response.put("info_model_reg_error_rdf", "This format is not supported");
-
-        try {
-            log.debug("The size of the file is " + rdfFile.getBytes().length + "bytes");
-        } catch (IOException e) {
-            log.info("", e);
-        }
-
-        if (response.size() > 0) {
-            response.put("error", "Invalid Arguments");
-            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        InformationModelResponse registryResponse;
-        try {
-            InformationModel informationModel = new InformationModel();
-            informationModel.setName(name);
-            informationModel.setOwner(user.getUsername());
-            informationModel.setUri(uri);
-            informationModel.setRdf(new String(rdfFile.getBytes(), "UTF-8"));
-
-            String[] parts = rdfFile.getOriginalFilename().split("\\.");
-            informationModel.setRdfFormat(RDFFormat.fromFilenameExtension(parts[parts.length-1]));
-
-
-            InformationModelRequest request = new InformationModelRequest();
-            request.setBody(informationModel);
-
-            registryResponse = rabbitManager.sendRegisterInfoModelRequest(request);
-            if (registryResponse != null) {
-                if (registryResponse.getStatus() != HttpStatus.OK.value()) {
-                    String message = "Registry responded with: " + registryResponse.getStatus();
-                    log.info(message);
-                    response.put("error", registryResponse.getMessage());
-                    return new ResponseEntity<>(response,
-                            new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
-                }
-            } else {
-                String message = "Registry unreachable!";
-                log.warn(message);
-                response.put("error", message);
-                return new ResponseEntity<>(response,
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "Registry threw communication exception: " + e.getMessage();
-            log.warn(message);
-            response.put("error", message);
-            return new ResponseEntity<>(response,
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-        } catch (IOException e) {
-            String message = "Could not read the rdfFile";
-            log.warn(message);
-            response.put("error", message);
-            return new ResponseEntity<>(response,
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
-        return new ResponseEntity<>(registryResponse.getBody(), new HttpHeaders(), HttpStatus.CREATED);
+        return informationModelService.registerInformationModel(name, uri, rdfFile, principal);
     }
 
 
@@ -460,54 +370,7 @@ public class UserCpanel {
                                                     Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
-
-        // Checking if the user owns the information model
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-
-        // Get InformationModelList from Registry
-        ResponseEntity<?> responseEntity = getInformationModels();
-        if (responseEntity.getStatusCode() != HttpStatus.OK)
-            return responseEntity;
-        else {
-
-            for (InformationModel informationModel : (List<InformationModel>)responseEntity.getBody()) {
-                log.debug(informationModel.getId() + " " + informationModel.getOwner());
-                if (informationModel.getId().equals(infoModelIdToDelete) &&
-                        informationModel.getOwner().equals(user.getUsername())) {
-
-                    // Ask Registry
-                    try {
-                        InformationModelRequest request = new InformationModelRequest();
-                        request.setBody(informationModel);
-
-                        InformationModelResponse response = rabbitManager.sendDeleteInfoModelRequest(request);
-                        if (response != null) {
-                            if (response.getStatus() != HttpStatus.OK.value()) {
-
-                                return new ResponseEntity<>(response.getMessage(),
-                                        new HttpHeaders(), HttpStatus.valueOf(response.getStatus()));
-                            }
-                        } else {
-                            log.warn("Registry unreachable!");
-                            return new ResponseEntity<>("Registry unreachable!",
-                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                        }
-                    } catch (CommunicationException e) {
-                        log.info("", e);
-                        String message = "Registry threw communication exception: " + e.getMessage();
-                        log.warn(message);
-                        return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                    }
-
-                    return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
-                }
-            }
-
-            return new ResponseEntity<>("You do not own the Information Model that you tried to delete",
-                    new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
+        return informationModelService.deleteInformationModel(infoModelIdToDelete, principal);
     }
 
     @PostMapping("/administration/user/cpanel/list_federations")
@@ -542,28 +405,4 @@ public class UserCpanel {
         this.rabbitManager = rabbitManager;
     }
 
-
-    private ResponseEntity<?> getInformationModels() {
-        try {
-            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
-            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                return new ResponseEntity<>(informationModelListResponse.getBody(),
-                        new HttpHeaders(), HttpStatus.OK);
-
-            } else {
-                if (informationModelListResponse != null)
-                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
-                            new HttpHeaders(), HttpStatus.valueOf(informationModelListResponse.getStatus()));
-                else
-                    return new ResponseEntity<>("Could not retrieve the information models from registry",
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-            }
-        } catch (CommunicationException e) {
-            log.info("", e);
-            return new ResponseEntity<>("Communication exception while retrieving the information models: " +
-                    e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        }
-    }
 }

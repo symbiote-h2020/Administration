@@ -24,8 +24,8 @@ import java.util.Map;
  */
 @Controller
 @CrossOrigin
-public class Login {
-    private static Log log = LogFactory.getLog(Login.class);
+public class LoginController {
+    private static Log log = LogFactory.getLog(LoginController.class);
 
 	@GetMapping("/administration/user/login")
 	public String userLogin() {

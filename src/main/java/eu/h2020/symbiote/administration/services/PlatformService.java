@@ -37,16 +37,14 @@ public class PlatformService {
     private RabbitManager rabbitManager;
     private PlatformConfigurer platformConfigurer;
     private ValidationService validationService;
+    private InformationModelService informationModelService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
 
-    private enum RequestType {
-        REGISTER, UPDATE
-    }
 
     @Autowired
     public PlatformService(RabbitManager rabbitManager, PlatformConfigurer platformConfigurer,
-                           ValidationService validationService,
+                           ValidationService validationService, InformationModelService informationModelService,
                            @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                            @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
@@ -58,6 +56,9 @@ public class PlatformService {
 
         Assert.notNull(validationService,"ValidationService can not be null!");
         this.validationService = validationService;
+
+        Assert.notNull(informationModelService,"InformationModelService can not be null!");
+        this.informationModelService = informationModelService;
 
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
@@ -97,31 +98,16 @@ public class PlatformService {
                     log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(platformDetails));
 
                     // Get Platform information from Registry
-                    try {
-                        PlatformRegistryResponse registryResponse = rabbitManager.sendGetPlatformDetailsMessage(
-                                platformDetails.getPlatformInstanceId());
-                        if (registryResponse != null) {
-                            if (registryResponse.getStatus() != HttpStatus.OK.value()) {
-                                log.debug(registryResponse.getMessage());
-                                unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
-                            } else {
-                                availablePlatforms.add(registryResponse.getBody());
-                            }
-                        } else {
-                            String message = "Registry unreachable!";
-                            log.warn(message);
-                            response.setMessage(message);
-                            return new ResponseEntity<>(response,
-                                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-                        }
-                    } catch (CommunicationException e) {
-                        String message = "Registry threw CommunicationException";
-
-                        log.warn(message, e);
-                        response.setMessage(message + ": " + e.getMessage());
-                        return new ResponseEntity<>(response,
-                                new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    ResponseEntity registryResponse = getPlatformDetailsFromRegistry(platformDetails.getPlatformInstanceId());
+                    if (registryResponse.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR) {
+                        response.setMessage((String) registryResponse.getBody());
+                        return new ResponseEntity<>(response, new HttpHeaders(), registryResponse.getStatusCode());
                     }
+
+                    if (registryResponse.getStatusCode() == HttpStatus.NOT_FOUND)
+                        unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
+                    else if (registryResponse.getStatusCode() == HttpStatus.OK)
+                        availablePlatforms.add(((PlatformRegistryResponse) registryResponse.getBody()).getBody());
                 }
 
                 ArrayList<PlatformDetails> availablePlatformDetails = new ArrayList<>();
@@ -181,7 +167,7 @@ public class PlatformService {
         log.debug(platformDetails.toString());
 
         List<String> validInfoModelIds = new ArrayList<>();
-        ResponseEntity<?> listOfInformationModels = getInformationModels();
+        ResponseEntity<?> listOfInformationModels = informationModelService.getInformationModels();
 
         if (listOfInformationModels.getStatusCode() != HttpStatus.OK) {
             log.debug("Could not get information models from Registry");
@@ -197,7 +183,7 @@ public class PlatformService {
 
         Map<String, Object> responseBody = new HashMap<>();
 
-        // Remove ending slashed from platformDetails interworking services
+        // Remove ending slashed from platformDetails inter-working services
         platformDetails.getInterworkingServices().get(0)
                 .setUrl(platformDetails.getInterworkingServices().get(0).getUrl().replaceFirst("\\/+$", ""));
 
@@ -296,7 +282,7 @@ public class PlatformService {
         String password = (String) token.getCredentials();
 
         List<String> validInfoModelIds = new ArrayList<>();
-        ResponseEntity<?> listOfInformationModels = getInformationModels();
+        ResponseEntity<?> listOfInformationModels = informationModelService.getInformationModels();
 
         ResponseEntity<?> ownedPlatformDetailsResponse = checkIfUserOwnsPlatform(platformDetails.getId(), user);
         if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK)
@@ -578,29 +564,6 @@ public class PlatformService {
         }
     }
 
-    private ResponseEntity<?> getInformationModels() {
-        try {
-            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
-            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                return new ResponseEntity<>(informationModelListResponse.getBody(),
-                        new HttpHeaders(), HttpStatus.OK);
-
-            } else {
-                if (informationModelListResponse != null)
-                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
-                            new HttpHeaders(), HttpStatus.valueOf(informationModelListResponse.getStatus()));
-                else
-                    return new ResponseEntity<>("Could not retrieve the information models from registry",
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-            }
-        } catch (CommunicationException e) {
-            log.info("", e);
-            return new ResponseEntity<>("Communication exception while retrieving the information models: " +
-                    e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        }
-    }
 
     public ResponseEntity<?> checkIfUserOwnsPlatform(String platformId, CoreUser user) {
 
@@ -660,7 +623,7 @@ public class PlatformService {
     }
 
     private boolean isPlatformRequestInvalid(BindingResult bindingResult, PlatformDetails platformDetails,
-                                           List<String> validInfoModelIds) {
+                                             List<String> validInfoModelIds) {
         boolean invalidInfoModel = false;
 
         for (InterworkingService service : platformDetails.getInterworkingServices()) {
@@ -671,5 +634,31 @@ public class PlatformService {
         }
 
         return bindingResult.hasErrors() || invalidInfoModel;
+    }
+
+    public ResponseEntity getPlatformDetailsFromRegistry(String platformId) {
+
+        try {
+            PlatformRegistryResponse registryResponse = rabbitManager.sendGetPlatformDetailsMessage(platformId);
+            if (registryResponse != null) {
+                if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                    log.debug(registryResponse.getMessage());
+                    return new ResponseEntity<>(new HttpHeaders(), HttpStatus.NOT_FOUND);
+                } else {
+                    return new ResponseEntity<>(registryResponse, new HttpHeaders(), HttpStatus.OK);
+                }
+            } else {
+                String message = "Registry unreachable!";
+                log.warn(message);
+                return new ResponseEntity<>(message,
+                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException e) {
+            String message = "Registry threw CommunicationException";
+
+            log.warn(message, e);
+            return new ResponseEntity<>("Registry threw CommunicationException: " + e.getMessage(),
+                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -29,10 +29,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,9 +44,9 @@ import java.util.stream.Collectors;
  */
 @Controller
 @CrossOrigin
-public class Register {
+public class RegisterController {
 
-    private static Log log = LogFactory.getLog(Register.class);
+    private static Log log = LogFactory.getLog(RegisterController.class);
 
 	@Value("${aam.deployment.owner.username}")
 	private String aaMOwnerUsername;
@@ -60,7 +58,7 @@ public class Register {
 
 
     @Autowired
-    public Register(RabbitManager rabbitManager) {
+    public RegisterController(RabbitManager rabbitManager) {
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
     }

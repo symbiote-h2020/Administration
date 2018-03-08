@@ -58,7 +58,7 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
         doReturn(ownedPlatformDetailsSet).when(mockRabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
         doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
-                .sendGetPlatformDetailsMessage(platformId);
+                .sendGetPlatformDetailsMessage(eq(platformId));
         doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId + "2"));
 
