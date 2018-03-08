@@ -1,14 +1,12 @@
 package eu.h2020.symbiote.administration.usercontrolpanel;
 
 import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
-import eu.h2020.symbiote.administration.CustomAuthenticationProvider;
-import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.controllers.RegisterController;
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
+import eu.h2020.symbiote.administration.services.FederationNotificationService;
 import eu.h2020.symbiote.administration.services.InformationModelService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import org.junit.Before;
-import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -25,33 +23,35 @@ import javax.servlet.Filter;
 public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTestClass {
 
     @Autowired
+    @InjectMocks
     protected ApplicationContext appContext;
 
     @Autowired
+    @InjectMocks
     protected WebApplicationContext wac;
 
     @Autowired
+    @InjectMocks
     protected Filter springSecurityFilterChain;
 
     @Autowired
-    protected CustomAuthenticationProvider provider;
+    @InjectMocks
+    protected UserCpanelController userCpanelController;
 
     @Autowired
-    RegisterController registerController;
+    @InjectMocks
+    protected PlatformService platformService;
 
     @Autowired
-    UserCpanelController userCpanelController;
+    @InjectMocks
+    protected InformationModelService informationModelService;
 
     @Autowired
-    PlatformService platformService;
-
-    @Autowired
-    InformationModelService informationModelService;
+    @InjectMocks
+    protected FederationNotificationService federationNotificationService;
 
     protected MockMvc mockMvc;
 
-    @Mock
-    protected RabbitManager mockRabbitManager;
 
     @Before
     public void setup() {
@@ -63,15 +63,7 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
 
         MockitoAnnotations.initMocks(this);
 
-        provider.setRabbitManager(mockRabbitManager);
-
-        registerController.setRabbitManager(mockRabbitManager);
-
-        userCpanelController.setRabbitManager(mockRabbitManager);
-
-        platformService.setRabbitManager(mockRabbitManager);
-
-        informationModelService.setRabbitManager(mockRabbitManager);
+        originalRequestFactory = restTemplate.getRequestFactory();
 
         federationRepository.deleteAll();
     }

@@ -18,10 +18,7 @@ import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,12 +29,14 @@ public class FederationService {
     private PlatformService platformService;
     private InformationModelService informationModelService;
     private ValidationService validationService;
+    private FederationNotificationService federationNotificationService;
 
     @Autowired
     public FederationService(FederationRepository federationRepository,
                              PlatformService platformService,
                              InformationModelService informationModelService,
-                             ValidationService validationService) {
+                             ValidationService validationService,
+                             FederationNotificationService federationNotificationService) {
 
         Assert.notNull(federationRepository,"FederationRepository can not be null!");
         this.federationRepository = federationRepository;
@@ -50,6 +49,9 @@ public class FederationService {
 
         Assert.notNull(validationService,"ValidationService can not be null!");
         this.validationService = validationService;
+
+        Assert.notNull(federationNotificationService,"FederationNotificationService can not be null!");
+        this.federationNotificationService = federationNotificationService;
     }
 
 
@@ -109,7 +111,8 @@ public class FederationService {
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        // Todo: Inform the Federation Managers of the platform members
+        // Inform the Federation Managers of the platform members
+        federationNotificationService.notifyAboutFederationUpdate(federation);
 
         // Storing the new federation
         federation = federationRepository.save(federation);
@@ -118,6 +121,7 @@ public class FederationService {
         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
     }
 
+
     public ResponseEntity<?> deleteFederation(String federationIdToDelete) {
 
         log.debug("POST request on /administration/user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
@@ -125,9 +129,12 @@ public class FederationService {
         List<Federation> deletedFederations = federationRepository.deleteById(federationIdToDelete);
         Map<String, Object> response = new HashMap<>();
 
-        // Todo: Inform the Federation Managers of the platform members
-
         if (deletedFederations.size() > 0) {
+            Federation deletedFederation = deletedFederations.get(0);
+
+            // Inform the Federation Managers of the platform members
+            federationNotificationService.notifyAboutFederationDeletion(deletedFederation);
+
             response.put(deletedFederations.get(0).getId(), deletedFederations.get(0));
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
         }
@@ -167,10 +174,15 @@ public class FederationService {
         if (isPlatformTheOnlyMember.getStatusCode() != HttpStatus.OK)
             return isPlatformTheOnlyMember;
 
+        // Save the whole list of members before removing the member that left
+        List<FederationMember> initialMembers = new ArrayList<>(federation.get().getMembers());
+
         // Remove platform member
         federation.get().getMembers().remove(memberIndex);
 
-        // Todo: Inform the Federation Managers of the platform members
+        // Inform the Federation Managers of the platform members
+        federationNotificationService.notifyAboutFederationUpdate(federation.get(), initialMembers);
+
         federationRepository.save(federation.get());
 
         responseBody.put(federation.get().getId(), federation.get());

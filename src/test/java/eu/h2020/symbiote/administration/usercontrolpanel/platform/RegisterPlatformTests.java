@@ -25,7 +25,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void informationModelsError() throws Exception {
         // Could not get Information models from Registry
-        doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -38,11 +38,11 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
         // Register platform successfully
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -57,11 +57,11 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryError() throws Exception {
         // Registry responds with error
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
-        doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseFail()).when(rabbitManager)
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -76,11 +76,11 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryTimeout() throws Exception {
         // Registry responds with null
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -95,11 +95,11 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryCommunicationException() throws Exception {
         // Registry throws CommunicationException
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -114,9 +114,9 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void platformExists() throws Exception {
         // AAM responds with PLATFORM_EXISTS
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(samplePlatformManagementResponse(ManagementStatus.PLATFORM_EXISTS)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.PLATFORM_EXISTS)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -131,9 +131,9 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamError() throws Exception {
         // AAM responds with other ERROR
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -148,9 +148,9 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamTimeout() throws Exception {
         // AAM responds with null
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -165,9 +165,9 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamCommunicationException() throws Exception {
         // AAM throws CommunicationException
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -191,7 +191,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
         platformDetails.getDescription().add(new Description("aaaa"));
         platformDetails.getDescription().add(new Description("aa"));
 
-        doReturn(informationModelListResponse).when(mockRabbitManager)
+        doReturn(informationModelListResponse).when(rabbitManager)
                 .sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")

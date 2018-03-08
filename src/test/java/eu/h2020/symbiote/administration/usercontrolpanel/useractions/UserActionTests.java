@@ -49,7 +49,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationAAMTimeout() throws Exception {
-        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(null);
+        when(rabbitManager.sendLoginRequest(any())).thenReturn(null);
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
@@ -58,7 +58,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationError() throws Exception {
-        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST));
+        when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST));
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
@@ -67,7 +67,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationSuccess() throws Exception {
-        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
+        when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
@@ -76,7 +76,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changePasswordTimeout() throws Exception {
-        doReturn(null).when(mockRabbitManager).sendUserManagementRequest(any());
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -87,7 +87,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changePasswordBadRequest() throws Exception {
-        doThrow(sampleCommunicationException()).when(mockRabbitManager).sendUserManagementRequest(any());
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -132,7 +132,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changePasswordSuccess() throws Exception {
-        doReturn(ManagementStatus.OK).when(mockRabbitManager).sendUserManagementRequest(any());
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -143,7 +143,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changeEmailTimeout() throws Exception {
-        doReturn(null).when(mockRabbitManager).sendUserManagementRequest(any());
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -154,7 +154,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changeEmailBadRequest() throws Exception {
-        doThrow(sampleCommunicationException()).when(mockRabbitManager).sendUserManagementRequest(any());
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -197,7 +197,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changeEmailSuccess() throws Exception {
-        doReturn(ManagementStatus.OK).when(mockRabbitManager).sendUserManagementRequest(any());
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))

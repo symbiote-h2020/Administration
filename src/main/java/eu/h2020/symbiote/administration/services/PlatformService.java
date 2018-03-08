@@ -499,12 +499,6 @@ public class PlatformService {
         }
     }
 
-    /**
-     * Used for testing
-     */
-    public void setRabbitManager(RabbitManager rabbitManager){
-        this.rabbitManager = rabbitManager;
-    }
 
     private void sendPlatformDeleteMessageToAAM(PlatformManagementRequest initialRequest) {
 

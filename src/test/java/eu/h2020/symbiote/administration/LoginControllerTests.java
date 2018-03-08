@@ -1,16 +1,11 @@
 package eu.h2020.symbiote.administration;
 
-import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
-import eu.h2020.symbiote.administration.controllers.RegisterController;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
@@ -44,29 +39,21 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
     @Autowired
     private Filter springSecurityFilterChain;
 
+    @Autowired
+    @InjectMocks
+    private UserCpanelController userCpanelController;
+
     private MockMvc mockMvc;
 
-    @Mock
-    private RabbitManager mockRabbitManager;
-
     @Before
-    public void setup(){
+    public void setup() {
 
         this.mockMvc = MockMvcBuilders
-            .webAppContextSetup(this.wac)
-            .addFilters(springSecurityFilterChain)
-            .build();
+                .webAppContextSetup(this.wac)
+                .addFilters(springSecurityFilterChain)
+                .build();
 
         MockitoAnnotations.initMocks(this);
-
-        CustomAuthenticationProvider provider = appContext.getBean(CustomAuthenticationProvider.class);
-        provider.setRabbitManager(mockRabbitManager);
-
-        RegisterController registerController = appContext.getBean(RegisterController.class);
-        registerController.setRabbitManager(mockRabbitManager);
-
-        UserCpanelController userCpanelController = appContext.getBean(UserCpanelController.class);
-        userCpanelController.setRabbitManager(mockRabbitManager);
     }
 
     @Test
@@ -88,7 +75,7 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postLoginPage() throws Exception {
 
-        when(mockRabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
+        when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
 
         mockMvc.perform(post("/administration/user/login")
             .with(csrf().asHeader())

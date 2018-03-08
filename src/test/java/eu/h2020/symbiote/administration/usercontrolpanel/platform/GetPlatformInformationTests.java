@@ -33,9 +33,9 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
         Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
         ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, platformUrl, platformName, new Certificate(), componentCertificates));
 
-        doReturn(ownedPlatformDetails).when(mockRabbitManager)
+        doReturn(ownedPlatformDetails).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(platformId);
 
         mockMvc.perform(post("/administration/user/cpanel/list_user_platforms")
@@ -55,11 +55,11 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
         ownedPlatformDetailsSet.add(new OwnedPlatformDetails(platformId + "2", platformUrl, platformName + "2",
                 new Certificate(), new HashMap<>()));
 
-        doReturn(ownedPlatformDetailsSet).when(mockRabbitManager)
+        doReturn(ownedPlatformDetailsSet).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseFail()).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId + "2"));
 
 
@@ -77,9 +77,9 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryUnreachable() throws Exception {
         // Registry unreachable
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
         mockMvc.perform(post("/administration/user/cpanel/list_user_platforms")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -92,9 +92,9 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryCommunicationException() throws Exception {
         // Registry threw communication exception
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
         mockMvc.perform(post("/administration/user/cpanel/list_user_platforms")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -107,7 +107,7 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamTimeout() throws Exception {
         // AAM responds with null
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
         mockMvc.perform(post("/administration/user/cpanel/list_user_platforms")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -120,7 +120,7 @@ public class GetPlatformInformationTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamCommunicationException() throws Exception {
         // AAM threw communication exception
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
         mockMvc.perform(post("/administration/user/cpanel/list_user_platforms")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))

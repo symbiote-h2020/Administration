@@ -1,15 +1,21 @@
 package eu.h2020.symbiote.administration.admincontrolpanel.federations;
 
 import eu.h2020.symbiote.administration.admincontrolpanel.AdminControlPanelBaseTestClass;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.http.HttpMethod;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.match.MockRestRequestMatchers;
 
-import static org.mockito.Mockito.*;
+import static eu.h2020.symbiote.administration.services.FederationNotificationService.FEDERATION_MANAGER_URL;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,9 +28,41 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
 
     @Test
     public void success() throws Exception {
-        // Save the federation
-        Federation federation = sampleFederationRequest();
+
+        Federation federation = sampleSavedFederation();
         federationRepository.save(federation);
+
+        String platformId1 = federation.getMembers().get(0).getPlatformId();
+        String platformId2 = federation.getMembers().get(1).getPlatformId();
+        String platformId3 = federation.getMembers().get(2).getPlatformId();
+        String platform1Url = federation.getMembers().get(0).getInterworkingServiceURL();
+        String platform2Url = federation.getMembers().get(1).getInterworkingServiceURL();
+        String platform3Url =federation.getMembers().get(2).getInterworkingServiceURL();
+
+        MockRestServiceServer mockServer =
+                MockRestServiceServer.bindTo(restTemplate).build();
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL + "/" + federationId))
+                .andExpect(method(HttpMethod.DELETE))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platformId2, platformId3)))
+                .andRespond(withSuccess());
+        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL + "/" + federationId))
+                .andExpect(method(HttpMethod.DELETE))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platformId2, platformId3)))
+                .andRespond(withSuccess());
+        mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL + "/" + federationId))
+                .andExpect(method(HttpMethod.DELETE))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platformId2, platformId3)))
+                .andRespond(withSuccess());
+
 
         mockMvc.perform(post("/administration/admin/cpanel/delete_federation")
                 .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
@@ -33,6 +71,11 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$." + federationId + ".members.length()").value(3))
                 .andExpect(jsonPath("$." + federationId + ".id").value(federationId));
+
+        mockServer.verify();
+
+        // Reset the original request factory of restTemplate to unbind it from the mockServer
+        restTemplate.setRequestFactory(originalRequestFactory);
     }
 
     @Test

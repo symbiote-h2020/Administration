@@ -5,13 +5,19 @@ import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTes
 import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.match.MockRestRequestMatchers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static eu.h2020.symbiote.administration.services.FederationNotificationService.FEDERATION_MANAGER_URL;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -19,10 +25,12 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 /**
  * Test class for use in testing MVC and form validation.
@@ -37,14 +45,38 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         String platformId3 = platformId + "3";
         String platform3Url = platformUrl + "/" + platformId3;
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId3));
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
+        doReturn(new HttpHeaders())
+                .when(authorizationService).getHttpHeadersWithSecurityRequest();
+        doReturn(true)
+                .when(authorizationService).validateServiceResponse(any(), any(), any());
+
+        MockRestServiceServer mockServer =
+                MockRestServiceServer.bindTo(restTemplate).build();
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platformId2, platformId3)))
+                .andRespond(withSuccess());
+        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platformId2, platformId3)))                .andRespond(withSuccess());
+        mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platformId2, platformId3)))
+                .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -53,6 +85,11 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Federation Registration was successful!"))
                 .andExpect(jsonPath("$.federation.id").value(federationId));
+
+        mockServer.verify();
+
+        // Reset the original request factory of restTemplate to unbind it from the mockServer
+        restTemplate.setRequestFactory(originalRequestFactory);
 
         List<Federation> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
@@ -139,11 +176,11 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         String platformId2 = platformId + "2";
         String platformId3 = platformId + "3";
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseFail()).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId3));
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
@@ -161,7 +198,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     @Test
     public void getPlatformDetailsRegistryUnreachable() throws Exception {
 
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
@@ -179,7 +216,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     @Test
     public void getPlatformDetailsCommunicationException() throws Exception {
 
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
@@ -200,13 +237,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         String platformId3 = platformId + "3";
         String dummyInfoModelId = "dummy";
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId3));
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager)
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
 
         Federation federationRequest = sampleFederationRequest();
@@ -229,13 +266,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         String platformId2 = platformId + "2";
         String platformId3 = platformId + "3";
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platformId3));
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendListInfoModelsRequest();
 
 
@@ -249,5 +286,43 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
         List<Federation> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
+    }
+
+    @Test
+    public void cannotContactFederationManagers() throws Exception {
+        String platform1Url = platformUrl + "/" + platformId;
+        String platformId2 = platformId + "2";
+        String platform2Url = platformUrl + "/" + platformId2;
+        String platformId3 = platformId + "3";
+        String platform3Url = platformUrl + "/" + platformId3;
+
+        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId));
+        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId2));
+        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
+                .sendListInfoModelsRequest();
+        doReturn(new HttpHeaders())
+                .when(authorizationService).getHttpHeadersWithSecurityRequest();
+        doReturn(true)
+                .when(authorizationService).validateServiceResponse(any(), any(), any());
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Federation Registration was successful!"))
+                .andExpect(jsonPath("$.federation.id").value(federationId));
+
+        List<Federation> federations = federationRepository.findAll();
+        assertEquals(1, federations.size());
+        assertEquals(federationId, federations.get(0).getId());
+        assertEquals(3, federations.get(0).getMembers().size());
+        assertEquals(platform1Url, federations.get(0).getMembers().get(0).getInterworkingServiceURL());
+        assertEquals(platform2Url, federations.get(0).getMembers().get(1).getInterworkingServiceURL());
+        assertEquals(platform3Url, federations.get(0).getMembers().get(2).getInterworkingServiceURL());
     }
 }

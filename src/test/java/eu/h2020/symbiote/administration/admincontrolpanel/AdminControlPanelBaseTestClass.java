@@ -1,10 +1,10 @@
 package eu.h2020.symbiote.administration.admincontrolpanel;
 
 import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
-import eu.h2020.symbiote.administration.CustomAuthenticationProvider;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.controllers.AdminCpanelController;
 import org.junit.Before;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,15 +31,13 @@ public abstract class AdminControlPanelBaseTestClass extends AdministrationBaseT
     protected Filter springSecurityFilterChain;
 
     @Autowired
-    CustomAuthenticationProvider provider;
-
-    @Autowired
-    AdminCpanelController adminCpanelController;
+    @InjectMocks
+    protected AdminCpanelController adminCpanelController;
 
     protected MockMvc mockMvc;
 
     @Mock
-    protected RabbitManager mockRabbitManager;
+    protected RabbitManager rabbitManager;
 
     @Before
     public void setup() {
@@ -51,9 +49,7 @@ public abstract class AdminControlPanelBaseTestClass extends AdministrationBaseT
 
         MockitoAnnotations.initMocks(this);
 
-        provider.setRabbitManager(mockRabbitManager);
-
-        adminCpanelController.setRabbitManager(mockRabbitManager);
+        originalRequestFactory = restTemplate.getRequestFactory();
 
         federationRepository.deleteAll();
 

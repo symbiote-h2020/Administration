@@ -22,11 +22,11 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
         // Delete Platform Successfully
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
-        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -39,7 +39,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void doesNotOwnPlatform() throws Exception {
         // The user does not own the platform which tries to delete
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -52,7 +52,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamTimeout() throws Exception {
         // AAM return null
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -66,7 +66,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamCommunicationException() throws Exception {
         // AAM throws CommunicationException
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -80,9 +80,9 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryError() throws Exception {
         // Registry returns error
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseFail()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseFail()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -96,9 +96,9 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryTimeout() throws Exception {
         // Registry returns null
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -112,9 +112,9 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryCommunicationException() throws Exception {
         // Registry throws CommunicationException
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -128,11 +128,11 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamError() throws Exception {
         // AAM returns error
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
-        doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(mockRabbitManager)
+        doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -146,11 +146,11 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamTimeout2() throws Exception {
         // AAM returns null
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
-        doReturn(null).when(mockRabbitManager)
+        doReturn(null).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
@@ -164,11 +164,11 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamCommunicationException2() throws Exception {
         // Registry throws CommunicationException
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(mockRabbitManager)
+        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
-        doThrow(new CommunicationException("error")).when(mockRabbitManager)
+        doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")

@@ -21,7 +21,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void couldNotRetrieveInfoModels() throws Exception {
         // Could not get Information models from Registry
-        doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -34,7 +34,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void doesNotModel() throws Exception {
         // The user does not own the information model which tried to delete
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -47,8 +47,8 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
         // Delete information model successfully
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager).sendListInfoModelsRequest();
-        doReturn(sampleInformationModelResponseSuccess()).when(mockRabbitManager).sendDeleteInfoModelRequest(any());
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
+        doReturn(sampleInformationModelResponseSuccess()).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -60,8 +60,8 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryError() throws Exception {
         // Registry returns error
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager).sendListInfoModelsRequest();
-        doReturn(sampleInformationModelResponseFail()).when(mockRabbitManager).sendDeleteInfoModelRequest(any());
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
+        doReturn(sampleInformationModelResponseFail()).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -74,8 +74,8 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryTimeout() throws Exception {
         // Registry returns null
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager).sendListInfoModelsRequest();
-        doReturn(null).when(mockRabbitManager).sendDeleteInfoModelRequest(any());
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
+        doReturn(null).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -88,8 +88,8 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryCommunicationException() throws Exception {
         // Registry throws CommunicationException
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager).sendListInfoModelsRequest();
-        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendDeleteInfoModelRequest(any());
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
+        doThrow(new CommunicationException("error")).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))

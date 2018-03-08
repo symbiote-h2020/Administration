@@ -23,7 +23,7 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void listAllInformationModels() throws Exception {
-        doReturn(sampleInformationModelListResponseSuccess()).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/list_all_info_models")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -42,7 +42,7 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
         InformationModelListResponse informationModelListResponse = sampleInformationModelListResponseSuccess();
         informationModelListResponse.getBody().add(infoModel);
 
-        doReturn(informationModelListResponse).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(informationModelListResponse).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/list_user_info_models")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -55,7 +55,7 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void getInformationModelsFailure() throws Exception {
         // Failed response
-        doReturn(sampleInformationModelListResponseFail()).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(sampleInformationModelListResponseFail()).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -68,7 +68,7 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void getInformationModelsTimeout() throws Exception {
         // Registry returns null
-        doReturn(null).when(mockRabbitManager).sendListInfoModelsRequest();
+        doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
@@ -81,7 +81,7 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
     @Test
     public void getInformationModelsCommunicationException() throws Exception {
         // Registry throws CommunicationException
-        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendListInfoModelsRequest();
+        doThrow(new CommunicationException("error")).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
                 .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))

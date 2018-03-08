@@ -129,7 +129,4 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
     }
 
-    public void setRabbitManager(RabbitManager rabbitManager){
-        this.rabbitManager = rabbitManager;
-    }
 }

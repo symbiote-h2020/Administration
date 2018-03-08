@@ -13,6 +13,7 @@ import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * Spring Boot Application class for Administration (AAM) component.
@@ -54,6 +55,11 @@ public class AdministrationApplication {
     @Bean
     public AlwaysSampler defaultSampler() {
         return new AlwaysSampler();
+    }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 
 }

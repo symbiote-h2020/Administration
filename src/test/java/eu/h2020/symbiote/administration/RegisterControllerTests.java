@@ -1,15 +1,11 @@
 package eu.h2020.symbiote.administration;
 
-import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.controllers.RegisterController;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import org.mockito.Mock;
+import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,7 +13,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.Filter;
-
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -26,7 +21,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 /**
@@ -43,10 +39,11 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Autowired
     private Filter springSecurityFilterChain;
 
-    private MockMvc mockMvc;
+    @Autowired
+    @InjectMocks
+    private RegisterController registerController;
 
-    @Mock
-    private RabbitManager mockRabbitManager;
+    private MockMvc mockMvc;
 
     @Before
     public void setup(){
@@ -57,9 +54,6 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
             .build();
 
         MockitoAnnotations.initMocks(this);
-
-        RegisterController registerController = appContext.getBean(RegisterController.class);
-        registerController.setRabbitManager(mockRabbitManager);
 
     }
 
@@ -155,7 +149,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterSuccess() throws Exception {
 
-        when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
+        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -169,7 +163,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterUsernameExists() throws Exception {
 
-        when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.USERNAME_EXISTS);
+        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.USERNAME_EXISTS);
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -184,7 +178,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterAAMError() throws Exception {
 
-        when(mockRabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.ERROR);
+        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.ERROR);
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -199,7 +193,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterCommunicationException() throws Exception {
 
-        when(mockRabbitManager.sendUserManagementRequest(any())).thenThrow(sampleCommunicationException());
+        when(rabbitManager.sendUserManagementRequest(any())).thenThrow(sampleCommunicationException());
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())

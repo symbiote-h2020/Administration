@@ -44,7 +44,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
     @Test
     public void success() throws Exception {
         // Successful information model registration
-        doReturn(sampleInformationModelResponseSuccess()).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
+        doReturn(sampleInformationModelResponseSuccess()).when(rabbitManager).sendRegisterInfoModelRequest(any());
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
@@ -58,7 +58,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
     @Test
     public void registryError() throws Exception {
         // Registry returns error
-        doReturn(sampleInformationModelResponseFail()).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
+        doReturn(sampleInformationModelResponseFail()).when(rabbitManager).sendRegisterInfoModelRequest(any());
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
@@ -72,7 +72,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
     @Test
     public void registryTimeout() throws Exception {
         // Registry returns null
-        doReturn(null).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
+        doReturn(null).when(rabbitManager).sendRegisterInfoModelRequest(any());
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
@@ -86,7 +86,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
     @Test
     public void registryCommunicationException() throws Exception {
         // Registry returns error
-        doThrow(new CommunicationException("error")).when(mockRabbitManager).sendRegisterInfoModelRequest(any());
+        doThrow(new CommunicationException("error")).when(rabbitManager).sendRegisterInfoModelRequest(any());
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)

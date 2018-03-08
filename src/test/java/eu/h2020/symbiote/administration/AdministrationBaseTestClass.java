@@ -1,9 +1,11 @@
 package eu.h2020.symbiote.administration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
+import eu.h2020.symbiote.administration.services.AuthorizationService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -12,24 +14,29 @@ import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
 import eu.h2020.symbiote.model.cim.Resource;
-import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.model.mim.Comparator;
+import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
 import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -39,10 +46,26 @@ import java.util.*;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+@ActiveProfiles("test")
 public abstract class AdministrationBaseTestClass {
 
     @Autowired
     protected FederationRepository federationRepository;
+
+    @Autowired
+    protected AuthorizationService authorizationService;
+
+    @Autowired
+    protected RestTemplate restTemplate;
+
+    @Mock
+    protected RabbitManager rabbitManager;
+
+    protected ClientHttpRequestFactory originalRequestFactory;
+
+    @Autowired
+    @InjectMocks
+    protected CustomAuthenticationProvider provider;
 
     @Value("${aam.deployment.owner.username}")
     protected String AAMOwnerUsername;
@@ -400,6 +423,22 @@ public abstract class AdministrationBaseTestClass {
         FederationMember member2 = new FederationMember(platformId + '2', null);
         FederationMember member3 = new FederationMember(platformId + '3', null);
         federation.setMembers(new ArrayList<>(Arrays.asList(member1, member2, member3)));
+
+        return federation;
+    }
+
+    public Federation sampleSavedFederation() {
+        Federation federation = sampleFederationRequest();
+
+        String platform1Url = platformUrl + "/" + platformId;
+        String platformId2 = platformId + "2";
+        String platform2Url = platformUrl + "/" + platformId2;
+        String platformId3 = platformId + "3";
+        String platform3Url = platformUrl + "/" + platformId3;
+
+        federation.getMembers().get(0).setInterworkingServiceURL(platform1Url);
+        federation.getMembers().get(1).setInterworkingServiceURL(platform2Url);
+        federation.getMembers().get(2).setInterworkingServiceURL(platform3Url);
 
         return federation;
     }

@@ -32,7 +32,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getPlatformConfigUserNotOwningPlatform() throws Exception {
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
 
         // User does not own the platform
@@ -50,7 +50,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     @Test
     public void getPlatformConfigSuccess() throws Exception {
 
-        doReturn(sampleOwnedPlatformDetails()).when(mockRabbitManager)
+        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
                 .sendOwnedPlatformDetailsRequest(any());
 
         // Successful Request
