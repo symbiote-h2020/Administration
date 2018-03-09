@@ -2,12 +2,10 @@ package eu.h2020.symbiote.administration.services;
 
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
-import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
-
+import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
@@ -55,7 +53,7 @@ public class PlatformConfigurer {
 
     public void returnPlatformConfiguration(HttpServletResponse response,
                                             CoreUser user,
-                                            OwnedPlatformDetails platformDetails,
+                                            OwnedService platformDetails,
                                             PlatformConfigurationMessage configurationMessage) throws Exception {
 
         String platformId = configurationMessage.getPlatformId();
@@ -66,7 +64,7 @@ public class PlatformConfigurer {
         String componentKeystorePassword = configurationMessage.getComponentsKeystorePassword().isEmpty() ?
                 "pass" : configurationMessage.getComponentsKeystorePassword();
         String aamKeystoreName = configurationMessage.getAamKeystoreName().isEmpty() ?
-                "paam-keystore-" + platformDetails.getPlatformInstanceFriendlyName() :
+                "paam-keystore-" + platformDetails.getInstanceFriendlyName() :
                 configurationMessage.getAamKeystoreName();
         String aamKeystorePassword = configurationMessage.getAamKeystorePassword().isEmpty() ?
                 "pass" : configurationMessage.getAamKeystorePassword();
@@ -106,7 +104,7 @@ public class PlatformConfigurer {
         response.getOutputStream().close();
     }
 
-    private void configureCloudConfigProperties(OwnedPlatformDetails platformDetails, ZipOutputStream zipOutputStream,
+    private void configureCloudConfigProperties(OwnedService platformDetails, ZipOutputStream zipOutputStream,
                                                 Boolean useBuiltInRapPlugin)
             throws Exception {
 
@@ -119,7 +117,7 @@ public class PlatformConfigurer {
         // Modify the application.properties file accordingly
         // Platform Details Configuration
         applicationProperties = applicationProperties.replaceFirst("(?m)^(platform.id=).*$",
-                "platform.id=" + Matcher.quoteReplacement(platformDetails.getPlatformInstanceId()));
+                "platform.id=" + Matcher.quoteReplacement(platformDetails.getServiceInstanceId()));
 
         // AMQP Configuration
         applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
@@ -154,7 +152,7 @@ public class PlatformConfigurer {
     }
 
 
-    private void configureNginx(ZipOutputStream zipOutputStream, OwnedPlatformDetails platformDetails)
+    private void configureNginx(ZipOutputStream zipOutputStream, OwnedService platformDetails)
             throws Exception {
 
         // Loading nginx.conf
@@ -193,7 +191,7 @@ public class PlatformConfigurer {
     private void configureComponentProperties(ZipOutputStream zipOutputStream, String componentFolder,
                                               String platformOwnerUsername, String platformOwnerPassword,
                                               String keystorePassword, String platformId,
-                                              OwnedPlatformDetails platformDetails) throws Exception {
+                                              OwnedService platformDetails) throws Exception {
 
         // Loading component properties
         InputStream bootstrapPropertiesAsStream = resourceLoader

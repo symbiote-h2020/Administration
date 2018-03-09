@@ -28,7 +28,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
         doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -46,7 +46,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isCreated())
@@ -65,7 +65,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isBadRequest())
@@ -84,7 +84,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -103,7 +103,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -120,7 +120,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isBadRequest())
@@ -137,7 +137,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isBadRequest())
@@ -154,7 +154,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -171,7 +171,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -195,7 +195,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(platformDetails)))
                 .andExpect(status().isBadRequest())

@@ -129,7 +129,7 @@ public class RabbitManager {
     private String userManageRequestRoutingKey;
     @Value("${rabbit.routingKey.get.user.details}")
     private String getUserDetailsRoutingKey;
-    @Value("${rabbit.routingKey.ownedplatformdetails.request}")
+    @Value("${rabbit.queue.ownedservices.request}")
     private String getOwnedPlatformDetailsRoutingKey;
 
     @Value("${rabbit.routingKey.manage.federation.rule}")
@@ -656,7 +656,6 @@ public class RabbitManager {
                     new UserDetails(
                             new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),
                             "",
-                            "",
                             UserRole.NULL,
                             new HashMap<>(),
                             new HashMap<>()
@@ -693,10 +692,10 @@ public class RabbitManager {
      *
      * @param request  request for user management
      */
-    public Set<OwnedPlatformDetails> sendOwnedPlatformDetailsRequest(UserManagementRequest request)
+    public Set<OwnedService> sendOwnedServiceDetailsRequest(UserManagementRequest request)
             throws CommunicationException {
 
-        log.debug("sendOwnedPlatformDetailsRequest to AAM: " + ReflectionToStringBuilder.toString(request));
+        log.debug("sendOwnedServiceDetailsRequest to AAM: " + ReflectionToStringBuilder.toString(request));
 
         try {
             String message = mapper.writeValueAsString(request);
@@ -707,8 +706,8 @@ public class RabbitManager {
                 return null;
 
             try {
-                Set<OwnedPlatformDetails> response = mapper.readValue(responseMsg,
-                        mapper.getTypeFactory().constructCollectionType(Set.class, OwnedPlatformDetails.class));
+                Set<OwnedService> response = mapper.readValue(responseMsg,
+                        mapper.getTypeFactory().constructCollectionType(Set.class, OwnedService.class));
                 log.trace("Received platform owner details response from AAM.");
                 return response;
 

@@ -65,7 +65,7 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
 
 
         mockMvc.perform(post("/administration/admin/cpanel/delete_federation")
-                .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleAdminAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationIdToDelete", federationId))
                 .andExpect(status().isOk())
@@ -82,7 +82,7 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
     public void federationNotFound() throws Exception {
 
         mockMvc.perform(post("/administration/admin/cpanel/delete_federation")
-                .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleAdminAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationIdToDelete", federationId))
                 .andExpect(status().isNotFound())

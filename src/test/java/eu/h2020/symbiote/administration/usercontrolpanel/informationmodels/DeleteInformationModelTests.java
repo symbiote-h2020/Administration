@@ -24,7 +24,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
         doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("infoModelIdToDelete", informationModelId))
                 .andExpect(status().isInternalServerError())
@@ -37,7 +37,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("infoModelIdToDelete", "dummyid"))
                 .andExpect(status().isBadRequest())
@@ -51,7 +51,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
         doReturn(sampleInformationModelResponseSuccess()).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("infoModelIdToDelete", informationModelId))
                 .andExpect(status().isOk());
@@ -64,7 +64,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
         doReturn(sampleInformationModelResponseFail()).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("infoModelIdToDelete", informationModelId))
                 .andExpect(status().isBadRequest())
@@ -78,7 +78,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
         doReturn(null).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("infoModelIdToDelete", informationModelId))
                 .andExpect(status().isInternalServerError())
@@ -92,7 +92,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
         doThrow(new CommunicationException("error")).when(rabbitManager).sendDeleteInfoModelRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_information_model")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("infoModelIdToDelete", informationModelId))
                 .andExpect(status().isInternalServerError())

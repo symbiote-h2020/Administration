@@ -30,11 +30,11 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
     @Test
     public void doesNotOwnPlatform() throws Exception {
         // The user does not own the platform which tries to leave the federation
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
                 .param("platformId", "dummy"))
@@ -45,11 +45,11 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void federationDoesNotExist() throws Exception {
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
                 .param("platformId", platformId))
@@ -59,8 +59,8 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void platformIsOnlyMemberFederation() throws Exception {
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         Federation federation = sampleFederationRequest();
         federation.getMembers().remove(2);
@@ -69,7 +69,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
                 .param("platformId", platformId))
@@ -80,8 +80,8 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void success() throws Exception {
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         Federation federation = sampleSavedFederation();
         federationRepository.save(federation);
@@ -114,7 +114,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
                 .param("platformId", platformId3))

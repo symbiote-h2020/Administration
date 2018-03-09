@@ -58,7 +58,7 @@ public class LeaveFederationAdminTests extends AdminControlPanelBaseTestClass {
                 .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/admin/cpanel/leave_federation")
-                .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleAdminAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
                 .param("platformId", platformId3))

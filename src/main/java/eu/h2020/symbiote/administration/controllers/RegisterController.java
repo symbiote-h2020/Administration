@@ -118,9 +118,8 @@ public class RegisterController {
                 new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
                 new UserDetails(
                         new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
-                        "",
                         coreUser.getRecoveryMail(),
-                        UserRole.PLATFORM_OWNER,
+                        UserRole.SERVICE_OWNER,
                         new HashMap<>(),
                         new HashMap<>()
                 ),

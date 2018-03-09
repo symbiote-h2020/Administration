@@ -13,7 +13,7 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
-import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
+import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
 import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
 import org.junit.Test;
@@ -412,7 +412,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
-        ManagementStatus response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+        ManagementStatus response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
 
         assertNotNull(response);
         assertEquals(ManagementStatus.OK, response);
@@ -423,7 +423,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
         try {
-            rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+            rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -442,7 +442,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+            rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
         } catch (CommunicationException e) {
             communicationCaught = true;
         }
@@ -452,7 +452,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
-        response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+        response = rabbitManager.sendUserManagementRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
 
         assertNull(response);
     }
@@ -523,7 +523,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         UserDetailsResponse response = rabbitManager.sendLoginRequest(sampleCredentials());
 
         assertNotNull(response);
-        assertEquals(UserRole.PLATFORM_OWNER, response.getUserDetails().getRole());
+        assertEquals(UserRole.SERVICE_OWNER, response.getUserDetails().getRole());
 
         // Return null
         doReturn(null)
@@ -566,11 +566,12 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         boolean communicationCaught = false;
 
         // Successful Message
-        doReturn(serialize(sampleOwnedPlatformDetails()))
+        doReturn(serialize(sampleOwnedServiceDetails()))
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
-        Set<OwnedPlatformDetails> response = rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+        Set<OwnedService> response = rabbitManager.sendOwnedServiceDetailsRequest(
+                sampleUserManagementRequest(UserRole.SERVICE_OWNER));
 
         assertNotNull(response);
 
@@ -579,7 +580,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
-        response = rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+        response = rabbitManager.sendOwnedServiceDetailsRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
         assertNull(response);
 
 
@@ -594,7 +595,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
-            rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+            rabbitManager.sendOwnedServiceDetailsRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
         }
             catch (CommunicationException e) {
             communicationCaught = true;
@@ -605,7 +606,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
-        response = rabbitManager.sendOwnedPlatformDetailsRequest(sampleUserManagementRequest(UserRole.PLATFORM_OWNER));
+        response = rabbitManager.sendOwnedServiceDetailsRequest(sampleUserManagementRequest(UserRole.SERVICE_OWNER));
         assertNull(response);
     }
 }

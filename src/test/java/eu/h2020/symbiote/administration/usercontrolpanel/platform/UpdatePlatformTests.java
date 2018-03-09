@@ -25,13 +25,13 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void doesNotOwnPlatform() throws Exception {
         // The user does not own the platform which tries to delete
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         PlatformDetails notOwningPlatform = samplePlatformDetails();
         notOwningPlatform.setId("dummy");
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(notOwningPlatform)))
                 .andExpect(status().isBadRequest())
@@ -41,12 +41,12 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void infoModelError() throws Exception {
         // Could not get Information models from Registry
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -56,8 +56,8 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
         // Register platform successfully
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
@@ -66,7 +66,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformModificationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isOk())
@@ -77,8 +77,8 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryError() throws Exception {
         // Registry responds with error
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
@@ -87,7 +87,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformModificationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isBadRequest())
@@ -98,8 +98,8 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryTimeout() throws Exception {
         // Registry responds with null
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
@@ -108,7 +108,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformModificationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -119,8 +119,8 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void registryCommunicationException() throws Exception {
         // Registry throws CommunicationException
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
@@ -129,7 +129,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .sendPlatformModificationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -140,15 +140,15 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamError() throws Exception {
         // AAM responds with other ERROR
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isBadRequest())
@@ -159,15 +159,15 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamTimeout() throws Exception {
         // AAM responds with null
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(null).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -178,15 +178,15 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
     @Test
     public void aamCommunicationException() throws Exception {
         // AAM throws CommunicationException
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendManagePlatformRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isInternalServerError())
@@ -196,8 +196,8 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void invalidArguments() throws Exception {
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         // Invalid Arguments Check
         InformationModelListResponse informationModelListResponse = sampleInformationModelListResponseSuccess();
@@ -213,7 +213,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .sendListInfoModelsRequest();
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(platformDetails)))
                 .andExpect(status().isBadRequest())

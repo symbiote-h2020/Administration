@@ -26,7 +26,7 @@ public class AdminControlPanelTests extends AdminControlPanelBaseTestClass {
     public void getControlPanelSuccess() throws Exception {
 
         mockMvc.perform(get("/administration/admin/cpanel")
-                .with(authentication(sampleAdminAuth(UserRole.PLATFORM_OWNER))) )
+                .with(authentication(sampleAdminAuth(UserRole.SERVICE_OWNER))) )
             .andExpect(status().isOk());
 
     }

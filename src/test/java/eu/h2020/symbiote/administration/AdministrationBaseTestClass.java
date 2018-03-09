@@ -21,6 +21,7 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
+import eu.h2020.symbiote.security.communication.payloads.OwnedService.ServiceType;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -87,6 +88,10 @@ public abstract class AdministrationBaseTestClass {
     protected String platformName = "Test Platform 1";
     protected String platformUrl = "https://platform.test:" + platformPort + "/paam";
     protected String platformDescription = "This is a test platform.";
+
+    protected String sspId = "testSSP";
+    protected String sspExternalAddress = "sspExternalAddress";
+    protected String sspSiteLocalAddress = "sspSiteLocalAddress";
 
     protected String informationModelId = "model_id";
     protected String informationModelName = "model_name";
@@ -337,7 +342,7 @@ public abstract class AdministrationBaseTestClass {
 
     public Credentials sampleCredentials() {
 
-        CoreUser user = sampleCoreUser(UserRole.PLATFORM_OWNER);
+        CoreUser user = sampleCoreUser(UserRole.SERVICE_OWNER);
         return new Credentials(user.getValidUsername(), user.getValidPassword());
     }
 
@@ -348,7 +353,6 @@ public abstract class AdministrationBaseTestClass {
                 new Credentials(username, password),
                 new UserDetails(
                     new Credentials(username, password),
-                        "",
                         mail,
                         role,
                         new HashMap<>(),
@@ -361,9 +365,8 @@ public abstract class AdministrationBaseTestClass {
     public UserDetailsResponse sampleUserDetailsResponse (HttpStatus status) {
         return new UserDetailsResponse(status, new UserDetails(
                 new Credentials(username, password),
-                "",
                 mail,
-                UserRole.PLATFORM_OWNER,
+                UserRole.SERVICE_OWNER,
                 new HashMap<>(),
                 new HashMap<>()
         ));
@@ -388,15 +391,35 @@ public abstract class AdministrationBaseTestClass {
             );
     }
 
-    public Set<OwnedPlatformDetails> sampleOwnedPlatformDetails() {
+    public Set<OwnedService> sampleOwnedServiceDetails() {
 
         Map<String, Certificate>  componentCertificates = new HashMap<>();
-        Set<OwnedPlatformDetails> ownedPlatformDetails = new HashSet<>();
-        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId, platformUrl, platformName, new Certificate(), componentCertificates));
-        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId + '2', platformUrl, platformName, new Certificate(), componentCertificates));
-        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId + '3', platformUrl, platformName, new Certificate(), componentCertificates));
-        ownedPlatformDetails.add(new OwnedPlatformDetails(platformId + '4', platformUrl, platformName, new Certificate(), componentCertificates));
-        return ownedPlatformDetails;
+        Set<OwnedService> ownedServiceSet = new HashSet<>();
+
+        // Platforms
+        ownedServiceSet.add(new OwnedService(
+                platformId, platformName, ServiceType.PLATFORM, platformUrl, null,
+                false, null, new Certificate(), componentCertificates));
+        ownedServiceSet.add(new OwnedService(
+                platformId + "2", platformName, ServiceType.PLATFORM, platformUrl, null,
+                false, null, new Certificate(), componentCertificates));
+        ownedServiceSet.add(new OwnedService(
+                platformId + "3", platformName, ServiceType.PLATFORM, platformUrl, null,
+                false, null, new Certificate(), componentCertificates));
+        ownedServiceSet.add(new OwnedService(
+                platformId + "4", platformName, ServiceType.PLATFORM, platformUrl, null,
+                false, null, new Certificate(), componentCertificates));
+
+        // SSPs
+        ownedServiceSet.add(new OwnedService(
+                sspId, platformName, ServiceType.SMART_SPACE, null, sspExternalAddress,
+                false, sspSiteLocalAddress, new Certificate(), componentCertificates));
+
+        ownedServiceSet.add(new OwnedService(
+                sspId + "2", platformName, ServiceType.SMART_SPACE, null, sspExternalAddress,
+                true, sspSiteLocalAddress, new Certificate(), componentCertificates));
+
+        return ownedServiceSet;
     }
 
     public Federation sampleFederationRequest() {

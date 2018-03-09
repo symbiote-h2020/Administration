@@ -90,7 +90,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", "val")
                 .param("validPassword", "val")
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.validUsername").value("must match \"^[\\w-]{4,}$\""))
                 .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
@@ -104,7 +104,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("validPassword", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.validUsername").value("Length must be between 0 and 30 characters"))
                 .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
@@ -141,7 +141,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorMessage").value("Authorization Manager is unreachable!"));
         }
@@ -156,7 +156,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isCreated());
     }
 
@@ -170,7 +170,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("Username exist!"));
         }
@@ -185,7 +185,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("Authorization Manager responded with ERROR!"));
         }
@@ -200,7 +200,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
-                .param("role", "PLATFORM_OWNER"))
+                .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("SAMPLE_ERROR"));
         }

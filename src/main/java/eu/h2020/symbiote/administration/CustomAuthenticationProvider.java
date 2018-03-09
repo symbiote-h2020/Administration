@@ -69,18 +69,18 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (name.equals(adminUsername) && password.equals(adminPassword)) {
             log.info("Valid Admin Username and password!");
 
-            List<GrantedAuthority> grantedAuths = new ArrayList<>();
+            List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
             // Todo: Are all the roles somewhere?
-            grantedAuths.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-            CoreUser user = new CoreUser(name, password, UserRole.PLATFORM_OWNER,
+            CoreUser user = new CoreUser(name, password, UserRole.SERVICE_OWNER,
                     true, true, true, true,
-                    grantedAuths);
+                    grantedAuthorities);
 
             // We clear the credential so that they are not shown anywhere
             user.clearPassword();
-            return new UsernamePasswordAuthenticationToken(user, password, grantedAuths);
+            return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
         }
 
         // Checking for normal user
@@ -92,20 +92,20 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 if (response.getHttpStatus() == HttpStatus.OK) {
                     log.info("Valid Username and password!");
 
-                    List<GrantedAuthority> grantedAuths = new ArrayList<>();
+                    List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
                     // Todo: Are all the roles somewhere?
-                    grantedAuths.add(new SimpleGrantedAuthority("ROLE_USER"));
+                    grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
                     CoreUser user = new CoreUser(name, password, response.getUserDetails().getRole(),
                             true, true, true, true,
-                            grantedAuths);
+                            grantedAuthorities);
 
                     user.setRecoveryMail(response.getUserDetails().getRecoveryMail());
                     user.setRole(response.getUserDetails().getRole());
                     // We clear the credential so that they are not shown anywhere
                     user.clearPassword();
-                    return new UsernamePasswordAuthenticationToken(user, password, grantedAuths);
+                    return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
                 } else if (response.getHttpStatus() == HttpStatus.BAD_REQUEST) {
                     log.info("Username does not exist");
                     throw new WrongUserNameException();

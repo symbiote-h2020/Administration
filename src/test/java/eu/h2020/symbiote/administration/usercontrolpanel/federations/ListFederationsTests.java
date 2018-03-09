@@ -31,7 +31,7 @@ public class ListFederationsTests extends AdminControlPanelBaseTestClass {
         federationRepository.save(federationList);
 
         mockMvc.perform(post("/administration/user/cpanel/list_federations")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$." + federationId + ".members.length()").value(3))

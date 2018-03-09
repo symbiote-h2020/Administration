@@ -34,7 +34,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
     public void getControlPanelSuccess() throws Exception {
 
         mockMvc.perform(get("/administration/user/cpanel")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
             .andExpect(status().isOk());
 
     }
@@ -52,7 +52,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         when(rabbitManager.sendLoginRequest(any())).thenReturn(null);
 
         mockMvc.perform(get("/administration/user/information")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
                 .andExpect(status().isInternalServerError());
     }
 
@@ -61,7 +61,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST));
 
         mockMvc.perform(get("/administration/user/information")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
                 .andExpect(status().isBadRequest());
     }
 
@@ -70,7 +70,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
 
         mockMvc.perform(get("/administration/user/information")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
                 .andExpect(status().isOk());
     }
 
@@ -79,7 +79,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangePasswordRequest())))
                 .andExpect(status().isInternalServerError());
@@ -90,7 +90,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangePasswordRequest())))
                 .andExpect(status().isBadRequest());
@@ -101,7 +101,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         ChangePasswordRequest invalidPasswords = new ChangePasswordRequest("wrongPassword","a", "b");
 
         mockMvc.perform(post("/administration/user/change_password")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidPasswords)))
                 .andExpect(status().isBadRequest())
@@ -120,7 +120,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         ChangePasswordRequest differentPasswords = new ChangePasswordRequest(password, "newPassword", "newPass");
 
         mockMvc.perform(post("/administration/user/change_password")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(differentPasswords)))
                 .andExpect(status().isBadRequest())
@@ -135,7 +135,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangePasswordRequest())))
                 .andExpect(status().isOk());
@@ -146,7 +146,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
                 .andExpect(status().isInternalServerError());
@@ -157,7 +157,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
                 .andExpect(status().isBadRequest());
@@ -168,7 +168,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         ChangeEmailRequest invalidEmails = new ChangeEmailRequest("a", "b");
 
         mockMvc.perform(post("/administration/user/change_email")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidEmails)))
                 .andExpect(status().isBadRequest())
@@ -185,7 +185,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         ChangeEmailRequest differentEmails = new ChangeEmailRequest("a@a.com", "b@a.com");
 
         mockMvc.perform(post("/administration/user/change_email")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(differentEmails)))
                 .andExpect(status().isBadRequest())
@@ -200,7 +200,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
                 .andExpect(status().isOk());

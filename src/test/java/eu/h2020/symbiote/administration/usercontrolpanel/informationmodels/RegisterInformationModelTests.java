@@ -30,7 +30,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(invalidFile)
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("info-model-name", "a")
                 .param("info-model-uri", "url"))
@@ -48,7 +48,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("info-model-name", informationModelName)
                 .param("info-model-uri", informationModelUri))
@@ -62,7 +62,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("info-model-name", informationModelName)
                 .param("info-model-uri", informationModelUri))
@@ -76,7 +76,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("info-model-name", informationModelName)
                 .param("info-model-uri", informationModelUri))
@@ -90,7 +90,7 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("info-model-name", informationModelName)
                 .param("info-model-uri", informationModelUri))

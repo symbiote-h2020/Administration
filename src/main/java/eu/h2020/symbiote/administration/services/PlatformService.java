@@ -4,7 +4,6 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
-import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.InterworkingService;
 import eu.h2020.symbiote.model.mim.Platform;
@@ -29,6 +28,7 @@ import org.springframework.validation.FieldError;
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PlatformService {
@@ -81,7 +81,6 @@ public class PlatformService {
                 new UserDetails(
                         new Credentials(user.getUsername(), ""),
                         "",
-                        "",
                         UserRole.NULL,
                         new HashMap<>(),
                         new HashMap<>()
@@ -91,21 +90,26 @@ public class PlatformService {
 
         // Get OwnedPlatformDetails from AAM
         try {
-            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
-                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
-            if (ownedPlatformDetailsSet != null) {
-                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
+            Set<OwnedService> ownedServicesSet =
+                    rabbitManager.sendOwnedServiceDetailsRequest(ownedPlatformDetailsRequest);
+            if (ownedServicesSet != null) {
+                // Filter whatever is not a platform
+                Set<OwnedService> ownedPlatformDetailsSet = ownedServicesSet.stream()
+                        .filter(ownedService -> ownedService.getServiceType() == OwnedService.ServiceType.PLATFORM)
+                        .collect(Collectors.toSet());
+
+                for (OwnedService platformDetails : ownedPlatformDetailsSet) {
                     log.debug("OwnedPlatformDetails: " + ReflectionToStringBuilder.toString(platformDetails));
 
                     // Get Platform information from Registry
-                    ResponseEntity registryResponse = getPlatformDetailsFromRegistry(platformDetails.getPlatformInstanceId());
+                    ResponseEntity registryResponse = getPlatformDetailsFromRegistry(platformDetails.getServiceInstanceId());
                     if (registryResponse.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR) {
                         response.setMessage((String) registryResponse.getBody());
                         return new ResponseEntity<>(response, new HttpHeaders(), registryResponse.getStatusCode());
                     }
 
                     if (registryResponse.getStatusCode() == HttpStatus.NOT_FOUND)
-                        unavailablePlatforms.add(platformDetails.getPlatformInstanceFriendlyName());
+                        unavailablePlatforms.add(platformDetails.getInstanceFriendlyName());
                     else if (registryResponse.getStatusCode() == HttpStatus.OK)
                         availablePlatforms.add(((PlatformRegistryResponse) registryResponse.getBody()).getBody());
                 }
@@ -343,7 +347,7 @@ public class PlatformService {
                             } else {
                                 log.warn("Update Failed: " + registryResponse.getMessage());
 
-                                sendPlatformUndoMessageToAAM((OwnedPlatformDetails) ownedPlatformDetailsResponse.getBody(), user, password);
+                                sendPlatformUndoMessageToAAM((OwnedService) ownedPlatformDetailsResponse.getBody(), user, password);
 
                                 responseBody.put("platformUpdateError", registryResponse.getMessage());
                                 return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
@@ -351,7 +355,7 @@ public class PlatformService {
                         } else {
                             log.warn("Registry unreachable!");
 
-                            sendPlatformUndoMessageToAAM((OwnedPlatformDetails) ownedPlatformDetailsResponse.getBody(), user, password);
+                            sendPlatformUndoMessageToAAM((OwnedService) ownedPlatformDetailsResponse.getBody(), user, password);
 
                             responseBody.put("platformUpdateError", "Registry unreachable!");
                             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -360,7 +364,7 @@ public class PlatformService {
                         log.info("", e);
                         log.warn("Registry threw communication exception: " + e.getMessage());
 
-                        sendPlatformUndoMessageToAAM((OwnedPlatformDetails) ownedPlatformDetailsResponse.getBody(), user, password);
+                        sendPlatformUndoMessageToAAM((OwnedService) ownedPlatformDetailsResponse.getBody(), user, password);
 
                         responseBody.put("platformUpdateError", "Registry threw CommunicationException");
                         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -460,8 +464,8 @@ public class PlatformService {
 
 
     public void getPlatformConfig(PlatformConfigurationMessage configurationMessage,
-                                               BindingResult bindingResult, Principal principal,
-                                               HttpServletResponse response) throws Exception {
+                                  BindingResult bindingResult, Principal principal,
+                                  HttpServletResponse response) throws Exception {
 
         if (bindingResult.hasErrors()) {
 
@@ -493,7 +497,7 @@ public class PlatformService {
                 response.getWriter().close();
             } else {
                 platformConfigurer.returnPlatformConfiguration(response, user,
-                        (OwnedPlatformDetails) aamResponse.getBody(), configurationMessage);
+                        (OwnedService) aamResponse.getBody(), configurationMessage);
 
             }
         }
@@ -529,14 +533,14 @@ public class PlatformService {
         }
     }
 
-    private void sendPlatformUndoMessageToAAM(OwnedPlatformDetails platformDetails, CoreUser user, String password) {
+    private void sendPlatformUndoMessageToAAM(OwnedService platformDetails, CoreUser user, String password) {
 
         PlatformManagementRequest aamRequest = new PlatformManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                 new Credentials(user.getUsername(), password),
                 platformDetails.getPlatformInterworkingInterfaceAddress(),
-                platformDetails.getPlatformInstanceFriendlyName(),
-                platformDetails.getPlatformInstanceId(),
+                platformDetails.getInstanceFriendlyName(),
+                platformDetails.getServiceInstanceId(),
                 OperationType.UPDATE);
 
         // Send deletion message to AAM
@@ -567,7 +571,6 @@ public class PlatformService {
                 new UserDetails(
                         new Credentials(user.getUsername(), ""),
                         "",
-                        "",
                         UserRole.NULL,
                         new HashMap<>(),
                         new HashMap<>()
@@ -576,19 +579,19 @@ public class PlatformService {
         );
 
         try {
-            Set<OwnedPlatformDetails> ownedPlatformDetailsSet =
-                    rabbitManager.sendOwnedPlatformDetailsRequest(ownedPlatformDetailsRequest);
-            OwnedPlatformDetails ownedPlatformDetails = null;
+            Set<OwnedService> ownedPlatformDetailsSet =
+                    rabbitManager.sendOwnedServiceDetailsRequest(ownedPlatformDetailsRequest);
+            OwnedService ownedService = null;
 
             if (ownedPlatformDetailsSet != null) {
                 boolean ownsPlatform = false;
-                for (OwnedPlatformDetails platformDetails : ownedPlatformDetailsSet) {
-                    log.debug(platformDetails);
-                    if (platformDetails.getPlatformInstanceId().equals(platformId)) {
+                for (OwnedService ownedServiceDetails : ownedPlatformDetailsSet) {
+                    log.debug(ownedServiceDetails);
+                    if (ownedServiceDetails.getServiceInstanceId().equals(platformId)) {
                         String message = "The user owns the platform with id " + platformId;
                         log.info(message);
                         ownsPlatform = true;
-                        ownedPlatformDetails = platformDetails;
+                        ownedService = ownedServiceDetails;
                         break;
                     }
                 }
@@ -599,7 +602,7 @@ public class PlatformService {
                     return new ResponseEntity<>("You do not own the platform with id " + platformId,
                             new HttpHeaders(), HttpStatus.BAD_REQUEST);
                 } else {
-                    return new ResponseEntity<>(ownedPlatformDetails,
+                    return new ResponseEntity<>(ownedService,
                             new HttpHeaders(), HttpStatus.OK);
                 }
             } else {

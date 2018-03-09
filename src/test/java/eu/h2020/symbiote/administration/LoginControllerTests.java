@@ -88,7 +88,7 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postLogoutPage() throws Exception {
 
-        mockMvc.perform(post("/administration/user/logout").with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER))) )
+        mockMvc.perform(post("/administration/user/logout").with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/administration"));
     }

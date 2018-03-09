@@ -79,7 +79,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isCreated())
@@ -111,7 +111,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         federation.setName("newName");
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(federation)))
                 .andExpect(status().isBadRequest())
@@ -148,7 +148,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(federation)))
                 .andExpect(status().isBadRequest())
@@ -184,7 +184,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .sendGetPlatformDetailsMessage(eq(platformId3));
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isBadRequest())
@@ -202,7 +202,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .sendGetPlatformDetailsMessage(any());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isInternalServerError())
@@ -220,7 +220,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .sendGetPlatformDetailsMessage(any());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isInternalServerError())
@@ -250,7 +250,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         federationRequest.getInformationModel().setId(dummyInfoModelId);
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(federationRequest)))
                 .andExpect(status().isBadRequest())
@@ -277,7 +277,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isInternalServerError())
@@ -310,7 +310,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .when(authorizationService).validateServiceResponse(any(), any(), any());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isCreated())

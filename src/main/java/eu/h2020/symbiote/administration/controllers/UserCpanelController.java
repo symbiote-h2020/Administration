@@ -175,7 +175,6 @@ public class UserCpanelController {
                 new Credentials(user.getUsername(), password),
                 new UserDetails(
                         new Credentials(user.getUsername(), password),
-                        "",
                         message.getNewEmail(),
                         user.getRole(),
                         new HashMap<>(),
@@ -258,7 +257,6 @@ public class UserCpanelController {
                 new Credentials(user.getUsername(), password),
                 new UserDetails(
                         new Credentials(user.getUsername(), message.getNewPassword()),
-                        "",
                         user.getRecoveryMail(),
                         user.getRole(),
                         new HashMap<>(),

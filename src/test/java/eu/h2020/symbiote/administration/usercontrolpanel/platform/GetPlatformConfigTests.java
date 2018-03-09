@@ -32,15 +32,15 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getPlatformConfigUserNotOwningPlatform() throws Exception {
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         // User does not own the platform
         PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage();
         invalidPlatform.setPlatformId("dummy");
 
         mockMvc.perform(post("/administration/user/cpanel/get_platform_config")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(invalidPlatform)))
                 .andExpect(status().isBadRequest())
@@ -50,12 +50,12 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     @Test
     public void getPlatformConfigSuccess() throws Exception {
 
-        doReturn(sampleOwnedPlatformDetails()).when(rabbitManager)
-                .sendOwnedPlatformDetailsRequest(any());
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
 
         // Successful Request
         MvcResult mvcResult = mockMvc.perform(post("/administration/user/cpanel/get_platform_config")
-                .with(authentication(sampleUserAuth(UserRole.PLATFORM_OWNER)))
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformConfigurationMessage())))
                 .andExpect(status().isOk())

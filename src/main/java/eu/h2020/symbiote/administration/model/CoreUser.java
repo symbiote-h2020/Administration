@@ -1,16 +1,14 @@
 package eu.h2020.symbiote.administration.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
+import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.springframework.security.core.userdetails.User;
+
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import javax.validation.constraints.NotNull;
-
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.OwnedPlatformDetails;
-import org.springframework.security.core.userdetails.User;
-import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import java.util.ArrayList;
+import java.util.Collection;
 
 
 
