@@ -189,18 +189,7 @@ public abstract class AdministrationBaseTestClass {
     }
 
     public Platform samplePlatform() {
-
-        InterworkingService interworkingService = new InterworkingService();
-        interworkingService.setInformationModelId(informationModelId);
-        interworkingService.setUrl(platformUrl);
-
-        Platform platform = new Platform();
-        platform.setId(platformId);
-        platform.setName(platformName);
-        platform.setDescription(Collections.singletonList(platformDescription));
-        platform.setInterworkingServices(Collections.singletonList(interworkingService));
-
-        return platform;
+        return samplePlatform(platformId);
     }
 
     public Platform samplePlatform(String platformId) {

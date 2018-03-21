@@ -4,6 +4,7 @@ import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
 import eu.h2020.symbiote.administration.services.FederationNotificationService;
 import eu.h2020.symbiote.administration.services.InformationModelService;
+import eu.h2020.symbiote.administration.services.OwnedServicesService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import org.junit.Before;
 import org.mockito.InjectMocks;
@@ -37,6 +38,10 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
     @Autowired
     @InjectMocks
     protected UserCpanelController userCpanelController;
+
+    @Autowired
+    @InjectMocks
+    protected OwnedServicesService ownedServicesService;
 
     @Autowired
     @InjectMocks

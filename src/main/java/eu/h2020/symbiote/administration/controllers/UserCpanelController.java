@@ -5,6 +5,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.administration.services.InformationModelService;
+import eu.h2020.symbiote.administration.services.OwnedServicesService;
 import eu.h2020.symbiote.administration.services.PlatformService;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
@@ -49,6 +50,7 @@ public class UserCpanelController {
     private static Log log = LogFactory.getLog(UserCpanelController.class);
 
     private RabbitManager rabbitManager;
+    private OwnedServicesService ownedServicesService;
     private PlatformService platformService;
     private InformationModelService informationModelService;
     private FederationService federationService;
@@ -56,13 +58,19 @@ public class UserCpanelController {
     private String aaMOwnerPassword;
 
     @Autowired
-    public UserCpanelController(RabbitManager rabbitManager, PlatformService platformService,
-                                InformationModelService informationModelService, FederationService federationService,
+    public UserCpanelController(RabbitManager rabbitManager,
+                                OwnedServicesService ownedServicesService,
+                                PlatformService platformService,
+                                InformationModelService informationModelService,
+                                FederationService federationService,
                                 @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                                 @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
+
+        Assert.notNull(ownedServicesService,"OwnedServicesService can not be null!");
+        this.ownedServicesService = ownedServicesService;
 
         Assert.notNull(platformService,"PlatformService can not be null!");
         this.platformService = platformService;
@@ -288,11 +296,11 @@ public class UserCpanelController {
         return new ResponseEntity<>(new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping("/administration/user/cpanel/list_user_platforms")
-    public ResponseEntity<ListUserPlatformsResponse> listUserPlatforms(Principal principal) {
+    @PostMapping("/administration/user/cpanel/list_user_services")
+    public ResponseEntity<ListUserServicesResponse> listUserPlatforms(Principal principal) {
 
-        log.debug("POST request on /administration/user/cpanel/list_user_platforms");
-        return platformService.listUserPlatforms(principal);
+        log.debug("POST request on /administration/user/cpanel/list_user_services");
+        return ownedServicesService.listUserServices(principal);
     }
 
     @PostMapping("/administration/user/cpanel/register_platform")
