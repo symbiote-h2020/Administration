@@ -2,10 +2,7 @@ package eu.h2020.symbiote.administration.usercontrolpanel;
 
 import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
-import eu.h2020.symbiote.administration.services.FederationNotificationService;
-import eu.h2020.symbiote.administration.services.InformationModelService;
-import eu.h2020.symbiote.administration.services.OwnedServicesService;
-import eu.h2020.symbiote.administration.services.PlatformService;
+import eu.h2020.symbiote.administration.services.*;
 import org.junit.Before;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
@@ -49,11 +46,19 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
 
     @Autowired
     @InjectMocks
+    protected SSPService sspService;
+
+    @Autowired
+    @InjectMocks
     protected InformationModelService informationModelService;
 
     @Autowired
     @InjectMocks
     protected FederationNotificationService federationNotificationService;
+
+    @Autowired
+    @InjectMocks
+    protected CheckServiceOwnershipService checkServiceOwnershipService;
 
     protected MockMvc mockMvc;
 

@@ -125,6 +125,8 @@ public class RabbitManager {
     private String userManagementRequestRoutingKey;
     @Value("${rabbit.routingKey.manage.platform.request}")
     private String platformManageRequestRoutingKey;
+    @Value("${rabbit.routingKey.manage.smartspace.request}")
+    private String sspManageRequestRoutingKey;
     @Value("${rabbit.routingKey.manage.user.request}")
     private String userManageRequestRoutingKey;
     @Value("${rabbit.routingKey.get.user.details}")
@@ -624,6 +626,42 @@ public class RabbitManager {
 
             try {
                 PlatformManagementResponse response = mapper.readValue(responseMsg, PlatformManagementResponse.class);
+                log.trace("Received ManagePlatformResponse from AAM.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in platform registration response from AAM.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
+    }
+
+    /**
+     * Method used to send RPC request to register SSP in AAM.
+     *
+     * @param request  request for registration
+     */
+    public SmartSpaceManagementResponse sendManageSSPRequest(SmartSpaceManagementRequest request)
+            throws CommunicationException {
+
+        log.debug("sendManageSSPRequest to AAM: " + ReflectionToStringBuilder.toString(request));
+
+        try {
+            String message = mapper.writeValueAsString(request);
+
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName,
+                    this.sspManageRequestRoutingKey, message, "application/json");
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                SmartSpaceManagementResponse response = mapper.readValue(responseMsg, SmartSpaceManagementResponse.class);
                 log.trace("Received ManagePlatformResponse from AAM.");
                 return response;
 

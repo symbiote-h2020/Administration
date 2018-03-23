@@ -3,10 +3,7 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
-import eu.h2020.symbiote.administration.services.FederationService;
-import eu.h2020.symbiote.administration.services.InformationModelService;
-import eu.h2020.symbiote.administration.services.OwnedServicesService;
-import eu.h2020.symbiote.administration.services.PlatformService;
+import eu.h2020.symbiote.administration.services.*;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
@@ -52,6 +49,7 @@ public class UserCpanelController {
     private RabbitManager rabbitManager;
     private OwnedServicesService ownedServicesService;
     private PlatformService platformService;
+    private SSPService sspService;
     private InformationModelService informationModelService;
     private FederationService federationService;
     private String aaMOwnerUsername;
@@ -61,6 +59,7 @@ public class UserCpanelController {
     public UserCpanelController(RabbitManager rabbitManager,
                                 OwnedServicesService ownedServicesService,
                                 PlatformService platformService,
+                                SSPService sspService,
                                 InformationModelService informationModelService,
                                 FederationService federationService,
                                 @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
@@ -74,6 +73,9 @@ public class UserCpanelController {
 
         Assert.notNull(platformService,"PlatformService can not be null!");
         this.platformService = platformService;
+
+        Assert.notNull(sspService,"SSPService can not be null!");
+        this.sspService = sspService;
 
         Assert.notNull(informationModelService,"InformationModelService can not be null!");
         this.informationModelService = informationModelService;
@@ -339,6 +341,23 @@ public class UserCpanelController {
         log.debug("POST request on /administration/user/cpanel/get_platform_config: " + configurationMessage);
         platformService.getPlatformConfig(configurationMessage, bindingResult, principal, response);
 
+    }
+
+    @PostMapping("/administration/user/cpanel/register_ssp")
+    public ResponseEntity<?> registerSSP(@Valid @RequestBody SSPDetails sspDetails,
+                                              BindingResult bindingResult, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/register_ssp");
+
+        return sspService.registerSSP(sspDetails, bindingResult, principal);
+    }
+
+    @PostMapping("/administration/user/cpanel/delete_ssp")
+    public ResponseEntity<?> deleteSSP(@RequestParam String sspIdToDelete, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/delete_ssp for ssp with id: " +
+                sspIdToDelete);
+        return sspService.deleteSSP(sspIdToDelete, principal);
     }
 
 

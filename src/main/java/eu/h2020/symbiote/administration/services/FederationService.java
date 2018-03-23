@@ -6,6 +6,7 @@ import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.FederationMember;
 import eu.h2020.symbiote.model.mim.InformationModel;
+import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ public class FederationService {
 
     private FederationRepository federationRepository;
     private PlatformService platformService;
+    private CheckServiceOwnershipService checkServiceOwnershipService;
     private InformationModelService informationModelService;
     private ValidationService validationService;
     private FederationNotificationService federationNotificationService;
@@ -34,6 +36,7 @@ public class FederationService {
     @Autowired
     public FederationService(FederationRepository federationRepository,
                              PlatformService platformService,
+                             CheckServiceOwnershipService checkServiceOwnershipService,
                              InformationModelService informationModelService,
                              ValidationService validationService,
                              FederationNotificationService federationNotificationService) {
@@ -43,6 +46,9 @@ public class FederationService {
 
         Assert.notNull(platformService,"PlatformService can not be null!");
         this.platformService = platformService;
+
+        Assert.notNull(checkServiceOwnershipService,"CheckServiceOwnershipService can not be null!");
+        this.checkServiceOwnershipService = checkServiceOwnershipService;
 
         Assert.notNull(informationModelService,"InformationModelService can not be null!");
         this.informationModelService = informationModelService;
@@ -152,7 +158,8 @@ public class FederationService {
 
         if (!isAdmin) {
             // Check if the user owns the platform
-            ResponseEntity<?> ownedPlatformDetailsResponse = platformService.checkIfUserOwnsPlatform(platformId, user);
+            ResponseEntity<?> ownedPlatformDetailsResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                    platformId, user, OwnedService.ServiceType.PLATFORM);
             if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK)
                 return ownedPlatformDetailsResponse;
         }

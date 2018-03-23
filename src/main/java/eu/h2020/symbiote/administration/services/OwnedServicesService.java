@@ -127,7 +127,6 @@ public class OwnedServicesService {
         return new ResponseEntity<>(response, new HttpHeaders(), httpStatus);
     }
 
-
     private void divideServices(Set<OwnedService> ownedServicesSet, Set<OwnedService> ownedPlatformDetailsSet,
                                 Set<OwnedService> ownedSSPDetailsSet) {
         for (OwnedService ownedService : ownedServicesSet) {
@@ -167,7 +166,13 @@ public class OwnedServicesService {
     private ArrayList<SSPDetails> constructAvailableSSPDetails(ArrayList<OwnedService> ssps) {
         ArrayList<SSPDetails> availableSSPDetails = new ArrayList<>();
         for (OwnedService ssp : ssps) {
-            availableSSPDetails.add(new SSPDetails(ssp.getServiceInstanceId()));
+            availableSSPDetails.add(
+                    new SSPDetails(
+                            ssp.getServiceInstanceId(),
+                            ssp.getInstanceFriendlyName(),
+                            ssp.getExternalAddress(),
+                            ssp.getSiteLocalAddress(),
+                            ssp.isExposingSiteLocalAddress()));
         }
         return availableSSPDetails;
     }

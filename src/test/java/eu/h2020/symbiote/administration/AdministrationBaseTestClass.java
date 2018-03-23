@@ -90,8 +90,10 @@ public abstract class AdministrationBaseTestClass {
     protected String platformDescription = "This is a test platform.";
 
     protected String sspId = "testSSP";
-    protected String sspExternalAddress = "sspExternalAddress";
-    protected String sspSiteLocalAddress = "sspSiteLocalAddress";
+    protected String sspName = "testSSPName";
+    protected String sspExternalAddress = "https://www.external.com";
+    protected String sspSiteLocalAddress = "https://www.local.com";
+    protected boolean exposingSSPSiteLocalAddress = true;
 
     protected String informationModelId = "model_id";
     protected String informationModelName = "model_name";
@@ -224,6 +226,10 @@ public abstract class AdministrationBaseTestClass {
         platformDetails.setIsEnabler(false);
 
         return platformDetails;
+    }
+
+    public SSPDetails sampleSSPDetails() {
+        return new SSPDetails(sspId, sspName, sspExternalAddress, sspSiteLocalAddress, exposingSSPSiteLocalAddress);
     }
 
     public InformationModel sampleInformationModel() {
@@ -378,6 +384,14 @@ public abstract class AdministrationBaseTestClass {
                 platformId,
                 status
             );
+    }
+
+    public SmartSpaceManagementResponse sampleSmartSpaceManagementResponse(ManagementStatus status) {
+
+        return new SmartSpaceManagementResponse(
+                sspId,
+                status
+        );
     }
 
     public Set<OwnedService> sampleOwnedServiceDetails() {

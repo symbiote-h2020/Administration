@@ -2,15 +2,20 @@ package eu.h2020.symbiote.administration.services;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
-import eu.h2020.symbiote.administration.model.*;
+import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.Description;
+import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
+import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.InterworkingService;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.*;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.OwnedService;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,8 +32,10 @@ import org.springframework.validation.FieldError;
 
 import javax.servlet.http.HttpServletResponse;
 import java.security.Principal;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class PlatformService {
@@ -38,13 +45,17 @@ public class PlatformService {
     private PlatformConfigurer platformConfigurer;
     private ValidationService validationService;
     private InformationModelService informationModelService;
+    private CheckServiceOwnershipService checkServiceOwnershipService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
 
 
     @Autowired
-    public PlatformService(RabbitManager rabbitManager, PlatformConfigurer platformConfigurer,
-                           ValidationService validationService, InformationModelService informationModelService,
+    public PlatformService(RabbitManager rabbitManager,
+                           PlatformConfigurer platformConfigurer,
+                           ValidationService validationService,
+                           InformationModelService informationModelService,
+                           CheckServiceOwnershipService checkServiceOwnershipService,
                            @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                            @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
@@ -60,6 +71,9 @@ public class PlatformService {
         Assert.notNull(informationModelService,"InformationModelService can not be null!");
         this.informationModelService = informationModelService;
 
+        Assert.notNull(checkServiceOwnershipService,"CheckServiceOwnershipService can not be null!");
+        this.checkServiceOwnershipService = checkServiceOwnershipService;
+        
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
 
@@ -196,7 +210,8 @@ public class PlatformService {
         List<String> validInfoModelIds = new ArrayList<>();
         ResponseEntity<?> listOfInformationModels = informationModelService.getInformationModels();
 
-        ResponseEntity<?> ownedPlatformDetailsResponse = checkIfUserOwnsPlatform(platformDetails.getId(), user);
+        ResponseEntity<?> ownedPlatformDetailsResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                platformDetails.getId(), user, OwnedService.ServiceType.PLATFORM);
         if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK)
             return ownedPlatformDetailsResponse;
 
@@ -309,7 +324,8 @@ public class PlatformService {
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
 
-        ResponseEntity<?> ownedPlatformDetailsResponse = checkIfUserOwnsPlatform(platformIdToDelete, user);
+        ResponseEntity<?> ownedPlatformDetailsResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                platformIdToDelete, user, OwnedService.ServiceType.PLATFORM);
         if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK)
             return ownedPlatformDetailsResponse;
 
@@ -397,7 +413,8 @@ public class PlatformService {
 
             String platformId = configurationMessage.getPlatformId();
 
-            ResponseEntity<?> aamResponse = checkIfUserOwnsPlatform(platformId, user);
+            ResponseEntity<?> aamResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                    platformId, user, OwnedService.ServiceType.PLATFORM);
             if (aamResponse.getStatusCode() != HttpStatus.OK) {
                 response.setStatus(aamResponse.getStatusCodeValue());
                 response.getWriter().write("You do not own the platform with id " + platformId);
@@ -467,63 +484,6 @@ public class PlatformService {
             }
         } catch (CommunicationException e) {
             log.info("", e);
-        }
-    }
-
-
-    public ResponseEntity<?> checkIfUserOwnsPlatform(String platformId, CoreUser user) {
-
-        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), ""),
-                new UserDetails(
-                        new Credentials(user.getUsername(), ""),
-                        "",
-                        UserRole.NULL,
-                        new HashMap<>(),
-                        new HashMap<>()
-                ),
-                OperationType.CREATE
-        );
-
-        try {
-            Set<OwnedService> ownedPlatformDetailsSet =
-                    rabbitManager.sendOwnedServiceDetailsRequest(ownedPlatformDetailsRequest);
-            OwnedService ownedService = null;
-
-            if (ownedPlatformDetailsSet != null) {
-                boolean ownsPlatform = false;
-                for (OwnedService ownedServiceDetails : ownedPlatformDetailsSet) {
-                    log.debug(ownedServiceDetails);
-                    if (ownedServiceDetails.getServiceInstanceId().equals(platformId)) {
-                        String message = "The user owns the platform with id " + platformId;
-                        log.info(message);
-                        ownsPlatform = true;
-                        ownedService = ownedServiceDetails;
-                        break;
-                    }
-                }
-
-                if (!ownsPlatform) {
-                    String message = "You do not own the platform with id " + platformId;
-                    log.info(message);
-                    return new ResponseEntity<>("You do not own the platform with id " + platformId,
-                            new HttpHeaders(), HttpStatus.BAD_REQUEST);
-                } else {
-                    return new ResponseEntity<>(ownedService,
-                            new HttpHeaders(), HttpStatus.OK);
-                }
-            } else {
-                String message = "AAM unreachable";
-                log.warn(message);
-                return new ResponseEntity<>("AAM unreachable",
-                        new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (CommunicationException e) {
-            String message = "AAM threw communication exception";
-            log.warn(message, e);
-            return new ResponseEntity<>(message + ": " + e.getMessage(),
-                    new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
