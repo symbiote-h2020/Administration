@@ -131,7 +131,7 @@ public class RabbitManager {
     private String userManageRequestRoutingKey;
     @Value("${rabbit.routingKey.get.user.details}")
     private String getUserDetailsRoutingKey;
-    @Value("${rabbit.queue.ownedservices.request}")
+    @Value("${rabbit.routingKey.ownedservices.request}")
     private String getOwnedPlatformDetailsRoutingKey;
 
     @Value("${rabbit.routingKey.manage.federation.rule}")
