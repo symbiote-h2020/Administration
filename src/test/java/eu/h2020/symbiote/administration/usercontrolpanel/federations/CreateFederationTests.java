@@ -158,7 +158,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error_name")
                         .value("Length must be between 3 and 30 characters"))
                 .andExpect(jsonPath("$.error_informationModel_id")
-                        .value("must match \"^[\\w-]{4,}$\""))
+                        .value("must match \"^[\\w-]+$\""))
                 .andExpect(jsonPath("$.error_slaConstraints_metric[1]")
                         .value("may not be null"))
                 .andExpect(jsonPath("$.error_slaConstraints_comparator[1]")
