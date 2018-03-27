@@ -10,6 +10,7 @@ import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
 import org.springframework.http.MediaType;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -51,7 +52,8 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name")
-                        .value(platformName));
+                        .value(platformName))
+                .andExpect(jsonPath("$.interworkingServices[*].url", containsInAnyOrder(platformUrl)));
     }
 
     @Test

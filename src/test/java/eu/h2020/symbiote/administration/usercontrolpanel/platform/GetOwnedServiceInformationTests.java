@@ -2,19 +2,12 @@ package eu.h2020.symbiote.administration.usercontrolpanel.platform;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
-import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 import org.junit.Test;
 import org.mockito.AdditionalMatchers;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;

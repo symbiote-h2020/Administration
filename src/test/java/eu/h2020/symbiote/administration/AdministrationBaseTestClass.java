@@ -111,9 +111,6 @@ public abstract class AdministrationBaseTestClass {
     protected String aamKeystoreName = "keystore";
     protected String aamKeystorePassword = "aampass";
     protected String aamPrivateKeyPassword = "private_key_pass";
-    protected String sslKeystore = "ssl_keystore";
-    protected String sslKeystorePassword = "ssl_keystore_pass";
-    protected String sslKeyPassword = "ssl_key_pass";
     protected Long tokenValidity = 100L;
     protected Boolean useBuiltInRapPlugin = true;
 
@@ -274,8 +271,7 @@ public abstract class AdministrationBaseTestClass {
     public PlatformConfigurationMessage samplePlatformConfigurationMessage() {
 
         return new PlatformConfigurationMessage(platformId, username, password, componentsKeystorePassword,
-                aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword, sslKeystore,
-                sslKeystorePassword, sslKeyPassword, tokenValidity, useBuiltInRapPlugin);
+                aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword, tokenValidity, useBuiltInRapPlugin);
     }
 
     public InformationModelListResponse sampleInformationModelListResponseSuccess() {

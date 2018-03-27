@@ -47,7 +47,9 @@ public class PlatformConfigurer {
         Assert.notNull(paamValidityMillis,"paamValidityMillis can not be null!");
         this.paamValidityMillis = paamValidityMillis;
 
-        this.cloudCoreInterfaceAddress = this.coreInterfaceAddress.replace("8100/coreInterface", "8101/cloudCoreInterface");
+        this.cloudCoreInterfaceAddress = this.coreInterfaceAddress
+                .replace("8100", "8101")
+                .replace("coreInterface", "cloudCoreInterface");
     }
 
 
@@ -68,12 +70,10 @@ public class PlatformConfigurer {
                 configurationMessage.getAamKeystoreName();
         String aamKeystorePassword = configurationMessage.getAamKeystorePassword().isEmpty() ?
                 "pass" : configurationMessage.getAamKeystorePassword();
+        // ToDo: Fix that to getAaaKeyPassword when jdk fix is published
         String aamPrivateKeyPassword = configurationMessage.getAamKeystorePassword().isEmpty() ?
-                "pass" : configurationMessage.getAamKeystorePassword(); // ToDo: Fix that to getAaaKeyPassword when jdk fix is published
-        String sslKeystore = configurationMessage.getSslKeystore();
-        String sslKeystorePassword = configurationMessage.getSslKeystorePassword();
-        String sslKeyPassword = configurationMessage.getSslKeyPassword();
-        String tokenValidity = configurationMessage.getTokenValidity() == 0 ? paamValidityMillis.toString() :
+                "pass" : configurationMessage.getAamKeystorePassword();
+        String tokenValidity = configurationMessage.getTokenValidity() == 0 ? paamValidityMillis :
                 configurationMessage.getTokenValidity().toString();
         Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
 
@@ -87,17 +87,18 @@ public class PlatformConfigurer {
 
         configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
         configureNginx(zipOutputStream, platformDetails);
-        configureComponentProperties(zipOutputStream, "registrationHandler", platformOwnerUsername,
+        configureComponentProperties(zipOutputStream, "RegistrationHandler", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
-        configureComponentProperties(zipOutputStream, "rap", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
-        configureComponentProperties(zipOutputStream, "monitoring", platformOwnerUsername,
+        configureComponentProperties(zipOutputStream, "ResourceAccessProxy", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
 
+        // Todo: implement for R4
+        // configureComponentProperties(zipOutputStream, "monitoring", platformOwnerUsername,
+        //        platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
-                aamKeystorePassword, aamPrivateKeyPassword, sslKeystore, sslKeystorePassword, sslKeyPassword,
-                tokenValidity);
-        configurePlatformAAMCertificateKeyStoreFactory(zipOutputStream, platformId, platformOwnerUsernameInCore,
+                aamKeystorePassword, aamPrivateKeyPassword, tokenValidity);
+        configureCertProperties(zipOutputStream, platformId, platformOwnerUsernameInCore,
                 platformOwnerPasswordInCore, aamKeystoreName, aamKeystorePassword, this.coreInterfaceAddress);
 
         zipOutputStream.close();
@@ -135,14 +136,14 @@ public class PlatformConfigurer {
         applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.interworking.interface.url=).*$",
                 "symbIoTe.interworking.interface.url=" +
                         Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()) +
-                        "/cloudCoreInterface/v1");
+                        "/cloudCoreInterface");
         applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
                 "symbIoTe.localaam.url=" + Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()) +
                         "/paam");
 
         // RAP Configuration
         applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
-                "rap.enableSpecificPlugin=" + useBuiltInRapPlugin.booleanValue());
+                "ResourceAccessProxy.enableSpecificPlugin=" + useBuiltInRapPlugin.booleanValue());
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("CloudConfigProperties/application.properties"));
@@ -168,16 +169,16 @@ public class PlatformConfigurer {
         if (m.find()) {
             // we are only looking for the first occurrence
             String platformPort = m.group(0).replaceAll(":", "").replaceAll("/", "");
-            log.debug("The platform used the port: " + m.group(0));
+            log.debug("The platform used the port: " + platformPort);
             nginxConf = nginxConf.replaceFirst("(?m)^.*(listen 443 ssl;).*$",
                     "        listen " + platformPort + " ssl;  ## HTTPS");
         }
 
         // Modify the nginx.conf file accordingly
         // AMQP Configuration
-        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}:8101).*$",
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}\\/cloudCoreInterface).*$",
                 "          proxy_pass  " + Matcher.quoteReplacement(this.cloudCoreInterfaceAddress) + "/;");
-        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}:8100).*$",
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}\\/coreInterface).*$",
                 "          proxy_pass  " + Matcher.quoteReplacement(this.coreInterfaceAddress) + "/;");
 
         //packing files
@@ -228,88 +229,73 @@ public class PlatformConfigurer {
     }
 
 
-    private void configureAAMProperties(ZipOutputStream zipOutputStream, String platformOwnerUsername,
-                                        String platformOwnerPassword, String aamKeystoreName,
+    private void configureAAMProperties(ZipOutputStream zipOutputStream, String serviceOwnerUsername,
+                                        String serviceOwnerPassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword,
-                                        String sslKeystore, String sslKeystorePassword, String sslKeyPassword,
                                         String tokenValidity)
             throws Exception {
 
         // Loading AAM bootstrap.properties
         InputStream bootstrapPropertiesAsStream = resourceLoader
-                .getResource("classpath:files/aam/bootstrap.properties").getInputStream();
+                .getResource("classpath:files/AuthenticationAuthorizationManager/bootstrap.properties").getInputStream();
         String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
                 .lines().collect(Collectors.joining("\n"));
 
         // Modify the nginx.conf file accordingly
         // AMQP Configuration
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.owner.username=).*$",
-                "aam.deployment.owner.username=" + Matcher.quoteReplacement(platformOwnerUsername));
+                "aam.deployment.owner.username=" + Matcher.quoteReplacement(serviceOwnerUsername));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.owner.password=).*$",
-                "aam.deployment.owner.password=" + Matcher.quoteReplacement(platformOwnerPassword));
+                "aam.deployment.owner.password=" + Matcher.quoteReplacement(serviceOwnerPassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_FILE_NAME=).*$",
-                "aam.security.KEY_STORE_FILE_NAME=" + Matcher.quoteReplacement(aamKeystoreName) + ".p12");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.ROOT_CA_CERTIFICATE_ALIAS=).*$",
-                "aam.security.ROOT_CA_CERTIFICATE_ALIAS=caam");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.CERTIFICATE_ALIAS=).*$",
-                "aam.security.CERTIFICATE_ALIAS=paam");
+                "aam.security.KEY_STORE_FILE_NAME=file://#{systemProperties['user.dir']}/" +
+                        Matcher.quoteReplacement(aamKeystoreName) + ".p12");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_PASSWORD=).*$",
                 "aam.security.KEY_STORE_PASSWORD=" + Matcher.quoteReplacement(aamKeystorePassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.PV_KEY_PASSWORD=).*$",
                 "aam.security.PV_KEY_PASSWORD=" + Matcher.quoteReplacement(aamPrivateKeyPassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
                 "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(tokenValidity));
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store=).*$",
-                "server.ssl.key-store=classpath:" + Matcher.quoteReplacement(sslKeystore));
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-store-password=).*$",
-                "server.ssl.key-store-password=" + Matcher.quoteReplacement(sslKeystorePassword));
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(server.ssl.key-password=).*$",
-                "server.ssl.key-password=" + Matcher.quoteReplacement(sslKeyPassword));
-
 
         //packing files
-        zipOutputStream.putNextEntry(new ZipEntry("aam/bootstrap.properties"));
+        zipOutputStream.putNextEntry(new ZipEntry("AuthenticationAuthorizationManager/bootstrap.properties"));
         InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
     }
 
 
-    private void configurePlatformAAMCertificateKeyStoreFactory(ZipOutputStream zipOutputStream, String platformId,
-                                                                String platformOwnerUsernameInCore,
-                                                                String platformOwnerPasswordInCore,
-                                                                String aamKeystoreName, String aamKeystorePassword,
-                                                                String coreAAMAddress)
+    private void configureCertProperties(ZipOutputStream zipOutputStream, String serviceId,
+                                         String serviceOwnerUsernameInCore,
+                                         String serviceOwnerPasswordInCore,
+                                         String aamKeystoreName, String aamKeystorePassword,
+                                         String coreAAMAddress)
             throws Exception {
 
         // Loading PlatformAAMCertificateKeyStoreFactory
         InputStream bootstrapPropertiesAsStream = resourceLoader
-                .getResource("classpath:files/symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java").getInputStream();
+                .getResource("classpath:files/AuthenticationAuthorizationManager/cert.properties").getInputStream();
         String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
                 .lines().collect(Collectors.joining("\n"));
 
         // Modify the nginx.conf file accordingly
         // AMQP Configuration
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String coreAAMAddress = ).*$",
-                "        String coreAAMAddress = \"" + Matcher.quoteReplacement(coreAAMAddress) + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformOwnerUsername =).*$",
-                "        String platformOwnerUsername = \"" + Matcher.quoteReplacement(platformOwnerUsernameInCore) + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformOwnerPassword = ).*$",
-                "        String platformOwnerPassword = \"" + Matcher.quoteReplacement(platformOwnerPasswordInCore) + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String platformId = ).*$",
-                "        String platformId = \"" + Matcher.quoteReplacement(platformId) + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStoreFileName =).*$",
-                "        String keyStoreFileName = \"" + Matcher.quoteReplacement(aamKeystoreName) + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String keyStorePassword = ).*$",
-                "        String keyStorePassword = \"" + Matcher.quoteReplacement(aamKeystorePassword) + "\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String aamCertificateAlias = ).*$",
-                "        String aamCertificateAlias = \"paam\";");
-        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(String rootCACertificateAlias =).*$",
-                "        String rootCACertificateAlias = \"caam\";");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(coreAAMAddress=).*$",
+                "coreAAMAddress=" + Matcher.quoteReplacement(coreAAMAddress));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(serviceOwnerUsername=).*$",
+                "serviceOwnerUsername=" + Matcher.quoteReplacement(serviceOwnerUsernameInCore));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(serviceOwnerPassword=).*$",
+                "serviceOwnerPassword=" + Matcher.quoteReplacement(serviceOwnerPasswordInCore));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(serviceId=).*$",
+                "serviceId=" + Matcher.quoteReplacement(serviceId));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(keyStoreFileName=).*$",
+                "keyStoreFileName=" + Matcher.quoteReplacement(aamKeystoreName) +".p12");
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(keyStorePassword=).*$",
+                "keyStorePassword=" + Matcher.quoteReplacement(aamKeystorePassword));
 
 
         //packing files
-        zipOutputStream.putNextEntry(new ZipEntry("symbioteSecurity/PlatformAAMCertificateKeyStoreFactory.java"));
+        zipOutputStream.putNextEntry(new ZipEntry("AuthenticationAuthorizationManager/cert.properties"));
         InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
