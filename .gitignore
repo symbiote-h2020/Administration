@@ -142,3 +142,6 @@ logs
 
 # Keystores
 *.jks
+
+# local property files
+*.properties
