@@ -123,7 +123,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         fileEntry = zipFiles.get("AuthenticationAuthorizationManager/bootstrap.properties");
         assertTrue(fileEntry.contains("aam.deployment.owner.username=" + username));
         assertTrue(fileEntry.contains("aam.deployment.owner.password=" + password));
-        assertTrue(fileEntry.contains("aam.security.KEY_STORE_FILE_NAME=file://#{systemProperties['user.dir']}/"
+        assertTrue(fileEntry.contains("aam.security.KEY_STORE_FILE_NAME=file:///#{systemProperties['user.dir']}/"
                 + aamKeystoreName + ".p12"));
         assertTrue(fileEntry.contains("aam.security.ROOT_CA_CERTIFICATE_ALIAS=caam"));
         assertTrue(fileEntry.contains("aam.security.CERTIFICATE_ALIAS=paam"));

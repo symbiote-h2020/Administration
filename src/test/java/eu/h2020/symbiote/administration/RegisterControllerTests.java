@@ -16,8 +16,7 @@ import javax.servlet.Filter;
 import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -40,7 +39,6 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     private Filter springSecurityFilterChain;
 
     @Autowired
-    @InjectMocks
     private RegisterController registerController;
 
     private MockMvc mockMvc;
@@ -136,6 +134,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void postRegisterUnreachable() throws Exception {
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
+
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
                 .param("validUsername", username)
@@ -149,7 +149,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterSuccess() throws Exception {
 
-        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -163,7 +163,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterUsernameExists() throws Exception {
 
-        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.USERNAME_EXISTS);
+        doReturn(ManagementStatus.USERNAME_EXISTS).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -178,7 +178,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterAAMError() throws Exception {
 
-        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.ERROR);
+        doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())
@@ -193,7 +193,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postRegisterCommunicationException() throws Exception {
 
-        when(rabbitManager.sendUserManagementRequest(any())).thenThrow(sampleCommunicationException());
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader())

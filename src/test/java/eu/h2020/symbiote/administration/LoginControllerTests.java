@@ -40,7 +40,6 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
     private Filter springSecurityFilterChain;
 
     @Autowired
-    @InjectMocks
     private UserCpanelController userCpanelController;
 
     private MockMvc mockMvc;

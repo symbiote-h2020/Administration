@@ -248,7 +248,7 @@ public class PlatformConfigurer {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.owner.password=).*$",
                 "aam.deployment.owner.password=" + Matcher.quoteReplacement(serviceOwnerPassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_FILE_NAME=).*$",
-                "aam.security.KEY_STORE_FILE_NAME=file://#{systemProperties['user.dir']}/" +
+                "aam.security.KEY_STORE_FILE_NAME=file:///#{systemProperties['user.dir']}/" +
                         Matcher.quoteReplacement(aamKeystoreName) + ".p12");
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.security.KEY_STORE_PASSWORD=).*$",
                 "aam.security.KEY_STORE_PASSWORD=" + Matcher.quoteReplacement(aamKeystorePassword));

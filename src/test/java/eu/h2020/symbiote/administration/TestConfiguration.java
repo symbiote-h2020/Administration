@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration;
 
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.services.AuthorizationService;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
@@ -20,5 +21,11 @@ public class TestConfiguration {
     public AuthorizationService authorizationService() {
         return Mockito.mock(AuthorizationService.class);
     }
+
+    @Bean
+    @Primary
+    protected RabbitManager rabbitManager()  {
+        return Mockito.mock(RabbitManager.class);
+    };
 
 }

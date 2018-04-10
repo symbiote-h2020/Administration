@@ -32,7 +32,6 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
         Federation federation = sampleSavedFederation();
         federationRepository.save(federation);
 
-        String platformId1 = federation.getMembers().get(0).getPlatformId();
         String platformId2 = federation.getMembers().get(1).getPlatformId();
         String platformId3 = federation.getMembers().get(2).getPlatformId();
         String platform1Url = federation.getMembers().get(0).getInterworkingServiceURL();

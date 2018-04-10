@@ -43,24 +43,18 @@ public class AdminCpanelController {
 
     private RabbitManager rabbitManager;
     private FederationService federationService;
-    private String aaMOwnerUsername;
-    private String aaMOwnerPassword;
 
     @Autowired
-    public AdminCpanelController(RabbitManager rabbitManager, FederationService federationService,
+    public AdminCpanelController(RabbitManager rabbitManager,
+                                 FederationService federationService,
                                  @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                                  @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
+
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 
         Assert.notNull(federationService,"FederationService can not be null!");
         this.federationService = federationService;
-
-        Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
-        this.aaMOwnerUsername = aaMOwnerUsername;
-
-        Assert.notNull(aaMOwnerPassword,"aaMOwnerPassword can not be null!");
-        this.aaMOwnerPassword = aaMOwnerPassword;
     }
 
     /**

@@ -24,7 +24,6 @@ import eu.h2020.symbiote.security.communication.payloads.*;
 import eu.h2020.symbiote.security.communication.payloads.OwnedService.ServiceType;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,7 +58,7 @@ public abstract class AdministrationBaseTestClass {
     @Autowired
     protected RestTemplate restTemplate;
 
-    @Mock
+    @Autowired
     protected RabbitManager rabbitManager;
 
     protected ClientHttpRequestFactory originalRequestFactory;
