@@ -45,11 +45,13 @@ public class FederationNotificationService {
         HttpEntity<Federation> httpEntity = new HttpEntity<>(federation, httpHeaders);
 
         for (FederationMember member : memberList) {
-            ResponseEntity federationNotificationResponse = null;
+            ResponseEntity federationNotificationResponse;
 
+            String federationMemberUrl = member.getInterworkingServiceURL() + FEDERATION_MANAGER_URL;
             try {
+                log.debug("Sending federation update to " + federationMemberUrl);
                 federationNotificationResponse = restTemplate.exchange(
-                        member.getInterworkingServiceURL() + FEDERATION_MANAGER_URL,
+                        federationMemberUrl,
                         HttpMethod.POST,
                         httpEntity,
                         Object.class
