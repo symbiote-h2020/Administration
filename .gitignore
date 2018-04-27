@@ -144,4 +144,4 @@ logs
 *.jks
 
 # local property files
-*.properties
+/*.properties

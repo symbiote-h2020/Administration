@@ -39,6 +39,9 @@ public class PlatformConfigurationMessage {
     @NotNull
     private Boolean useBuiltInRapPlugin;
 
+    @NotNull
+    private Level level;
+
     @JsonCreator
     public PlatformConfigurationMessage(@JsonProperty("platformId") String platformId,
                                         @JsonProperty("platformOwnerUsername") String platformOwnerUsername,
@@ -48,7 +51,8 @@ public class PlatformConfigurationMessage {
                                         @JsonProperty("aamKeystorePassword") String aamKeystorePassword,
                                         @JsonProperty("aamPrivateKeyPassword") String aamPrivateKeyPassword,
                                         @JsonProperty("tokenValidity") Long tokenValidity,
-                                        @JsonProperty("useBuiltInRapPlugin") Boolean useBuiltInRapPlugin) {
+                                        @JsonProperty("useBuiltInRapPlugin") Boolean useBuiltInRapPlugin,
+                                        @JsonProperty("level") Level level) {
         this.platformId = platformId;
         this.platformOwnerUsername = platformOwnerUsername;
         this.platformOwnerPassword = platformOwnerPassword;
@@ -58,6 +62,7 @@ public class PlatformConfigurationMessage {
         this.aamPrivateKeyPassword = aamPrivateKeyPassword;
         this.tokenValidity = tokenValidity;
         this.useBuiltInRapPlugin = useBuiltInRapPlugin;
+        this.level = level;
     }
 
 
@@ -82,8 +87,7 @@ public class PlatformConfigurationMessage {
     }
     public Long getTokenValidity() { return tokenValidity; }
     public Boolean getUseBuiltInRapPlugin() { return useBuiltInRapPlugin; }
-
-
+    public Level getLevel() { return level; }
 
     @Override
     public String toString() {
@@ -97,6 +101,11 @@ public class PlatformConfigurationMessage {
                 ", aamPrivateKeyPassword='" + aamPrivateKeyPassword + '\'' +
                 ", tokenValidity=" + tokenValidity +
                 ", useBuiltInRapPlugin=" + useBuiltInRapPlugin +
+                ", level=" + level +
                 '}';
+    }
+
+    public enum Level {
+        L1, L2, L3_4;
     }
 }

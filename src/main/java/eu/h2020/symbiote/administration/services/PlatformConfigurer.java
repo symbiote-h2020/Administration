@@ -76,6 +76,7 @@ public class PlatformConfigurer {
         String tokenValidity = configurationMessage.getTokenValidity() == 0 ? paamValidityMillis :
                 configurationMessage.getTokenValidity().toString();
         Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
+        PlatformConfigurationMessage.Level level = configurationMessage.getLevel();
 
         // Create .zip output stream
         ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
@@ -86,15 +87,22 @@ public class PlatformConfigurer {
         response.addHeader("Content-Type", "application/zip");
 
         configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
-        configureNginx(zipOutputStream, platformDetails);
+        configureNginx(zipOutputStream, platformDetails, level);
         configureComponentProperties(zipOutputStream, "RegistrationHandler", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
         configureComponentProperties(zipOutputStream, "ResourceAccessProxy", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+        configureComponentProperties(zipOutputStream, "Monitoring", platformOwnerUsername,
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
 
-        // Todo: implement for R4
-        // configureComponentProperties(zipOutputStream, "monitoring", platformOwnerUsername,
-        //        platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+        if (level == PlatformConfigurationMessage.Level.L2) {
+            configureComponentProperties(zipOutputStream, "FederationManager", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+            configureComponentProperties(zipOutputStream, "SubscriptionManager", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+            configureComponentProperties(zipOutputStream, "PlatformRegistry", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+        }
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
                 aamKeystorePassword, aamPrivateKeyPassword, tokenValidity);
@@ -153,12 +161,22 @@ public class PlatformConfigurer {
     }
 
 
-    private void configureNginx(ZipOutputStream zipOutputStream, OwnedService platformDetails)
+    private void configureNginx(ZipOutputStream zipOutputStream, OwnedService platformDetails,
+                                PlatformConfigurationMessage.Level level)
             throws Exception {
+
+        StringBuilder sb = new StringBuilder("classpath:files/nginx_l");
+
+        if (level == PlatformConfigurationMessage.Level.L1)
+            sb.append("1.conf");
+        else if (level == PlatformConfigurationMessage.Level.L2)
+            sb.append("2.conf");
+
+        String nginxFile = sb.toString();
 
         // Loading nginx.conf
         InputStream nginxConfAsStream = resourceLoader
-                .getResource("classpath:files/nginx.conf").getInputStream();
+                .getResource(nginxFile).getInputStream();
         String nginxConf = new BufferedReader(new InputStreamReader(nginxConfAsStream))
                 .lines().collect(Collectors.joining("\n"));
 

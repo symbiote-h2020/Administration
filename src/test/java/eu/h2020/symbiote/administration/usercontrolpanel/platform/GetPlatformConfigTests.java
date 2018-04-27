@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -37,7 +38,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
                 .sendOwnedServiceDetailsRequest(any());
 
         // User does not own the platform
-        PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage();
+        PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage(PlatformConfigurationMessage.Level.L1);
         Field platformIdField = invalidPlatform.getClass().getDeclaredField("platformId");
         platformIdField.setAccessible(true);
         platformIdField.set(invalidPlatform, "dummy");
@@ -51,21 +52,40 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     }
 
     @Test
-    public void getPlatformConfigSuccess() throws Exception {
+    public void getPlatformConfigL1Success() throws Exception {
 
-        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
-                .sendOwnedServiceDetailsRequest(any());
+        Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress, PlatformConfigurationMessage.Level.L1);
 
-        // Successful Request
-        MvcResult mvcResult = mockMvc.perform(post("/administration/user/cpanel/get_platform_config")
-                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
-                .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformConfigurationMessage())))
-                .andExpect(status().isOk())
-                .andExpect(header().string("Content-Disposition", "attachment; filename=\"configuration.zip\""))
-                .andExpect(header().string("Content-Type", "application/zip"))
-                .andReturn();
+        assertNull(zipFiles.get("FederationManager/bootstrap.properties"));
+        assertNull(zipFiles.get("SubscriptionManager/bootstrap.properties"));
+        assertNull(zipFiles.get("PlatformRegistry/bootstrap.properties"));
+    }
 
+    @Test
+    public void getPlatformConfigL2Success() throws Exception {
+
+        Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress, PlatformConfigurationMessage.Level.L2);
+
+        // Checking bootstrap.properties of Registration Handler
+        String fileEntry = zipFiles.get("FederationManager/bootstrap.properties");
+        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
+        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
+        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
+        // Checking bootstrap.properties of RAP
+        fileEntry = zipFiles.get("SubscriptionManager/bootstrap.properties");
+        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
+        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
+        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
+        // Checking bootstrap.properties of Monitoring
+        fileEntry = zipFiles.get("PlatformRegistry/bootstrap.properties");
+        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
+        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
+        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+    }
+
+    private Map<String, String> getZipFiles(MvcResult mvcResult) throws Exception {
         Map<String, String> zipFiles = new HashMap<>();
         ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(mvcResult.getResponse().getContentAsByteArray()));
 
@@ -80,6 +100,25 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
         zis.closeEntry();
         zis.close();
+        return zipFiles;
+    }
+
+    private Map<String, String> testCommonFiles(String coreInterfaceAddress, PlatformConfigurationMessage.Level level)
+            throws Exception {
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
+
+        // Successful Request
+        MvcResult mvcResult = mockMvc.perform(post("/administration/user/cpanel/get_platform_config")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformConfigurationMessage(level))))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"configuration.zip\""))
+                .andExpect(header().string("Content-Type", "application/zip"))
+                .andReturn();
+
+        Map<String, String> zipFiles = getZipFiles(mvcResult);
 
         String cloudCoreInterfaceAddress = this.coreInterfaceAddress
                 .replace("8100", "8101")
@@ -118,6 +157,11 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
         assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
 
+        // Checking bootstrap.properties of Monitoring
+        fileEntry = zipFiles.get("Monitoring/bootstrap.properties");
+        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
+        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
+        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
 
         // Checking bootstrap.properties of AAM
         fileEntry = zipFiles.get("AuthenticationAuthorizationManager/bootstrap.properties");
@@ -142,5 +186,6 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("aamCertificateAlias=paam"));
         assertTrue(fileEntry.contains("rootCACertificateAlias=caam"));
 
+        return zipFiles;
     }
 }
