@@ -1,6 +1,7 @@
 package eu.h2020.symbiote.administration.controllers;
 
 
+import eu.h2020.symbiote.administration.model.CoreUser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpHeaders;
@@ -80,6 +81,9 @@ public class LoginController {
             log.debug("User is already logged in");
             log.debug("User authorities = " + auth.getAuthorities());
 
+            CoreUser user = (CoreUser) auth.getPrincipal();
+            log.debug("User role = " + user.getRole());
+
             Map<String, String> response = new HashMap<>();
 
             if (auth.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"))) {
@@ -88,7 +92,7 @@ public class LoginController {
                 return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
             } else {
                 log.debug("The user is a normal user");
-                response.put("role", "USER");
+                response.put("role", user.getRole().toString());
                 return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
             }
         } else {

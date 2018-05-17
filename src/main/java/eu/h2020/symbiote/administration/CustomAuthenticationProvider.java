@@ -58,8 +58,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     }
 
     @Override
-    public Authentication authenticate(Authentication authentication) 
-      throws AuthenticationException {
+    public Authentication authenticate(Authentication authentication)
+            throws AuthenticationException {
 
         log.debug("A user tries to login");
         String name = authentication.getName();
@@ -84,7 +84,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         }
 
         // Checking for normal user
-        try{
+        try {
 
             UserDetailsResponse response = rabbitManager.sendLoginRequest(new Credentials(name, password));
 
@@ -123,7 +123,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         }
         return null;
     }
- 
+
     @Override
     public boolean supports(Class<?> authentication) {
         return (UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication));
