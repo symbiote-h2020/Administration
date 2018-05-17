@@ -1,8 +1,10 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.ownedservices;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
+import eu.h2020.symbiote.administration.services.platform.PlatformService;
+import eu.h2020.symbiote.administration.services.ssp.SSPService;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.cci.SspRegistryResponse;
 import eu.h2020.symbiote.model.mim.Platform;

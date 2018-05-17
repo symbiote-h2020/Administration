@@ -1,10 +1,12 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.ssp;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.SSPDetails;
+import eu.h2020.symbiote.administration.services.ownedservices.CheckServiceOwnershipService;
+import eu.h2020.symbiote.administration.services.validation.ValidationService;
 import eu.h2020.symbiote.core.cci.SspRegistryResponse;
 import eu.h2020.symbiote.model.mim.InterworkingService;
 import eu.h2020.symbiote.model.mim.SmartSpace;

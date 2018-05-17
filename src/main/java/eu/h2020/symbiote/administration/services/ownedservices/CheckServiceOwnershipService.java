@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.ownedservices;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
