@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.validation;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

@@ -1,6 +1,7 @@
 package eu.h2020.symbiote.administration.controllers;
 
 
+import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
@@ -17,17 +18,19 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.context.request.WebRequest;
 
 import javax.validation.Valid;
 import java.util.HashMap;
@@ -55,18 +58,25 @@ public class RegisterController {
 
     private RabbitManager rabbitManager;
     private UserRepository userRepository;
+    private ApplicationEventPublisher eventPublisher;
+
 
 
     @Autowired
-    public RegisterController(RabbitManager rabbitManager,
-                              UserRepository userRepository) {
+    public RegisterController(RabbitManager rabbitManager, UserRepository userRepository, ApplicationEventPublisher eventPublisher) {
+        Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
+
+        Assert.notNull(userRepository,"UserRepository can not be null!");
         this.userRepository = userRepository;
+
+        Assert.notNull(eventPublisher,"EventPublisher can not be null!");
+        this.eventPublisher = eventPublisher;
     }
 
     // The CoreUser argument is needed so that the template can associate form attributes with a CoreUser
 	@GetMapping("/administration/register")
-	public String coreUserRegisterForm(CoreUser coreUser, Model model) {
+	public String coreUserRegisterForm(Model model) {
 		log.debug("GET request on /administration/register");
 
 		model.addAttribute("allRoles", UserRoleValueTextMapping.getList());
@@ -82,7 +92,8 @@ public class RegisterController {
 
     @PostMapping("/administration/register")
     public ResponseEntity<Map<String, Object>> coreUserRegister(@Valid CoreUser coreUser,
-                                                                BindingResult bindingResult) {
+                                                                BindingResult bindingResult,
+                                                                WebRequest webRequest) {
 
         log.debug("POST request on /administration/register");
         log.debug("CoreUser = " + ReflectionToStringBuilder.toString(coreUser));
@@ -112,8 +123,6 @@ public class RegisterController {
         log.debug(ReflectionToStringBuilder.toString(coreUser));
 
         // Construct the UserManagementRequest
-        // Todo: Change the federatedId in R4
-
         UserManagementRequest userRegistrationRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                 new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
@@ -141,6 +150,14 @@ public class RegisterController {
             } else if(managementStatus == ManagementStatus.OK ) {
                 coreUser.clearSensitiveData();
                 userRepository.save(coreUser);
+                try {
+                    String appUrl = webRequest.getContextPath();
+                    eventPublisher.publishEvent(new OnRegistrationCompleteEvent
+                            (coreUser, webRequest.getLocale(), appUrl));
+                } catch (Exception me) {
+                    response.put("errorMessage","Could not send verification email");
+                }
+
                 return new ResponseEntity<>(response, new HttpHeaders(),
                         HttpStatus.CREATED);
             } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {

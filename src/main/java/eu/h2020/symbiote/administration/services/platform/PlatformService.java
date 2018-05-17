@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.platform;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
@@ -6,6 +6,9 @@ import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
+import eu.h2020.symbiote.administration.services.CheckServiceOwnershipService;
+import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;
+import eu.h2020.symbiote.administration.services.validation.ValidationService;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.InterworkingService;

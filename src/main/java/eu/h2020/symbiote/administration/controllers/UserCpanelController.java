@@ -5,6 +5,10 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.administration.services.*;
+import eu.h2020.symbiote.administration.services.federation.FederationService;
+import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;
+import eu.h2020.symbiote.administration.services.platform.PlatformService;
+import eu.h2020.symbiote.administration.services.ssp.SSPService;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;

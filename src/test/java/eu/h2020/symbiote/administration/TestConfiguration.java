@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.services.AuthorizationService;
+import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

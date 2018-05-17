@@ -1,9 +1,11 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.ssp;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.SSPDetails;
+import eu.h2020.symbiote.administration.services.CheckServiceOwnershipService;
+import eu.h2020.symbiote.administration.services.validation.ValidationService;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.exceptions.custom.InvalidArgumentsException;

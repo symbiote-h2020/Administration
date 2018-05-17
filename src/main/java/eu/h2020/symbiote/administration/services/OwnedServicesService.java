@@ -6,6 +6,7 @@ import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.ListUserServicesResponse;
 import eu.h2020.symbiote.administration.model.PlatformDetails;
 import eu.h2020.symbiote.administration.model.SSPDetails;
+import eu.h2020.symbiote.administration.services.platform.PlatformService;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.OperationType;

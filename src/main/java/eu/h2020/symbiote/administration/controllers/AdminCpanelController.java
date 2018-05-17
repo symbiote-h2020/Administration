@@ -3,7 +3,7 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.administration.services.FederationService;
+import eu.h2020.symbiote.administration.services.federation.FederationService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.ClearDataRequest;

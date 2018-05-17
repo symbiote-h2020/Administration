@@ -84,6 +84,7 @@ dependencies {
     compile("org.springframework.boot:spring-boot-starter-security")
     compile('org.springframework.boot:spring-boot-starter-data-rest')
     compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+    compile('org.springframework.boot:spring-boot-starter-mail')
 
     // gui page
     compile('org.springframework.boot:spring-boot-starter-thymeleaf')
