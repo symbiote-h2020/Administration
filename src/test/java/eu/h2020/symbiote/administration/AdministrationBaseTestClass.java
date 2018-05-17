@@ -5,7 +5,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
-import eu.h2020.symbiote.administration.services.AuthorizationService;
+import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;

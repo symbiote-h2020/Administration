@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.federation;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.helpers.AuthorizationServiceHelper;
@@ -7,6 +7,10 @@ import eu.h2020.symbiote.administration.model.FederationInvitation;
 import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.administration.model.InvitationRequest;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
+import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;
+import eu.h2020.symbiote.administration.services.ownedservices.CheckServiceOwnershipService;
+import eu.h2020.symbiote.administration.services.platform.PlatformService;
+import eu.h2020.symbiote.administration.services.validation.ValidationService;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.FederationMember;

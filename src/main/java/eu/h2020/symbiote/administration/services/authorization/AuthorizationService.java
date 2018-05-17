@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.authorization;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.h2020.symbiote.administration.helpers.AuthorizationServiceHelper;

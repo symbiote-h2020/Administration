@@ -1,5 +1,6 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.federation;
 
+import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.FederationMember;
 import org.apache.commons.logging.Log;

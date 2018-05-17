@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.administration.services;
+package eu.h2020.symbiote.administration.services.platform;
 
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
