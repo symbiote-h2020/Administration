@@ -171,8 +171,10 @@ public class UserCpanelController {
         // Get the user details
         ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
 
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
-            return userDetailsResponseEntity;
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK) {
+            errorsResponse.put("changeEmailError", (String) userDetailsResponseEntity.getBody());
+            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), userDetailsResponseEntity.getStatusCode());
+        }
 
         UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
         Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
@@ -192,28 +194,26 @@ public class UserCpanelController {
                 OperationType.UPDATE
         );
 
-        Map<String, Object> response = new HashMap<>();
-
         try {
             ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
 
             if (managementStatus == null) {
-                response.put("changeEmailError","Authorization Manager is unreachable!");
-                return new ResponseEntity<>(response, new HttpHeaders(),
+                errorsResponse.put("changeEmailError","Authorization Manager is unreachable!");
+                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
             } else if(managementStatus == ManagementStatus.OK ){
-                return new ResponseEntity<>(response, new HttpHeaders(),
+                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
                         HttpStatus.OK);
             }
         } catch (CommunicationException e) {
-            response.put("changeEmailError",e.getMessage());
-            return  new ResponseEntity<>(response, new HttpHeaders(),
+            errorsResponse.put("changeEmailError",e.getMessage());
+            return  new ResponseEntity<>(errorsResponse, new HttpHeaders(),
                     HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>("The Authorization Manager responded with ERROR",
-                new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        errorsResponse.put("changeEmailError", "The Authorization Manager responded with ERROR");
+        return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/administration/user/change_password")
@@ -262,8 +262,10 @@ public class UserCpanelController {
         // Get the user details
         ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
 
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
-            return userDetailsResponseEntity;
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK) {
+            errorsResponse.put("changePasswordError", (String) userDetailsResponseEntity.getBody());
+            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), userDetailsResponseEntity.getStatusCode());
+        }
 
         UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
         Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
@@ -283,28 +285,69 @@ public class UserCpanelController {
                 OperationType.UPDATE
         );
 
+        try {
+            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
+
+            if (managementStatus == null) {
+                errorsResponse.put("changePasswordError","Authorization Manager is unreachable!");
+                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+
+            } else if(managementStatus == ManagementStatus.OK ){
+                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
+                        HttpStatus.OK);
+            }
+        } catch (CommunicationException e) {
+            errorsResponse.put("changePasswordError",e.getMessage());
+            return  new ResponseEntity<>(errorsResponse, new HttpHeaders(),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        errorsResponse.put("changePasswordError", "The Authorization Manager responded with ERROR");
+        return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @PostMapping("/administration/user/delete_user")
+    public ResponseEntity<?> deleteUser(Principal principal) {
+        log.debug("POST request on /administration/user/delete_user");
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), password),
+                        "",
+                        user.getRole(),
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.DELETE
+        );
+
         Map<String, Object> response = new HashMap<>();
 
         try {
             ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
 
             if (managementStatus == null) {
-                response.put("changePasswordError","Authorization Manager is unreachable!");
-                return new ResponseEntity<>(response, new HttpHeaders(),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+                response.put("userDeletionError","Authorization Manager is unreachable!");
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
             } else if(managementStatus == ManagementStatus.OK ){
-                return new ResponseEntity<>(response, new HttpHeaders(),
-                        HttpStatus.OK);
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
             }
         } catch (CommunicationException e) {
-            response.put("changePasswordError",e.getMessage());
-            return  new ResponseEntity<>(response, new HttpHeaders(),
-                    HttpStatus.BAD_REQUEST);
+            response.put("userDeletionError",e.getMessage());
+            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>("The Authorization Manager responded with ERROR",
-                new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        response.put("userDeletionError", "The Authorization Manager responded with ERROR");
+        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/administration/user/cpanel/delete_client")
@@ -313,6 +356,7 @@ public class UserCpanelController {
         log.debug("POST request on /administration/user/cpanel/delete_client for client with id: " +
                 clientIdToDelete);
 
+        Map<String, Object> response = new HashMap<>();
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
@@ -320,8 +364,10 @@ public class UserCpanelController {
         // Check if the user owns the client
         ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
 
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
-            return userDetailsResponseEntity;
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK) {
+            response.put("clientDeletionError", userDetailsResponseEntity.getBody());
+            return new ResponseEntity<>(response, new HttpHeaders(), userDetailsResponseEntity.getStatusCode());
+        }
 
         UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
         String username = userDetailsResponse.getUserDetails().getCredentials().getUsername();
@@ -353,19 +399,19 @@ public class UserCpanelController {
             ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
 
             if (managementStatus == null) {
-                return new ResponseEntity<>("Authorization Manager is unreachable!", new HttpHeaders(),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
+                response.put("clientDeletionError", "Authorization Manager is unreachable!");
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
 
             } else if(managementStatus == ManagementStatus.OK ) {
                 return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
             }
         } catch (CommunicationException e) {
-            return  new ResponseEntity<>(e.getMessage(), new HttpHeaders(),
-                    HttpStatus.BAD_REQUEST);
+            response.put("clientDeletionError", e.getMessage());
+            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>("Authorization Manager responded with ERROR",
-                new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        response.put("clientDeletionError", "Authorization Manager responded with ERROR");
+        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/administration/user/cpanel/list_user_services")

@@ -280,4 +280,44 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
                 .param("clientIdToDelete", clientId1))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    public void deleteUserTimeout() throws Exception {
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/delete_user")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void deleteUserException() throws Exception {
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/delete_user")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteUserError() throws Exception {
+        doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/delete_user")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteUserSuccess() throws Exception {
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/delete_user")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isOk());
+    }
 }
