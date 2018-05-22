@@ -38,6 +38,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.cert.CertificateException;
 import java.util.*;
 
 
@@ -81,6 +82,10 @@ public abstract class AdministrationBaseTestClass {
     protected String username = "Test1";
     protected String password = "Test1$";
     protected String mail = "test@mail.com";
+    protected String clientId1 = "clientId1";
+    protected String clientId2 = "clientId2";
+    protected String certificate1String = "certificate1";
+    protected String certificate2String = "certificate2";
 
     protected String platformId = "test1Plat";
     protected String platformPort = "8102";
@@ -353,12 +358,20 @@ public abstract class AdministrationBaseTestClass {
     }
 
     public UserDetailsResponse sampleUserDetailsResponse (HttpStatus status) {
+        Map<String, Certificate> clients = new HashMap<>();
+        try {
+            clients.put(clientId1, new Certificate(certificate1String));
+            clients.put(clientId2, new Certificate(certificate2String));
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        }
+
         return new UserDetailsResponse(status, new UserDetails(
                 new Credentials(username, password),
                 mail,
                 UserRole.SERVICE_OWNER,
                 new HashMap<>(),
-                new HashMap<>()
+                clients
         ));
     }
 

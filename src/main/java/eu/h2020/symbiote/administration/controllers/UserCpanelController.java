@@ -5,6 +5,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.services.*;
 import eu.h2020.symbiote.model.mim.Federation;
+import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
@@ -117,28 +118,18 @@ public class UserCpanelController {
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
 
-        UserDetailsResponse response;
-        try {
-            response = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
+        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
 
-            if(response != null) {
-                if (response.getHttpStatus() != HttpStatus.OK) {
-                    log.debug("Could not get the userDetails");
-                    return new ResponseEntity<>(new HttpHeaders(), response.getHttpStatus());
-                }
-            } else {
-                return new ResponseEntity<>(new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch(CommunicationException e){
-            log.info(e.getMessage());
-            return new ResponseEntity<>(e.getErrorMessage(), new HttpHeaders(), e.getStatusCode());
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
+            return userDetailsResponseEntity;
 
-        }
+        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
+        String recoveryMail = userDetailsResponse.getUserDetails().getRecoveryMail();
+        String role = userDetailsResponse.getUserDetails().getRole().toString();
+        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
 
-        String recoveryMail = response.getUserDetails().getRecoveryMail();
-        String role = response.getUserDetails().getRole().toString();
-        UserDetailsDDO userDetails = new UserDetailsDDO(user.getUsername(), recoveryMail, role);
-        return new ResponseEntity<>(userDetails, new HttpHeaders(), HttpStatus.OK);
+        UserDetailsDDO userDetailsDDO = new UserDetailsDDO(user.getUsername(), recoveryMail, role, clients);
+        return new ResponseEntity<>(userDetailsDDO, new HttpHeaders(), HttpStatus.OK);
     }
 
     @PostMapping("/administration/user/change_email")
@@ -177,9 +168,17 @@ public class UserCpanelController {
             return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        // Construct the UserManagementRequest
-        // Todo: Change the federatedId in R4
+        // Get the user details
+        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
 
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
+            return userDetailsResponseEntity;
+
+        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
+        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
         UserManagementRequest userUpdateRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                 new Credentials(user.getUsername(), password),
@@ -188,7 +187,7 @@ public class UserCpanelController {
                         message.getNewEmail(),
                         user.getRole(),
                         new HashMap<>(),
-                        new HashMap<>()
+                        clients
                 ),
                 OperationType.UPDATE
         );
@@ -213,7 +212,8 @@ public class UserCpanelController {
                     HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("The Authorization Manager responded with ERROR",
+                new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/administration/user/change_password")
@@ -259,9 +259,17 @@ public class UserCpanelController {
             return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        // Construct the UserManagementRequest
-        // Todo: Change the federatedId in R4
+        // Get the user details
+        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
 
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
+            return userDetailsResponseEntity;
+
+        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
+        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
         UserManagementRequest userUpdateRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                 new Credentials(user.getUsername(), password),
@@ -270,7 +278,7 @@ public class UserCpanelController {
                         user.getRecoveryMail(),
                         user.getRole(),
                         new HashMap<>(),
-                        new HashMap<>()
+                        clients
                 ),
                 OperationType.UPDATE
         );
@@ -295,7 +303,69 @@ public class UserCpanelController {
                     HttpStatus.BAD_REQUEST);
         }
 
-        return new ResponseEntity<>(new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>("The Authorization Manager responded with ERROR",
+                new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @PostMapping("/administration/user/cpanel/delete_client")
+    public ResponseEntity<?> deleteClient(@RequestParam String clientIdToDelete, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/delete_client for client with id: " +
+                clientIdToDelete);
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        // Check if the user owns the client
+        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
+
+        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
+            return userDetailsResponseEntity;
+
+        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
+        String username = userDetailsResponse.getUserDetails().getCredentials().getUsername();
+        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
+
+        if (!clients.containsKey(clientIdToDelete)) {
+            log.debug("The user " + username + " does not own the client with id " + clientIdToDelete);
+            String message = "You do not own the client with id " + clientIdToDelete;
+            return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.UNAUTHORIZED);
+        } else
+            clients.remove(clientIdToDelete);
+
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), user.getValidPassword()),
+                        user.getRecoveryMail(),
+                        user.getRole(),
+                        new HashMap<>(),
+                        clients
+                ),
+                OperationType.UPDATE
+        );
+
+
+        try {
+            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
+
+            if (managementStatus == null) {
+                return new ResponseEntity<>("Authorization Manager is unreachable!", new HttpHeaders(),
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+
+            } else if(managementStatus == ManagementStatus.OK ) {
+                return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+            }
+        } catch (CommunicationException e) {
+            return  new ResponseEntity<>(e.getMessage(), new HttpHeaders(),
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        return new ResponseEntity<>("Authorization Manager responded with ERROR",
+                new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }
 
     @PostMapping("/administration/user/cpanel/list_user_services")
@@ -428,6 +498,28 @@ public class UserCpanelController {
      */
     public void setRabbitManager(RabbitManager rabbitManager){
         this.rabbitManager = rabbitManager;
+    }
+
+    private ResponseEntity getUserDetails(CoreUser user, String password) {
+        UserDetailsResponse response;
+        try {
+            response = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
+
+            if(response != null) {
+                if (response.getHttpStatus() != HttpStatus.OK) {
+                    log.debug("Could not get the userDetails");
+                    return new ResponseEntity<>(new HttpHeaders(), response.getHttpStatus());
+                } else {
+                    return new ResponseEntity<>(response, new HttpHeaders(), response.getHttpStatus());
+                }
+            } else {
+                return new ResponseEntity<>(new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch(CommunicationException e){
+            log.info(e.getMessage());
+            return new ResponseEntity<>(e.getErrorMessage(), new HttpHeaders(), e.getStatusCode());
+
+        }
     }
 
 }

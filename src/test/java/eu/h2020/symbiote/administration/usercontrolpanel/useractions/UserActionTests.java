@@ -76,6 +76,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changePasswordTimeout() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
         doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
@@ -87,6 +88,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changePasswordBadRequest() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
         doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
@@ -132,6 +134,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changePasswordSuccess() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_password")
@@ -143,6 +146,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changeEmailTimeout() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
         doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
@@ -154,6 +158,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changeEmailBadRequest() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
         doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
@@ -197,12 +202,82 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void changeEmailSuccess() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/user/change_email")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleChangeEmailRequest())))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void deleteClientTimeout1() throws Exception {
+        doReturn(null).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/delete_client")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("clientIdToDelete", clientId1))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void deleteClientTimeout2() throws Exception {
+        doReturn(null).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/delete_client")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("clientIdToDelete", clientId1))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    public void deleteClientException1() throws Exception {
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/delete_client")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("clientIdToDelete", clientId1))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteClientException2() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/delete_client")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("clientIdToDelete", clientId1))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteClientIdError() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/delete_client")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("clientIdToDelete", clientId1))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void deleteClientIdSuccess() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/delete_client")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("clientIdToDelete", clientId1))
                 .andExpect(status().isOk());
     }
 }

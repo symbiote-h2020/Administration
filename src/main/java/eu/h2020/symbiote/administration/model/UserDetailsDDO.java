@@ -1,25 +1,27 @@
 package eu.h2020.symbiote.administration.model;
 
+import eu.h2020.symbiote.security.commons.Certificate;
+
+import java.util.Map;
+
 public class UserDetailsDDO {
 
     private String username;
     private String email;
     private String role;
+    private Map<String, Certificate> clients;
 
-    public UserDetailsDDO(String username, String email, String role) {
-        setUsername(username);
-        setEmail(email);
-        setRole(role);
+    public UserDetailsDDO(String username, String email, String role, Map<String, Certificate> clients) {
+        this.username = username;
+        this.email = email;
+        this.role = role;
+        this.clients = clients;
     }
 
     public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
     public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public Map<String, Certificate> getClients() { return clients; }
 
     @Override
     public String toString() {
