@@ -53,7 +53,7 @@ public class PlatformConfigurer {
     }
 
 
-    public void returnPlatformConfiguration(HttpServletResponse response,
+    void returnPlatformConfiguration(HttpServletResponse response,
                                             CoreUser user,
                                             OwnedService platformDetails,
                                             PlatformConfigurationMessage configurationMessage) throws Exception {
@@ -77,6 +77,7 @@ public class PlatformConfigurer {
                 configurationMessage.getTokenValidity().toString();
         Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
         PlatformConfigurationMessage.Level level = configurationMessage.getLevel();
+        PlatformConfigurationMessage.DeploymentType deploymentType = configurationMessage.getDeploymentType();
 
         // Create .zip output stream
         ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
@@ -86,8 +87,8 @@ public class PlatformConfigurer {
         response.addHeader("Content-Disposition", "attachment; filename=\"configuration.zip\"");
         response.addHeader("Content-Type", "application/zip");
 
-        configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin);
-        configureNginx(zipOutputStream, platformDetails, level);
+        configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin, deploymentType);
+        configureNginx(zipOutputStream, platformDetails, level, deploymentType);
         configureComponentProperties(zipOutputStream, "RegistrationHandler", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
         configureComponentProperties(zipOutputStream, "ResourceAccessProxy", platformOwnerUsername,
@@ -113,8 +114,10 @@ public class PlatformConfigurer {
         response.getOutputStream().close();
     }
 
-    private void configureCloudConfigProperties(OwnedService platformDetails, ZipOutputStream zipOutputStream,
-                                                Boolean useBuiltInRapPlugin)
+    private void configureCloudConfigProperties(OwnedService platformDetails,
+                                                ZipOutputStream zipOutputStream,
+                                                Boolean useBuiltInRapPlugin,
+                                                PlatformConfigurationMessage.DeploymentType deploymentType)
             throws Exception {
 
         // Loading application.properties
@@ -129,8 +132,21 @@ public class PlatformConfigurer {
                 "platform.id=" + Matcher.quoteReplacement(platformDetails.getServiceInstanceId()));
 
         // AMQP Configuration
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
-                "rabbit.host=localhost");
+        switch (deploymentType) {
+            case DOCKER:
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
+                        "rabbit.host=symbiote-rabbitmq");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
+                        "spring.data.mongodb.host=symbiote-mongo");
+                break;
+            case MANUAL:
+            default:
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
+                        "rabbit.host=localhost");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
+                        "spring.data.mongodb.host=localhost");
+        }
+
         applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.username=).*$",
                 "rabbit.username=guest");
         applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.password=).*$",
@@ -151,7 +167,7 @@ public class PlatformConfigurer {
 
         // RAP Configuration
         applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
-                "ResourceAccessProxy.enableSpecificPlugin=" + useBuiltInRapPlugin.booleanValue());
+                "ResourceAccessProxy.enableSpecificPlugin=" + useBuiltInRapPlugin);
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("CloudConfigProperties/application.properties"));
@@ -162,7 +178,8 @@ public class PlatformConfigurer {
 
 
     private void configureNginx(ZipOutputStream zipOutputStream, OwnedService platformDetails,
-                                PlatformConfigurationMessage.Level level)
+                                PlatformConfigurationMessage.Level level,
+                                PlatformConfigurationMessage.DeploymentType deploymentType)
             throws Exception {
 
         StringBuilder sb = new StringBuilder("classpath:files/nginx_l");
@@ -180,7 +197,7 @@ public class PlatformConfigurer {
         String nginxConf = new BufferedReader(new InputStreamReader(nginxConfAsStream))
                 .lines().collect(Collectors.joining("\n"));
 
-        Pattern p = Pattern.compile(":(\\d)+(\\/)?");   // the pattern to search for
+        Pattern p = Pattern.compile(":(\\d)+(/)?");   // the pattern to search for
         Matcher m = p.matcher(platformDetails.getPlatformInterworkingInterfaceAddress());
 
         // if we find a match, get the group
@@ -193,11 +210,17 @@ public class PlatformConfigurer {
         }
 
         // Modify the nginx.conf file accordingly
-        // AMQP Configuration
-        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}\\/cloudCoreInterface).*$",
+        nginxConf = nginxConf.replaceAll("example_platform", platformDetails.getInstanceFriendlyName());
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(https://\\{symbiote-core-hostname}/cloudCoreInterface).*$",
                 "          proxy_pass  " + Matcher.quoteReplacement(this.cloudCoreInterfaceAddress) + "/;");
-        nginxConf = nginxConf.replaceFirst("(?m)^.*(https:\\/\\/\\{symbiote-core-hostname\\}\\/coreInterface).*$",
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(https://\\{symbiote-core-hostname}/coreInterface).*$",
                 "          proxy_pass  " + Matcher.quoteReplacement(this.coreInterfaceAddress) + "/;");
+
+        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
+            nginxConf = nginxConf.replaceAll("localhost", "symbiote-cloud");
+            nginxConf = nginxConf.replaceAll("/etc/nginx/ssl/fullchain.pem", "/certificates/fullchain.pem");
+            nginxConf = nginxConf.replaceAll("/etc/nginx/ssl/privkey.pem", "/certificates/privkey.pem");
+        }
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("nginx.conf"));

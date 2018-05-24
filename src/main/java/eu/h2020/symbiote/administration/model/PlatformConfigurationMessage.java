@@ -42,6 +42,9 @@ public class PlatformConfigurationMessage {
     @NotNull
     private Level level;
 
+    @NotNull
+    private DeploymentType deploymentType;
+
     @JsonCreator
     public PlatformConfigurationMessage(@JsonProperty("platformId") String platformId,
                                         @JsonProperty("platformOwnerUsername") String platformOwnerUsername,
@@ -52,7 +55,8 @@ public class PlatformConfigurationMessage {
                                         @JsonProperty("aamPrivateKeyPassword") String aamPrivateKeyPassword,
                                         @JsonProperty("tokenValidity") Long tokenValidity,
                                         @JsonProperty("useBuiltInRapPlugin") Boolean useBuiltInRapPlugin,
-                                        @JsonProperty("level") Level level) {
+                                        @JsonProperty("level") Level level,
+                                        @JsonProperty("deploymentType") DeploymentType deploymentType) {
         this.platformId = platformId;
         this.platformOwnerUsername = platformOwnerUsername;
         this.platformOwnerPassword = platformOwnerPassword;
@@ -63,6 +67,7 @@ public class PlatformConfigurationMessage {
         this.tokenValidity = tokenValidity;
         this.useBuiltInRapPlugin = useBuiltInRapPlugin;
         this.level = level;
+        this.deploymentType = deploymentType;
     }
 
 
@@ -88,6 +93,7 @@ public class PlatformConfigurationMessage {
     public Long getTokenValidity() { return tokenValidity; }
     public Boolean getUseBuiltInRapPlugin() { return useBuiltInRapPlugin; }
     public Level getLevel() { return level; }
+    public DeploymentType getDeploymentType() { return deploymentType; }
 
     @Override
     public String toString() {
@@ -102,10 +108,18 @@ public class PlatformConfigurationMessage {
                 ", tokenValidity=" + tokenValidity +
                 ", useBuiltInRapPlugin=" + useBuiltInRapPlugin +
                 ", level=" + level +
+                ", deploymentType=" + deploymentType +
                 '}';
     }
 
     public enum Level {
-        L1, L2, L3_4;
+        L1,
+        L2,
+        L3_4;
+    }
+
+    public enum DeploymentType {
+        DOCKER,
+        MANUAL;
     }
 }

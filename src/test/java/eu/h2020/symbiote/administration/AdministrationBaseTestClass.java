@@ -272,10 +272,12 @@ public abstract class AdministrationBaseTestClass {
         return platformResponse;
     }
 
-    public PlatformConfigurationMessage samplePlatformConfigurationMessage(PlatformConfigurationMessage.Level level) {
+    public PlatformConfigurationMessage samplePlatformConfigurationMessage(PlatformConfigurationMessage.Level level,
+                                                                           PlatformConfigurationMessage.DeploymentType deploymentType) {
 
         return new PlatformConfigurationMessage(platformId, username, password, componentsKeystorePassword,
-                aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword, tokenValidity, useBuiltInRapPlugin, level);
+                aamKeystoreName, aamKeystorePassword, aamPrivateKeyPassword, tokenValidity, useBuiltInRapPlugin,
+                level, deploymentType);
     }
 
     public InformationModelListResponse sampleInformationModelListResponseSuccess() {
