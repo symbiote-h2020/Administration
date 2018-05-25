@@ -334,12 +334,11 @@ public class UserCpanelController {
         Map<String, Object> response = new HashMap<>();
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
 
         // Construct the UserManagementRequest
         RevocationRequest revocationRequest = new RevocationRequest();
-        revocationRequest.setCredentials(new Credentials(user.getUsername(), password));
-        revocationRequest.setCredentialType(RevocationRequest.CredentialType.USER);
+        revocationRequest.setCredentials(new Credentials(aaMOwnerUsername, aaMOwnerPassword));
+        revocationRequest.setCredentialType(RevocationRequest.CredentialType.ADMIN);
         revocationRequest.setCertificateCommonName(clientIdToDelete + "@" + user.getUsername());
 
 
