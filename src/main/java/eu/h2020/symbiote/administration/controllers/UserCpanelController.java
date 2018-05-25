@@ -8,10 +8,7 @@ import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.UserDetails;
-import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.*;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -168,17 +165,6 @@ public class UserCpanelController {
             return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        // Get the user details
-        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
-
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK) {
-            errorsResponse.put("changeEmailError", (String) userDetailsResponseEntity.getBody());
-            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), userDetailsResponseEntity.getStatusCode());
-        }
-
-        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
-        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
-
         // Todo: fill in the attributes
         // Construct the UserManagementRequest
         UserManagementRequest userUpdateRequest = new UserManagementRequest(
@@ -189,7 +175,7 @@ public class UserCpanelController {
                         message.getNewEmail(),
                         user.getRole(),
                         new HashMap<>(),
-                        clients
+                        new HashMap<>()
                 ),
                 OperationType.UPDATE
         );
@@ -259,17 +245,6 @@ public class UserCpanelController {
             return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
-        // Get the user details
-        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
-
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK) {
-            errorsResponse.put("changePasswordError", (String) userDetailsResponseEntity.getBody());
-            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), userDetailsResponseEntity.getStatusCode());
-        }
-
-        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
-        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
-
         // Todo: fill in the attributes
         // Construct the UserManagementRequest
         UserManagementRequest userUpdateRequest = new UserManagementRequest(
@@ -280,7 +255,7 @@ public class UserCpanelController {
                         user.getRecoveryMail(),
                         user.getRole(),
                         new HashMap<>(),
-                        clients
+                        new HashMap<>()
                 ),
                 OperationType.UPDATE
         );
@@ -361,50 +336,22 @@ public class UserCpanelController {
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
 
-        // Check if the user owns the client
-        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
-
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK) {
-            response.put("clientDeletionError", userDetailsResponseEntity.getBody());
-            return new ResponseEntity<>(response, new HttpHeaders(), userDetailsResponseEntity.getStatusCode());
-        }
-
-        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
-        String username = userDetailsResponse.getUserDetails().getCredentials().getUsername();
-        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
-
-        if (!clients.containsKey(clientIdToDelete)) {
-            log.debug("The user " + username + " does not own the client with id " + clientIdToDelete);
-            String message = "You do not own the client with id " + clientIdToDelete;
-            return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.UNAUTHORIZED);
-        } else
-            clients.remove(clientIdToDelete);
-
         // Construct the UserManagementRequest
-        UserManagementRequest userUpdateRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), password),
-                new UserDetails(
-                        new Credentials(user.getUsername(), user.getValidPassword()),
-                        user.getRecoveryMail(),
-                        user.getRole(),
-                        new HashMap<>(),
-                        clients
-                ),
-                OperationType.UPDATE
-        );
+        RevocationRequest revocationRequest = new RevocationRequest();
+        revocationRequest.setCredentials(new Credentials(user.getUsername(), password));
+        revocationRequest.setCredentialType(RevocationRequest.CredentialType.USER);
+        revocationRequest.setCertificateCommonName(clientIdToDelete + "@" + user.getUsername());
 
 
         try {
-            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
+            RevocationResponse revocationResponse = rabbitManager.sendRevocationRequest(revocationRequest);
 
-            if (managementStatus == null) {
+            if (revocationResponse == null) {
                 response.put("clientDeletionError", "Authorization Manager is unreachable!");
                 return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-            } else if(managementStatus == ManagementStatus.OK ) {
+            } else  if (revocationResponse.getStatus().is2xxSuccessful() && revocationResponse.isRevoked())
                 return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
-            }
+
         } catch (CommunicationException e) {
             response.put("clientDeletionError", e.getMessage());
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);

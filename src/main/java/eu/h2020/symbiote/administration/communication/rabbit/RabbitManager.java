@@ -123,6 +123,8 @@ public class RabbitManager {
 
     @Value("${rabbit.routingKey.manage.user.request}")
     private String userManagementRequestRoutingKey;
+    @Value("${rabbit.routingKey.manage.revocation.request}")
+    private String userRevocationRequestRoutingKey;
     @Value("${rabbit.routingKey.manage.platform.request}")
     private String platformManageRequestRoutingKey;
     @Value("${rabbit.routingKey.manage.smartspace.request}")
@@ -604,6 +606,41 @@ public class RabbitManager {
         return null;
     }
 
+    /**
+     * Method used to send RPC request to register user.
+     *
+     * @param request  request for revocation
+     * @return response status
+     */
+    public RevocationResponse sendRevocationRequest(RevocationRequest request) throws CommunicationException {
+        log.debug("sendUserManagementRequest to AAM: " + ReflectionToStringBuilder.toString(request));
+        try {
+            String message = mapper.writeValueAsString(request);
+
+            String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.userRevocationRequestRoutingKey, message, "application/json");
+
+            if (responseMsg == null) {
+                throw new CommunicationException("Communication Problem with AAM");
+            }
+
+            try {
+                RevocationResponse response = mapper.readValue(responseMsg, RevocationResponse.class);
+                log.trace("Received response from AAM.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in response from AAM.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+
+
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
+    }
 
     /**
      * Method used to send RPC request to register platform in AAM.
