@@ -1,10 +1,10 @@
 {
   "main.css": "static/css/main.08de8b08.css",
   "main.css.map": "static/css/main.08de8b08.css.map",
-  "main.js": "static/js/main.4e755c76.js",
-  "main.js.map": "static/js/main.4e755c76.js.map",
-  "administration/static/media/ECH2020.png": "administration/static/media/ECH2020.fd60acd3.png",
-  "administration/static/media/IoT-EPI-logo1.png": "administration/static/media/IoT-EPI-logo1.0049bf1b.png",
-  "administration/static/media/logo-1.1.png": "administration/static/media/logo-1.1.640ed7b6.png",
-  "administration/static/media/symbiote-homepage.png": "administration/static/media/symbiote-homepage.d2bd3f74.png"
+  "main.js": "static/js/main.351ae30f.js",
+  "main.js.map": "static/js/main.351ae30f.js.map",
+  "static/media/ECH2020.png": "administration/static/media/ECH2020.fd60acd3.png",
+  "static/media/IoT-EPI-logo1.png": "administration/static/media/IoT-EPI-logo1.0049bf1b.png",
+  "static/media/logo-1.1.png": "administration/static/media/logo-1.1.640ed7b6.png",
+  "static/media/symbiote-homepage.png": "administration/static/media/symbiote-homepage.d2bd3f74.png"
 }

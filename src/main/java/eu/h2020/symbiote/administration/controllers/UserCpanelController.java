@@ -339,7 +339,7 @@ public class UserCpanelController {
         RevocationRequest revocationRequest = new RevocationRequest();
         revocationRequest.setCredentials(new Credentials(aaMOwnerUsername, aaMOwnerPassword));
         revocationRequest.setCredentialType(RevocationRequest.CredentialType.ADMIN);
-        revocationRequest.setCertificateCommonName(clientIdToDelete + "@" + user.getUsername());
+        revocationRequest.setCertificateCommonName(user.getUsername() + "@" + clientIdToDelete);
 
 
         try {
