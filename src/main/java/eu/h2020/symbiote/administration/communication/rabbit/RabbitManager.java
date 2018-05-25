@@ -582,7 +582,6 @@ public class RabbitManager {
             String responseMsg = this.sendRpcMessage(this.aamExchangeName, this.userManagementRequestRoutingKey, message, "application/json");
 
             if (responseMsg == null) {
-
                 throw new CommunicationException("Communication Problem with AAM");
             }
 
