@@ -199,11 +199,12 @@ public class PlatformConfigurer {
 
         Pattern p = Pattern.compile(":(\\d)+(/)?");   // the pattern to search for
         Matcher m = p.matcher(platformDetails.getPlatformInterworkingInterfaceAddress());
+        String platformPort = "443";
 
         // if we find a match, get the group
         if (m.find()) {
             // we are only looking for the first occurrence
-            String platformPort = m.group(0).replaceAll(":", "").replaceAll("/", "");
+            platformPort = m.group(0).replaceAll(":", "").replaceAll("/", "");
             log.debug("The platform used the port: " + platformPort);
             nginxConf = nginxConf.replaceFirst("(?m)^.*(listen 443 ssl;).*$",
                     "        listen " + platformPort + " ssl;  ## HTTPS");
@@ -222,9 +223,27 @@ public class PlatformConfigurer {
             nginxConf = nginxConf.replaceAll("/etc/nginx/ssl/privkey.pem", "/certificates/privkey.pem");
         }
 
-        //packing files
-        zipOutputStream.putNextEntry(new ZipEntry("nginx.conf"));
+        // packing the nginx.conf and nginx-prod.conf
+        zipOutputStream.putNextEntry(new ZipEntry("nginx-prod.conf"));
         InputStream stream = new ByteArrayInputStream(nginxConf.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+
+        zipOutputStream.putNextEntry(new ZipEntry("nginx.conf"));
+        stream = new ByteArrayInputStream(nginxConf.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+
+
+        // Create the nginx-ngrok.conf
+        nginxConf = nginxConf.replaceFirst("(?m)^.*(ssl;  ## HTTPS).*$",
+                "        #listen " + platformPort + " ssl;  ## HTTPS;");
+        nginxConf = nginxConf.replaceAll("#listen 8102;", "listen 8102;");
+        nginxConf = nginxConf.replaceAll("ssl_certificate", "#ssl_certificate");
+
+        // packing the nginx-ngrok.conf
+        zipOutputStream.putNextEntry(new ZipEntry("nginx-ngrok.conf"));
+        stream = new ByteArrayInputStream(nginxConf.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
     }

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
@@ -156,22 +157,41 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
                 assertTrue(fileEntry.contains("spring.data.mongodb.host=localhost"));
         }
 
+        // Checking nginx-prod.conf
+        fileEntry = zipFiles.get("nginx-prod.conf");
+        String nginxConf = zipFiles.get("nginx.conf");
+        assertEquals(fileEntry, nginxConf);
 
-
-        // Checking nginx.conf
-        fileEntry = zipFiles.get("nginx.conf");
         assertTrue(fileEntry.contains("server_name  " + platformName + ";"));
         assertTrue(fileEntry.contains("proxy_pass  " + coreInterfaceAddress + "/;"));
         assertTrue(fileEntry.contains("proxy_pass  " + cloudCoreInterfaceAddress + "/;"));
         assertTrue(fileEntry.contains("listen " + platformPort + " ssl"));
+        assertTrue(fileEntry.contains("#listen 8102"));
+        testNginxL1ComponentPorts(fileEntry, deploymentType);
 
         if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
-            assertTrue(fileEntry.contains("ssl_certificate     /certificates/fullchain.pem;"));
-            assertTrue(fileEntry.contains("ssl_certificate_key /certificates/privkey.pem;"));
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8001/;"));
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8100/notification;"));
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8103;"));
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8080/;"));
+            assertTrue(fileEntry.contains(" ssl_certificate     /certificates/fullchain.pem;"));
+            assertTrue(fileEntry.contains(" ssl_certificate_key /certificates/privkey.pem;"));
+        } else {
+            assertTrue(fileEntry.contains(" ssl_certificate     /etc/nginx/ssl/fullchain.pem;"));
+            assertTrue(fileEntry.contains(" ssl_certificate_key /etc/nginx/ssl/privkey.pem;"));
+        }
+
+        // Checking nginx-ngrok.conf
+        fileEntry = zipFiles.get("nginx-ngrok.conf");
+        assertTrue(fileEntry.contains("server_name  " + platformName + ";"));
+        assertTrue(fileEntry.contains("proxy_pass  " + coreInterfaceAddress + "/;"));
+        assertTrue(fileEntry.contains("proxy_pass  " + cloudCoreInterfaceAddress + "/;"));
+        assertTrue(fileEntry.contains("#listen " + platformPort + " ssl"));
+        assertTrue(fileEntry.contains(" listen 8102"));
+        testNginxL1ComponentPorts(fileEntry, deploymentType);
+
+        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
+            assertTrue(fileEntry.contains("#ssl_certificate     /certificates/fullchain.pem;"));
+            assertTrue(fileEntry.contains("#ssl_certificate_key /certificates/privkey.pem;"));
+        } else {
+            assertTrue(fileEntry.contains("#ssl_certificate     /etc/nginx/ssl/fullchain.pem;"));
+            assertTrue(fileEntry.contains("#ssl_certificate_key /etc/nginx/ssl/privkey.pem;"));
         }
 
         // Checking bootstrap.properties of Registration Handler
@@ -239,11 +259,38 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
 
         // Checking nginx.conf
+        fileEntry = zipFiles.get("nginx-prod.conf");
+        testNginxL2ComponentPorts(fileEntry, deploymentType);
+
+        fileEntry = zipFiles.get("nginx-ngrok.conf");
+        testNginxL2ComponentPorts(fileEntry, deploymentType);
+    }
+
+    private void testNginxL1ComponentPorts(String file, PlatformConfigurationMessage.DeploymentType deploymentType) {
+
         if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
-            fileEntry = zipFiles.get("nginx.conf");
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8202;"));
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8203;"));
-            assertTrue(fileEntry.contains("proxy_pass http://symbiote-cloud:8128;"));
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8001/;"));
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8100/notification;"));
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8103;"));
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8080/;"));
+        } else {
+            assertTrue(file.contains("proxy_pass http://localhost:8001/;"));
+            assertTrue(file.contains("proxy_pass http://localhost:8100/notification;"));
+            assertTrue(file.contains("proxy_pass http://localhost:8103;"));
+            assertTrue(file.contains("proxy_pass http://localhost:8080/;"));
+        }
+    }
+
+    private void testNginxL2ComponentPorts(String file, PlatformConfigurationMessage.DeploymentType deploymentType) {
+
+        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8202;"));
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8203;"));
+            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8128;"));
+        } else {
+            assertTrue(file.contains("proxy_pass http://localhost:8202;"));
+            assertTrue(file.contains("proxy_pass http://localhost:8203;"));
+            assertTrue(file.contains("proxy_pass http://localhost:8128;"));
         }
     }
 }
