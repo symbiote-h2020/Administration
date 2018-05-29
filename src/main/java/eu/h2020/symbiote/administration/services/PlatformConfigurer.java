@@ -134,15 +134,15 @@ public class PlatformConfigurer {
         // AMQP Configuration
         switch (deploymentType) {
             case DOCKER:
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
-                        "rabbit.host=symbiote-rabbitmq");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.rabbitmq.host=).*$",
+                        "spring.rabbitmq.host=symbiote-rabbitmq");
                 applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
                         "spring.data.mongodb.host=symbiote-mongo");
                 break;
             case MANUAL:
             default:
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.host=).*$",
-                        "rabbit.host=localhost");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.rabbitmq.host=).*$",
+                        "spring.rabbitmq.host=localhost");
                 applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
                         "spring.data.mongodb.host=localhost");
         }

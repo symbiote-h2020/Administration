@@ -132,8 +132,10 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         // Checking application.properties of CloudConfigProperties
         String fileEntry = zipFiles.get("CloudConfigProperties/application.properties");
         assertTrue(fileEntry.contains("platform.id=" + platformId));
+        assertTrue(fileEntry.contains("rabbit.host=${spring.rabbitmq.host}"));
         assertTrue(fileEntry.contains("rabbit.username=guest"));
         assertTrue(fileEntry.contains("rabbit.password=guest"));
+        assertTrue(fileEntry.contains("aam.database.host=${spring.data.mongodb.host}"));
         assertTrue(fileEntry.contains("symbIoTe.core.interface.url="
                 + this.coreInterfaceAddress));
         assertTrue(fileEntry.contains("symbIoTe.core.cloud.interface.url="
@@ -145,12 +147,12 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
         switch (deploymentType) {
             case DOCKER:
-                assertTrue(fileEntry.contains("rabbit.host=symbiote-rabbitmq"));
+                assertTrue(fileEntry.contains("spring.rabbitmq.host=symbiote-rabbitmq"));
                 assertTrue(fileEntry.contains("spring.data.mongodb.host=symbiote-mongo"));
                 break;
             case MANUAL:
             default:
-                assertTrue(fileEntry.contains("rabbit.host=localhost"));
+                assertTrue(fileEntry.contains("spring.rabbitmq.host=localhost"));
                 assertTrue(fileEntry.contains("spring.data.mongodb.host=localhost"));
         }
 

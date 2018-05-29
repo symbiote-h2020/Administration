@@ -334,11 +334,12 @@ public class UserCpanelController {
         Map<String, Object> response = new HashMap<>();
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
 
         // Construct the UserManagementRequest
         RevocationRequest revocationRequest = new RevocationRequest();
-        revocationRequest.setCredentials(new Credentials(aaMOwnerUsername, aaMOwnerPassword));
-        revocationRequest.setCredentialType(RevocationRequest.CredentialType.ADMIN);
+        revocationRequest.setCredentials(new Credentials(user.getUsername(), password));
+        revocationRequest.setCredentialType(RevocationRequest.CredentialType.USER);
         revocationRequest.setCertificateCommonName(user.getUsername() + "@" + clientIdToDelete);
 
 
@@ -348,8 +349,11 @@ public class UserCpanelController {
             if (revocationResponse == null) {
                 response.put("clientDeletionError", "Authorization Manager is unreachable!");
                 return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            } else  if (revocationResponse.getStatus().is2xxSuccessful() && revocationResponse.isRevoked())
+            } else  if (revocationResponse.getStatus().is2xxSuccessful() && revocationResponse.isRevoked()) {
+                log.debug("revocationResponse.status " + revocationResponse.getStatus());
+                log.debug("revocationResponse.isRevoked " + revocationResponse.isRevoked());
                 return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+            }
 
         } catch (CommunicationException e) {
             response.put("clientDeletionError", e.getMessage());
