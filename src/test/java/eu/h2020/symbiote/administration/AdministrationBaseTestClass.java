@@ -139,29 +139,17 @@ public abstract class AdministrationBaseTestClass {
     }
 
     public CoreUser sampleCoreUser(UserRole role) {
-
-
-        CoreUser user = new CoreUser(username, password, role, true, true,
-                true, true, sampleUserAuthorities());
-        user.setValidUsername(username);
-        user.setValidPassword(password);
-        user.setRole(role);
-        user.setRecoveryMail(mail);
-
-        return user;
+        return new CoreUser(username, password, true, true,
+                true, true, sampleUserAuthorities(), mail, role,
+                true, true, true, true,
+                true, true);
     }
 
     public CoreUser sampleAdminUser(UserRole role) {
-
-
-        CoreUser user = new CoreUser(username, password, role, true, true,
-                true, true, sampleAdminAuthorities());
-        user.setValidUsername(username);
-        user.setValidPassword(password);
-        user.setRole(role);
-        user.setRecoveryMail(mail);
-
-        return user;
+        return new CoreUser(username, password, true, true,
+                true, true, sampleUserAuthorities(), mail, role,
+                true, true, true, true,
+                true, true);
     }
 
     public Authentication sampleUserAuth(UserRole role) {

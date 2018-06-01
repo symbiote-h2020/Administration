@@ -3,11 +3,13 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
+import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.administration.services.*;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
@@ -29,9 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Spring controller for the User control panel, handles management views and form validation.
@@ -45,6 +45,7 @@ public class UserCpanelController {
     private static Log log = LogFactory.getLog(UserCpanelController.class);
 
     private RabbitManager rabbitManager;
+    private UserRepository userRepository;
     private OwnedServicesService ownedServicesService;
     private PlatformService platformService;
     private SSPService sspService;
@@ -55,6 +56,7 @@ public class UserCpanelController {
 
     @Autowired
     public UserCpanelController(RabbitManager rabbitManager,
+                                UserRepository userRepository,
                                 OwnedServicesService ownedServicesService,
                                 PlatformService platformService,
                                 SSPService sspService,
@@ -65,6 +67,9 @@ public class UserCpanelController {
 
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
+
+        Assert.notNull(userRepository,"UserRepository can not be null!");
+        this.userRepository = userRepository;
 
         Assert.notNull(ownedServicesService,"OwnedServicesService can not be null!");
         this.ownedServicesService = ownedServicesService;
@@ -125,7 +130,16 @@ public class UserCpanelController {
         String role = userDetailsResponse.getUserDetails().getRole().toString();
         Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
 
-        UserDetailsDDO userDetailsDDO = new UserDetailsDDO(user.getUsername(), recoveryMail, role, clients);
+        Optional<CoreUser> storedUser = userRepository.findByValidUsername(user.getUsername());
+        UserDetailsDDO userDetailsDDO = storedUser.isPresent() ?
+                new UserDetailsDDO(user.getUsername(), recoveryMail, role, storedUser.get().isTermsAccepted(),
+                        storedUser.get().isConditionsAccepted(), storedUser.get().isUsernamePermission(),
+                        storedUser.get().isEmailPermission(), storedUser.get().isPublicKeysPermission(),
+                        storedUser.get().isJwtPermission(), clients) :
+                new UserDetailsDDO(user.getUsername(), recoveryMail, role, true,
+                        true, false, false, false,
+                        false, clients);
+
         return new ResponseEntity<>(userDetailsDDO, new HttpHeaders(), HttpStatus.OK);
     }
 
@@ -200,6 +214,41 @@ public class UserCpanelController {
 
         errorsResponse.put("changeEmailError", "The Authorization Manager responded with ERROR");
         return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+    }
+
+    @PostMapping("/administration/user/change_permissions")
+    public ResponseEntity<?> changePermissions(@Valid @RequestBody ChangePermissions message,
+                                               BindingResult bindingResult,
+                                               Principal principal) {
+        log.debug("POST request on /administration/user/change_email");
+
+        Map<String, String> errorsResponse = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        UserRole role = user.getRole();
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = fieldError.getDefaultMessage();
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+
+            errorsResponse.put("changePermissionsError", "Invalid values");
+            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        }
+
+        CoreUser updatedUser = new CoreUser(user.getUsername(), "", false, false,
+                false, false, new ArrayList<>(),
+                "", role, true, true,
+                message.isUsernamePermission(), message.isEmailPermission(),
+                message.isPublicKeysPermission(), message.isJwtPermission());
+        userRepository.save(updatedUser);
+        return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.OK);
     }
 
     @PostMapping("/administration/user/change_password")

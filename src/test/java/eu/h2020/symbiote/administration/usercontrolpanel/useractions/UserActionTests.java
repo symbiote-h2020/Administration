@@ -2,6 +2,7 @@ package eu.h2020.symbiote.administration.usercontrolpanel.useractions;
 
 import eu.h2020.symbiote.administration.model.ChangeEmailRequest;
 import eu.h2020.symbiote.administration.model.ChangePasswordRequest;
+import eu.h2020.symbiote.administration.model.ChangePermissions;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -296,7 +297,18 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
                 .andExpect(status().isOk());
     }
 
-    public void deleteClientIdError(RevocationResponse response) throws Exception {
+    @Test
+    public void changePermissionSuccess() throws Exception {
+        mockMvc.perform(post("/administration/user/change_permissions")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(
+                        new ChangePermissions(false, false, true, true))))
+                .andExpect(status().isOk());
+    }
+
+
+    private  void deleteClientIdError(RevocationResponse response) throws Exception {
         doReturn(response).when(rabbitManager).sendRevocationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_client")

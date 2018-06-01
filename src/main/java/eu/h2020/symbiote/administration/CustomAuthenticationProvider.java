@@ -3,11 +3,13 @@ package eu.h2020.symbiote.administration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import eu.h2020.symbiote.administration.exceptions.authentication.AAMProblemException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
+import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -74,12 +76,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             // Todo: Are all the roles somewhere?
             grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-            CoreUser user = new CoreUser(name, password, UserRole.SERVICE_OWNER,
-                    true, true, true, true,
-                    grantedAuthorities);
+            CoreUser user = new CoreUser(name, password, true, true, true,
+                    true, grantedAuthorities, "", UserRole.SERVICE_OWNER,
+                    true, true, true,
+                    true, true, true);
+
 
             // We clear the credential so that they are not shown anywhere
-            user.clearPassword();
+//            user.clearPassword();
             return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
         }
 
@@ -97,14 +101,19 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                     // Todo: Are all the roles somewhere?
                     grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
-                    CoreUser user = new CoreUser(name, password, response.getUserDetails().getRole(),
-                            true, true, true, true,
-                            grantedAuthorities);
+                    CoreUser user = new CoreUser(name, password, true, true, true,
+                            true, grantedAuthorities, response.getUserDetails().getRecoveryMail(),
+                            response.getUserDetails().getRole(), true, true,
+                            false, false, false, false);
 
-                    user.setRecoveryMail(response.getUserDetails().getRecoveryMail());
-                    user.setRole(response.getUserDetails().getRole());
+//                    CoreUser user = new CoreUser(name, password, response.getUserDetails().getRole(),
+//                            true, true, true, true,
+//                            grantedAuthorities);
+
+//                    user.setRecoveryMail(response.getUserDetails().getRecoveryMail());
+//                    user.setRole(response.getUserDetails().getRole());
                     // We clear the credential so that they are not shown anywhere
-                    user.clearPassword();
+//                    user.clearPassword();
                     return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
                 } else if (response.getHttpStatus() == HttpStatus.BAD_REQUEST) {
                     log.info("Username does not exist");

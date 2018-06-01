@@ -5,17 +5,16 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
+import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
-
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -23,12 +22,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.validation.Valid;
 import java.util.HashMap;
@@ -55,12 +54,14 @@ public class RegisterController {
 	private String aaMOwnerPassword;
 
     private RabbitManager rabbitManager;
+    private UserRepository userRepository;
 
 
     @Autowired
-    public RegisterController(RabbitManager rabbitManager) {
-        Assert.notNull(rabbitManager,"RabbitManager can not be null!");
+    public RegisterController(RabbitManager rabbitManager,
+                              UserRepository userRepository) {
         this.rabbitManager = rabbitManager;
+        this.userRepository = userRepository;
     }
 
     // The CoreUser argument is needed so that the template can associate form attributes with a CoreUser
@@ -137,7 +138,9 @@ public class RegisterController {
                 return new ResponseEntity<>(response, new HttpHeaders(),
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
-            } else if(managementStatus == ManagementStatus.OK ){
+            } else if(managementStatus == ManagementStatus.OK ) {
+                coreUser.clearSensitiveData();
+                userRepository.save(coreUser);
                 return new ResponseEntity<>(response, new HttpHeaders(),
                         HttpStatus.CREATED);
             } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
