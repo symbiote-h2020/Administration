@@ -81,9 +81,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                     true, true, true,
                     true, true, true);
 
-
-            // We clear the credential so that they are not shown anywhere
-//            user.clearPassword();
             return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
         }
 
@@ -106,14 +103,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                             response.getUserDetails().getRole(), true, true,
                             false, false, false, false);
 
-//                    CoreUser user = new CoreUser(name, password, response.getUserDetails().getRole(),
-//                            true, true, true, true,
-//                            grantedAuthorities);
-
-//                    user.setRecoveryMail(response.getUserDetails().getRecoveryMail());
-//                    user.setRole(response.getUserDetails().getRole());
-                    // We clear the credential so that they are not shown anywhere
-//                    user.clearPassword();
                     return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
                 } else if (response.getHttpStatus() == HttpStatus.BAD_REQUEST) {
                     log.info("Username does not exist");
