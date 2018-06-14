@@ -1,19 +1,14 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * Spring Boot Application class for Administration (AAM) component.
@@ -29,8 +24,6 @@ import org.springframework.web.client.RestTemplate;
 @EnableDiscoveryClient
 @SpringBootApplication
 public class AdministrationApplication {
-
-    private static Log log = LogFactory.getLog(AdministrationApplication.class);
 
     public static void main(String[] args) {
         SpringApplication.run(AdministrationApplication.class, args);
@@ -50,16 +43,6 @@ public class AdministrationApplication {
         public void run(String... args) throws Exception {
             this.rabbitManager.initCommunication();
         }
-    }
-
-    @Bean
-    public AlwaysSampler defaultSampler() {
-        return new AlwaysSampler();
-    }
-
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
     }
 
 }

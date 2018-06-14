@@ -93,6 +93,7 @@ dependencies {
 
     // other
     compile('commons-validator:commons-validator:1.6')
+    compile('com.google.apis:google-api-services-gmail:v1-rev91-1.23.0')
 
     // tests only
     testCompile('junit:junit:4.+')

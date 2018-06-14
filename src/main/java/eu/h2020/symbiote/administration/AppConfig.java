@@ -3,18 +3,20 @@ package eu.h2020.symbiote.administration;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.ApplicationEventMulticaster;
+import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Properties;
 
 @Configuration
 @EnableMongoRepositories
@@ -47,38 +49,22 @@ public class AppConfig extends AbstractMongoConfiguration {
     }
 
     @Bean
-    public JavaMailSender javaMailSender(){
-        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+    public AlwaysSampler defaultSampler() {
+        return new AlwaysSampler();
+    }
 
-        // Using iris
-//        mailSender.setHost("iris");
-//        mailSender.setPort(25);
-//        mailSender.setUsername("***");
-//        mailSender.setPassword("***");
-//
-//        Properties javaMailProperties = new Properties();
-//        javaMailProperties.put("mail.transport.protocol", "smtp");
-//        javaMailProperties.put("mail.smtp.auth", "true");
-//        javaMailProperties.put("mail.smtp.starttls.enable", "true");
-//        javaMailProperties.put("mail.debug", "true");
-//
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
-        // Using gmail
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
+    @Bean(name = "applicationEventMulticaster")
+    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
+        SimpleApplicationEventMulticaster eventMulticaster
+                = new SimpleApplicationEventMulticaster();
 
-        mailSender.setUsername("***");
-        mailSender.setPassword("***");
-
-        Properties javaMailProperties = mailSender.getJavaMailProperties();
-        javaMailProperties.put("mail.transport.protocol", "smtp");
-        javaMailProperties.put("mail.smtp.auth", "true");
-        javaMailProperties.put("mail.smtp.starttls.enable", "true");
-        javaMailProperties.put("mail.debug", "true");
-
-        mailSender.setJavaMailProperties(javaMailProperties);
-
-        return mailSender;
+        eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        return eventMulticaster;
     }
 
 }

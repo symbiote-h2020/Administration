@@ -148,16 +148,17 @@ public class RegisterController {
                         HttpStatus.INTERNAL_SERVER_ERROR);
 
             } else if(managementStatus == ManagementStatus.OK ) {
-                coreUser.clearSensitiveData();
-                userRepository.save(coreUser);
                 try {
                     String appUrl = webRequest.getContextPath();
                     eventPublisher.publishEvent(new OnRegistrationCompleteEvent
-                            (coreUser, webRequest.getLocale(), appUrl));
+                            (coreUser, webRequest.getLocale(), appUrl, coreUser.getRecoveryMail()));
                 } catch (Exception me) {
                     response.put("errorMessage","Could not send verification email");
+                    return new ResponseEntity<>(response, new HttpHeaders(),
+                            HttpStatus.INTERNAL_SERVER_ERROR);
                 }
-
+                coreUser.clearSensitiveData();
+                userRepository.save(coreUser);
                 return new ResponseEntity<>(response, new HttpHeaders(),
                         HttpStatus.CREATED);
             } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
