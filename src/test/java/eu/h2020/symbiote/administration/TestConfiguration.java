@@ -3,6 +3,10 @@ package eu.h2020.symbiote.administration;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.services.AuthorizationService;
 import org.mockito.Mockito;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -16,6 +20,15 @@ import org.springframework.context.annotation.Profile;
 @Configuration
 public class TestConfiguration {
 
+    @Value("${rabbit.host}")
+    private String rabbitHost;
+
+    @Value("${rabbit.username}")
+    private String rabbitUsername;
+
+    @Value("${rabbit.password}")
+    private String rabbitPassword;
+
     @Bean
     @Primary
     public AuthorizationService authorizationService() {
@@ -25,7 +38,21 @@ public class TestConfiguration {
     @Bean
     @Primary
     protected RabbitManager rabbitManager()  {
-        return Mockito.mock(RabbitManager.class);
-    };
+        return Mockito.spy(RabbitManager.class);
+    }
 
+    @Bean
+    public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public ConnectionFactory connectionFactory() {
+        CachingConnectionFactory connectionFactory = new CachingConnectionFactory(rabbitHost);
+        // connectionFactory.setPublisherConfirms(true);
+        // connectionFactory.setPublisherReturns(true);
+        connectionFactory.setUsername(rabbitUsername);
+        connectionFactory.setPassword(rabbitPassword);
+        return connectionFactory;
+    }
 }

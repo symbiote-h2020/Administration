@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration.services;
 
+import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -26,20 +27,25 @@ import java.util.stream.Collectors;
 public class FederationService {
     private static Log log = LogFactory.getLog(FederationService.class);
 
-    private FederationRepository federationRepository;
-    private PlatformService platformService;
-    private CheckServiceOwnershipService checkServiceOwnershipService;
-    private InformationModelService informationModelService;
-    private ValidationService validationService;
-    private FederationNotificationService federationNotificationService;
+    private final RabbitManager rabbitManager;
+    private final FederationRepository federationRepository;
+    private final PlatformService platformService;
+    private final CheckServiceOwnershipService checkServiceOwnershipService;
+    private final InformationModelService informationModelService;
+    private final ValidationService validationService;
+    private final FederationNotificationService federationNotificationService;
 
     @Autowired
-    public FederationService(FederationRepository federationRepository,
+    public FederationService(RabbitManager rabbitManager,
+                             FederationRepository federationRepository,
                              PlatformService platformService,
                              CheckServiceOwnershipService checkServiceOwnershipService,
                              InformationModelService informationModelService,
                              ValidationService validationService,
                              FederationNotificationService federationNotificationService) {
+
+        Assert.notNull(rabbitManager,"RabbitManager can not be null!");
+        this.rabbitManager = rabbitManager;
 
         Assert.notNull(federationRepository,"FederationRepository can not be null!");
         this.federationRepository = federationRepository;
@@ -120,6 +126,9 @@ public class FederationService {
         // Inform the Federation Managers of the platform members
         federationNotificationService.notifyAboutFederationUpdate(federation);
 
+        // Publish to federation queue
+        rabbitManager.publishFederationCreation(federation);
+
         // Storing the new federation
         federation = federationRepository.save(federation);
         responseBody.put("message", "Federation Registration was successful!");
@@ -160,6 +169,9 @@ public class FederationService {
         // Inform the Federation Managers of the platform members
         federationNotificationService.notifyAboutFederationDeletion(federationToDelete.get());
 
+        // Publish to federation queue
+        rabbitManager.publishFederationDeletion(federationToDelete.get());
+
         response.put(federationToDelete.get().getId(), federationToDelete.get());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
 
@@ -195,6 +207,10 @@ public class FederationService {
         if (isPlatformTheOnlyMemberOfFederation(federation.get(), platformId)) {
             federationRepository.deleteById(federationId);
             federationNotificationService.notifyAboutFederationDeletion(federation.get());
+
+            // Publish to federation queue
+            rabbitManager.publishFederationDeletion(federation.get());
+
             responseBody.put("deleted", true);
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NO_CONTENT);
         }
@@ -207,6 +223,9 @@ public class FederationService {
 
         // Inform the Federation Managers of the platform members
         federationNotificationService.notifyAboutFederationUpdate(federation.get(), initialMembers);
+
+        // Publish to federation queue
+        rabbitManager.publishFederationUpdate(federation.get());
 
         federationRepository.save(federation.get());
 

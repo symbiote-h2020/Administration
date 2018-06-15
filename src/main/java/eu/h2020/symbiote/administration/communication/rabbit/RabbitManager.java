@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration.communication.rabbit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
@@ -7,6 +8,7 @@ import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.internal.*;
+import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
@@ -136,8 +138,25 @@ public class RabbitManager {
     @Value("${rabbit.routingKey.ownedservices.request}")
     private String getOwnedPlatformDetailsRoutingKey;
 
-    @Value("${rabbit.routingKey.manage.federation.rule}")
-    private String manageFederationRuleRoutingKey;
+    // ------------ Federations ----------------
+
+    @Value("${rabbit.exchange.federation}")
+    private String federationExchangeName;
+    @Value("${rabbit.exchange.federation.type}")
+    private String federationExchangeType;
+    @Value("${rabbit.exchange.federation.durable}")
+    private boolean federationExchangeDurable;
+    @Value("${rabbit.exchange.federation.autodelete}")
+    private boolean federationExchangeAutodelete;
+    @Value("${rabbit.exchange.federation.internal}")
+    private boolean federationExchangeInternal;
+
+    @Value("${rabbit.routingKey.federation.created}")
+    private String federationCreatedRoutingKey;
+    @Value("${rabbit.routingKey.federation.changed}")
+    private String federationUpdatedRoutingKey;
+    @Value("${rabbit.routingKey.federation.deleted}")
+    private String federationDeletedRoutingKey;
 
     // ----------------------------------------------------
 
@@ -233,6 +252,7 @@ public class RabbitManager {
      * @param exchangeName name of the exchange to send message to
      * @param routingKey   routing key to send message to
      * @param message      message to be sent
+     * @param contentType  the content type of the message
      * @return response from the consumer or null if timeout occurs
      */
     public String sendRpcMessage(String exchangeName, String routingKey, String message, String contentType) {
@@ -274,7 +294,7 @@ public class RabbitManager {
             // log.debug("Received response: " + responseMsg);
             return responseMsg;
         } catch (IOException | InterruptedException e) {
-            log.info("", e);
+            log.warn("", e);
         } finally {
             try {
                 this.channel.basicCancel(consumer.getConsumerTag());
@@ -285,6 +305,29 @@ public class RabbitManager {
         return null;
     }
 
+    /**
+     * Method used to publish a message
+     *
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param message      message to be sent
+     * @param contentType  the content type of the message
+     */
+    public void publishMessage(String exchangeName, String routingKey, String message, String contentType) {
+
+        try {
+            AMQP.BasicProperties props = new AMQP.BasicProperties()
+                    .builder()
+                    .contentType(contentType)
+                    .build();
+
+
+            this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
+
+        } catch (IOException e) {
+            log.warn("", e);
+        }
+    }
 
     /**
      * Interaction with Registry
@@ -797,6 +840,62 @@ public class RabbitManager {
         return null;
     }
 
+    /**
+     * Method used to publish federation creation events
+     *
+     * @param federation  the created federation
+     */
+    public void publishFederationCreation(Federation federation) {
+
+        log.debug("Publish federation creation: " + federation);
+
+        String message = null;
+        try {
+            message = mapper.writeValueAsString(federation);
+            this.publishMessage(this.federationExchangeName, this.federationCreatedRoutingKey, message, "application/json");
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to publish federation creation due to", e);
+        }
+
+    }
+
+    /**
+     * Method used to publish federation update events
+     *
+     * @param federation  the updated federation
+     */
+    public void publishFederationUpdate(Federation federation) {
+
+        log.debug("Publish federation update: " + federation);
+
+        String message = null;
+        try {
+            message = mapper.writeValueAsString(federation);
+            this.publishMessage(this.federationExchangeName, this.federationUpdatedRoutingKey, message, "application/json");
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to publish federation update due to", e);
+        }
+
+    }
+
+    /**
+     * Method used to publish federation deletion events
+     *
+     * @param federation  the deleted federation
+     */
+    public void publishFederationDeletion(Federation federation) {
+
+        log.debug("Publish federation deletion: " + federation);
+
+        String message = null;
+        try {
+            message = mapper.writeValueAsString(federation);
+            this.publishMessage(this.federationExchangeName, this.federationDeletedRoutingKey, message, "application/json");
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to publish federation deletion due to", e);
+        }
+
+    }
 
     // Used in testing
     public void setMapper(ObjectMapper mapper) { this.mapper = mapper; }

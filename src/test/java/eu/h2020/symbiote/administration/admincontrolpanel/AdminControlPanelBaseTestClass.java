@@ -2,6 +2,7 @@ package eu.h2020.symbiote.administration.admincontrolpanel;
 
 import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
 import eu.h2020.symbiote.administration.controllers.AdminCpanelController;
+import eu.h2020.symbiote.administration.dummyListeners.DummyAAMListener;
 import org.junit.Before;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,9 @@ public abstract class AdminControlPanelBaseTestClass extends AdministrationBaseT
     @Autowired
     protected AdminCpanelController adminCpanelController;
 
+    @Autowired
+    protected DummyAAMListener dummyAAMListener;
+
     protected MockMvc mockMvc;
 
     @Before
@@ -45,5 +49,6 @@ public abstract class AdminControlPanelBaseTestClass extends AdministrationBaseT
         originalRequestFactory = restTemplate.getRequestFactory();
 
         federationRepository.deleteAll();
+        dummyAAMListener.clearMessagesReceivedByListener();
     }
 }

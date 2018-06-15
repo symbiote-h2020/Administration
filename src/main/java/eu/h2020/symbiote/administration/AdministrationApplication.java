@@ -61,5 +61,4 @@ public class AdministrationApplication {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 }

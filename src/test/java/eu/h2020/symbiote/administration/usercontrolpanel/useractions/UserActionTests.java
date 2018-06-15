@@ -51,7 +51,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationAAMTimeout() throws Exception {
-        when(rabbitManager.sendLoginRequest(any())).thenReturn(null);
+        doReturn(null).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
@@ -60,7 +60,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationError() throws Exception {
-        when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST));
+        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
@@ -69,7 +69,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationSuccess() throws Exception {
-        when(rabbitManager.sendLoginRequest(any())).thenReturn(sampleUserDetailsResponse(HttpStatus.OK));
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )

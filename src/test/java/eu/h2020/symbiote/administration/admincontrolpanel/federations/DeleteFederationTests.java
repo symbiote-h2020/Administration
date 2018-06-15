@@ -8,9 +8,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.match.MockRestRequestMatchers;
 
+import java.util.concurrent.TimeUnit;
+
 import static eu.h2020.symbiote.administration.services.FederationNotificationService.FEDERATION_MANAGER_URL;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -72,6 +75,14 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
                 .andExpect(jsonPath("$." + federationId + ".id").value(federationId));
 
         mockServer.verify();
+
+        // Verify that AAM received the message
+        while(dummyAAMListener.federationMessagesDeleted() == 0)
+            TimeUnit.MILLISECONDS.sleep(100);
+
+        assertEquals(0, dummyAAMListener.federationMessagesCreated());
+        assertEquals(0, dummyAAMListener.federationMessagesUpdated());
+        assertEquals(1, dummyAAMListener.federationMessagesDeleted());
 
         // Reset the original request factory of restTemplate to unbind it from the mockServer
         restTemplate.setRequestFactory(originalRequestFactory);

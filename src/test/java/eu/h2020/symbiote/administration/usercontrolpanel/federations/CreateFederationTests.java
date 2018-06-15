@@ -14,6 +14,7 @@ import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static eu.h2020.symbiote.administration.services.FederationNotificationService.FEDERATION_MANAGER_URL;
 import static org.hamcrest.Matchers.contains;
@@ -88,9 +89,6 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
         mockServer.verify();
 
-        // Reset the original request factory of restTemplate to unbind it from the mockServer
-        restTemplate.setRequestFactory(originalRequestFactory);
-
         List<Federation> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
         assertEquals(federationId, federations.get(0).getId());
@@ -98,6 +96,18 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         assertEquals(platform1Url, federations.get(0).getMembers().get(0).getInterworkingServiceURL());
         assertEquals(platform2Url, federations.get(0).getMembers().get(1).getInterworkingServiceURL());
         assertEquals(platform3Url, federations.get(0).getMembers().get(2).getInterworkingServiceURL());
+
+        // Verify that AAM received the messages
+        while(dummyAAMListener.federationMessagesCreated() == 0)
+            TimeUnit.MILLISECONDS.sleep(100);
+
+        assertEquals(1, dummyAAMListener.federationMessagesCreated());
+        assertEquals(0, dummyAAMListener.federationMessagesUpdated());
+        assertEquals(0, dummyAAMListener.federationMessagesDeleted());
+
+        // Reset the original request factory of restTemplate to unbind it from the mockServer
+        restTemplate.setRequestFactory(originalRequestFactory);
+
     }
 
     @Test
@@ -324,5 +334,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         assertEquals(platform1Url, federations.get(0).getMembers().get(0).getInterworkingServiceURL());
         assertEquals(platform2Url, federations.get(0).getMembers().get(1).getInterworkingServiceURL());
         assertEquals(platform3Url, federations.get(0).getMembers().get(2).getInterworkingServiceURL());
+
+        // Verify that AAM received the message
+        while(dummyAAMListener.federationMessagesCreated() == 0)
+            TimeUnit.MILLISECONDS.sleep(100);
+
+        assertEquals(1, dummyAAMListener.federationMessagesCreated());
+        assertEquals(0, dummyAAMListener.federationMessagesUpdated());
+        assertEquals(0, dummyAAMListener.federationMessagesDeleted());
     }
 }

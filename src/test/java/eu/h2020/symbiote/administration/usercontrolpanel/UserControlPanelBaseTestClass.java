@@ -2,6 +2,7 @@ package eu.h2020.symbiote.administration.usercontrolpanel;
 
 import eu.h2020.symbiote.administration.AdministrationBaseTestClass;
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
+import eu.h2020.symbiote.administration.dummyListeners.DummyAAMListener;
 import eu.h2020.symbiote.administration.services.*;
 import org.junit.Before;
 import org.mockito.MockitoAnnotations;
@@ -53,6 +54,9 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
     @Autowired
     protected CheckServiceOwnershipService checkServiceOwnershipService;
 
+    @Autowired
+    protected DummyAAMListener dummyAAMListener;
+
     protected MockMvc mockMvc;
 
 
@@ -69,6 +73,8 @@ public abstract class UserControlPanelBaseTestClass extends AdministrationBaseTe
         originalRequestFactory = restTemplate.getRequestFactory();
 
         federationRepository.deleteAll();
+
+        dummyAAMListener.clearMessagesReceivedByListener();
 
         for (final String profileName : environment.getActiveProfiles()) {
             System.out.println("Currently active profile - " + profileName);
