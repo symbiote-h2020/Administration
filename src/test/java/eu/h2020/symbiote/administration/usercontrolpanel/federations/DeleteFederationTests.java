@@ -19,7 +19,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 /**
@@ -78,14 +79,10 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
-        Federation federation = sampleSavedFederation();
-        federation.getMembers().remove(2);
-        federation.getMembers().remove(1);
-        federationRepository.save(federation);
-
-        String platformId1 = federation.getMembers().get(0).getPlatformId();
+        Federation federation = sampleSavedFederationWithSinglePlatform();
+        String platformId = federation.getMembers().get(0).getPlatformId();
         String platform1Url = federation.getMembers().get(0).getInterworkingServiceURL();
-
+        federationRepository.save(federation);
 
         MockRestServiceServer mockServer =
                 MockRestServiceServer.bindTo(restTemplate).build();
@@ -104,7 +101,7 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
                 .param("federationIdToDelete", federationId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$." + federationId + ".members.length()").value(1))
-                .andExpect(jsonPath("$." + federationId + ".members[*].platformId", contains(platformId1)))
+                .andExpect(jsonPath("$." + federationId + ".members[*].platformId", contains(platformId)))
                 .andExpect(jsonPath("$." + federationId + ".id").value(federationId));
 
         mockServer.verify();

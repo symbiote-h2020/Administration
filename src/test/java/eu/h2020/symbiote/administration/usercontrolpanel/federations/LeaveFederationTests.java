@@ -62,20 +62,34 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
-        Federation federation = sampleFederationRequest();
-        federation.getMembers().remove(2);
-        federation.getMembers().remove(1);
+        Federation federation = sampleSavedFederationWithSinglePlatform();
         federationRepository.save(federation);
 
+        String platformId = federation.getMembers().get(0).getPlatformId();
+        String platform1Url = federation.getMembers().get(0).getInterworkingServiceURL();
+
+        MockRestServiceServer mockServer =
+                MockRestServiceServer.bindTo(restTemplate).build();
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL + "/" + federationId))
+                .andExpect(method(HttpMethod.DELETE))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(1)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId)))
+                .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
                 .param("platformId", platformId))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Platform " + platformId +
-                        " is the only a member of federation " + federationId + ". Please, delete the federation"));
+                .andExpect(status().isNoContent())
+                .andExpect(jsonPath("$.deleted").value(true));
+
+        mockServer.verify();
+
+        // Reset the original request factory of restTemplate to unbind it from the mockServer
+        restTemplate.setRequestFactory(originalRequestFactory);
     }
 
     @Test
@@ -110,8 +124,6 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(2)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platformId, platformId2)))
                 .andRespond(withSuccess());
-
-
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))

@@ -117,6 +117,14 @@ jacocoTestReport {
     }
 }
 
+test {
+    testLogging {
+        // Uncomment the following if you need verbose output in console/Travis
+        // showStandardStreams = true
+        exceptionFormat = 'full'
+    }
+}
+
 // owasp config
 dependencyCheck {
     outputDirectory = "build/reports/security"

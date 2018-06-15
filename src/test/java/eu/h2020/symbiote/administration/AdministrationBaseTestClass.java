@@ -467,6 +467,16 @@ public abstract class AdministrationBaseTestClass {
         return federation;
     }
 
+    public Federation sampleSavedFederationWithSinglePlatform() {
+        Federation federation = sampleFederationRequest();
+
+        String platform1Url = platformUrl + "/" + platformId;
+        federation.getMembers().get(0).setInterworkingServiceURL(platform1Url);
+        federation.getMembers().remove(2);
+        federation.getMembers().remove(1);
+        return federation;
+    }
+
     public ErrorResponseContainer sampleErrorResponse() {
 
         return new ErrorResponseContainer("SAMPLE_ERROR", 400);

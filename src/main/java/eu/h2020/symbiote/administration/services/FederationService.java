@@ -192,9 +192,12 @@ public class FederationService {
         int memberIndex = (Integer) isPlatformMember.getBody();
 
 
-        ResponseEntity<?> isPlatformTheOnlyMember =  isPlatformTheOnlyMemberOfFederation(federation.get(), platformId);
-        if (isPlatformTheOnlyMember.getStatusCode() != HttpStatus.OK)
-            return isPlatformTheOnlyMember;
+        if (isPlatformTheOnlyMemberOfFederation(federation.get(), platformId)) {
+            federationRepository.deleteById(federationId);
+            federationNotificationService.notifyAboutFederationDeletion(federation.get());
+            responseBody.put("deleted", true);
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NO_CONTENT);
+        }
 
         // Save the whole list of members before removing the member that left
         List<FederationMember> initialMembers = new ArrayList<>(federation.get().getMembers());
@@ -227,16 +230,12 @@ public class FederationService {
 
     }
 
-    private ResponseEntity<?> isPlatformTheOnlyMemberOfFederation(Federation federation, String platformId) {
+    private boolean isPlatformTheOnlyMemberOfFederation(Federation federation, String platformId) {
         if (federation.getMembers().size() > 1)
-            return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
+            return false;
 
-        Map<String, Object> responseBody = new HashMap<>();
-        String message = "Platform " + platformId + " is the only a member of federation " + federation.getId() +
-                ". Please, delete the federation";
+        String message = "Platform " + platformId + " is the only a member of federation " + federation.getId();
         log.warn(message);
-        responseBody.put("error", message);
-        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-
+        return true;
     }
 }
