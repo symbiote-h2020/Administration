@@ -4,7 +4,6 @@ import eu.h2020.symbiote.administration.controllers.UserCpanelController;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
