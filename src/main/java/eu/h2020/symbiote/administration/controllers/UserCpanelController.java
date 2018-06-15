@@ -529,6 +529,13 @@ public class UserCpanelController {
         return federationService.createFederation(federation, bindingResult);
     }
 
+    @PostMapping("/administration/user/cpanel/delete_federation")
+    public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+        return federationService.deleteFederation(federationIdToDelete, false, principal);
+    }
+
     @PostMapping("/administration/user/cpanel/leave_federation")
     public ResponseEntity<?> createFederation(@RequestParam String federationId, @RequestParam String platformId,
                                               Principal principal) {

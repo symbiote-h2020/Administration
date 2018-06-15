@@ -18,5 +18,5 @@ public interface FederationRepository extends MongoRepository<Federation, String
 
     List<Federation> findAllByIsPublic(Boolean isPublic);
 
-    List<Federation> deleteById(String id);
+    Optional<Federation> deleteById(String id);
 }

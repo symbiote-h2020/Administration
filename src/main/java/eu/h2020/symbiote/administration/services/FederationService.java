@@ -128,26 +128,41 @@ public class FederationService {
     }
 
 
-    public ResponseEntity<?> deleteFederation(String federationIdToDelete) {
+    public ResponseEntity<?> deleteFederation(String federationIdToDelete, boolean isAdmin, Principal principal) {
 
-        log.debug("POST request on /administration/user/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+        log.debug("POST request for deleting federation with id = " + federationIdToDelete);
 
-        List<Federation> deletedFederations = federationRepository.deleteById(federationIdToDelete);
         Map<String, Object> response = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
 
-        if (deletedFederations.size() > 0) {
-            Federation deletedFederation = deletedFederations.get(0);
-
-            // Inform the Federation Managers of the platform members
-            federationNotificationService.notifyAboutFederationDeletion(deletedFederation);
-
-            response.put(deletedFederations.get(0).getId(), deletedFederations.get(0));
-            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
-        }
-        else {
+        Optional<Federation> federationToDelete = federationRepository.findById(federationIdToDelete);
+        if (!federationToDelete.isPresent()) {
             response.put("error", "The federation was not found");
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.NOT_FOUND);
+        } else if (!isAdmin) {
+            if (federationToDelete.get().getMembers().size() > 1) {
+                response.put("error", "There are more than 1 platform in the federations");
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            }
+
+            // Check if the user owns the platform
+            ResponseEntity<?> ownedPlatformDetailsResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                    federationToDelete.get().getMembers().get(0).getPlatformId(), user, OwnedService.ServiceType.PLATFORM);
+            if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK) {
+                response.put("error", "You do not own the single platform in the federation");
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            }
         }
+
+        federationRepository.deleteById(federationIdToDelete);
+
+        // Inform the Federation Managers of the platform members
+        federationNotificationService.notifyAboutFederationDeletion(federationToDelete.get());
+
+        response.put(federationToDelete.get().getId(), federationToDelete.get());
+        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+
     }
 
     public ResponseEntity<?> leaveFederation(String federationId, String platformId, Principal principal, boolean isAdmin) {

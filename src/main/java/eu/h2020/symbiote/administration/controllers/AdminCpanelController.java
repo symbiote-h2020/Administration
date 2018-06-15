@@ -153,10 +153,10 @@ public class AdminCpanelController {
     }
 
     @PostMapping("/administration/admin/cpanel/delete_federation")
-    public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete) {
+    public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete, Principal principal) {
 
         log.debug("POST request on /administration/admin/cpanel/delete_federation for federation with id = " + federationIdToDelete);
-        return federationService.deleteFederation(federationIdToDelete);
+        return federationService.deleteFederation(federationIdToDelete, true, principal);
     }
 
     @PostMapping("/administration/admin/cpanel/leave_federation")
