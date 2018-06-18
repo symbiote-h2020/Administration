@@ -25,12 +25,12 @@ public class DummyAAMListener {
 
     private List<Federation> federationCreated = new ArrayList<>();
     private List<Federation> federationUpdated = new ArrayList<>();
-    private List<Federation> federationDeleted = new ArrayList<>();
+    private List<String> federationDeleted = new ArrayList<>();
     private ObjectMapper mapper = new ObjectMapper();
 
     public List<Federation> getFederationCreated() { return federationCreated; }
     public List<Federation> getFederationUpdated() { return federationUpdated; }
-    public List<Federation> getFederationDeleted() { return federationDeleted; }
+    public List<String> getFederationDeleted() { return federationDeleted; }
 
     public int federationMessagesCreated() { return federationCreated.size(); }
     public int federationMessagesUpdated() { return federationUpdated.size(); }
@@ -44,7 +44,7 @@ public class DummyAAMListener {
 
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "rabbit.queueName.federation.created", durable = "true", autoDelete = "true", exclusive = "false"),
-            exchange = @Exchange(value = "${rabbit.exchange.federation}", ignoreDeclarationExceptions = "true",
+            exchange = @Exchange(value = "${rabbit.exchange.federation.name}", ignoreDeclarationExceptions = "true",
                     durable = "${rabbit.exchange.federation.durable}", autoDelete  = "${rabbit.exchange.federation.autodelete}",
                     internal = "${rabbit.exchange.federation.internal}", type = "${rabbit.exchange.federation.type}"),
             key = "${rabbit.routingKey.federation.created}")
@@ -63,7 +63,7 @@ public class DummyAAMListener {
 
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "rabbit.queueName.federation.changed", durable = "true", autoDelete = "true", exclusive = "false"),
-            exchange = @Exchange(value = "${rabbit.exchange.federation}", ignoreDeclarationExceptions = "true",
+            exchange = @Exchange(value = "${rabbit.exchange.federation.name}", ignoreDeclarationExceptions = "true",
                     durable = "${rabbit.exchange.federation.durable}", autoDelete  = "${rabbit.exchange.federation.autodelete}",
                     internal = "${rabbit.exchange.federation.internal}", type = "${rabbit.exchange.federation.type}"),
             key = "${rabbit.routingKey.federation.changed}")
@@ -82,20 +82,16 @@ public class DummyAAMListener {
 
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "rabbit.queueName.federation.deleted", durable = "true", autoDelete = "true", exclusive = "false"),
-            exchange = @Exchange(value = "${rabbit.exchange.federation}", ignoreDeclarationExceptions = "true",
+            exchange = @Exchange(value = "${rabbit.exchange.federation.name}", ignoreDeclarationExceptions = "true",
                     durable = "${rabbit.exchange.federation.durable}", autoDelete  = "${rabbit.exchange.federation.autodelete}",
                     internal = "${rabbit.exchange.federation.internal}", type = "${rabbit.exchange.federation.type}"),
             key = "${rabbit.routingKey.federation.deleted}")
     )
-    public void federationDeletedListener(Federation federation) {
-        federationDeleted.add(federation);
+    public void federationDeletedListener(String id) {
+        federationDeleted.add(id);
 
-        try {
-            String responseInString = mapper.writeValueAsString(federation);
-            log.info("federationDeletedListener received update request: " + responseInString);
-            log.info("federationDeletedListener.size() = " + federationMessagesDeleted());
-        } catch (JsonProcessingException e) {
-            log.info(e.toString());
-        }
+        log.info("federationDeletedListener received delete request for federation: " + id);
+        log.info("federationDeletedListener.size() = " + federationMessagesDeleted());
+
     }
 }

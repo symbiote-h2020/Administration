@@ -140,7 +140,7 @@ public class RabbitManager {
 
     // ------------ Federations ----------------
 
-    @Value("${rabbit.exchange.federation}")
+    @Value("${rabbit.exchange.federation.name}")
     private String federationExchangeName;
     @Value("${rabbit.exchange.federation.type}")
     private String federationExchangeType;
@@ -881,20 +881,23 @@ public class RabbitManager {
     /**
      * Method used to publish federation deletion events
      *
-     * @param federation  the deleted federation
+     * @param federationId  the deleted federationId
      */
-    public void publishFederationDeletion(Federation federation) {
+    public void publishFederationDeletion(String federationId) {
 
-        log.debug("Publish federation deletion: " + federation);
+        log.debug("Publish federation deletion for: " + federationId);
 
-        String message = null;
         try {
-            message = mapper.writeValueAsString(federation);
-            this.publishMessage(this.federationExchangeName, this.federationDeletedRoutingKey, message, "application/json");
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to publish federation deletion due to", e);
-        }
+            AMQP.BasicProperties props = new AMQP.BasicProperties()
+                    .builder()
+                    .build();
 
+
+            this.channel.basicPublish(this.federationExchangeName, this.federationDeletedRoutingKey, props, federationId.getBytes());
+
+        } catch (IOException e) {
+            log.warn("", e);
+        }
     }
 
     // Used in testing

@@ -170,7 +170,7 @@ public class FederationService {
         federationNotificationService.notifyAboutFederationDeletion(federationToDelete.get());
 
         // Publish to federation queue
-        rabbitManager.publishFederationDeletion(federationToDelete.get());
+        rabbitManager.publishFederationDeletion(federationToDelete.get().getId());
 
         response.put(federationToDelete.get().getId(), federationToDelete.get());
         return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
@@ -209,7 +209,7 @@ public class FederationService {
             federationNotificationService.notifyAboutFederationDeletion(federation.get());
 
             // Publish to federation queue
-            rabbitManager.publishFederationDeletion(federation.get());
+            rabbitManager.publishFederationDeletion(federation.get().getId());
 
             responseBody.put("deleted", true);
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NO_CONTENT);
