@@ -48,21 +48,21 @@ public class DeleteFederationTests extends AdminControlPanelBaseTestClass {
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
-                        contains(platformId, platformId2, platformId3)))
+                        contains(platform1Id, platformId2, platformId3)))
                 .andRespond(withSuccess());
         mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL + "/" + federationId))
                 .andExpect(method(HttpMethod.DELETE))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
-                        contains(platformId, platformId2, platformId3)))
+                        contains(platform1Id, platformId2, platformId3)))
                 .andRespond(withSuccess());
         mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL + "/" + federationId))
                 .andExpect(method(HttpMethod.DELETE))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
-                        contains(platformId, platformId2, platformId3)))
+                        contains(platform1Id, platformId2, platformId3)))
                 .andRespond(withSuccess());
 
 

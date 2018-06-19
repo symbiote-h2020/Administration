@@ -7,9 +7,11 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
+import eu.h2020.symbiote.core.cci.SspRegistryResponse;
 import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.Platform;
+import eu.h2020.symbiote.model.mim.SmartSpace;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -77,6 +79,17 @@ public class RabbitManager {
     @Value("${rabbit.exchange.platform.internal}")
     private boolean informationModelExchangeInternal;
 
+    @Value("${rabbit.exchange.ssp.name}")
+    private String sspExchangeName;
+    @Value("${rabbit.exchange.ssp.type}")
+    private String sspExchangeType;
+    @Value("${rabbit.exchange.ssp.durable}")
+    private boolean sspExchangeDurable;
+    @Value("${rabbit.exchange.ssp.autodelete}")
+    private boolean sspExchangeAutodelete;
+    @Value("${rabbit.exchange.ssp.internal}")
+    private boolean sspExchangeInternal;
+
     @Value("${rabbit.exchange.resource.name}")
     private String resourceExchangeName;
     @Value("${rabbit.exchange.resource.type}")
@@ -109,6 +122,14 @@ public class RabbitManager {
     @Value("${rabbit.routingKey.resource.clearDataRequested}")
     private String clearPlatformResourcesRoutingKey;
 
+    @Value("${rabbit.routingKey.ssp.creationRequested}")
+    private String sspCreationRequestedRoutingKey;
+    @Value("${rabbit.routingKey.ssp.removalRequested}")
+    private String sspRemovalRequestedRoutingKey;
+    @Value("${rabbit.routingKey.ssp.modificationRequested}")
+    private String sspModificationRequestedRoutingKey;
+    @Value("${rabbit.routingKey.ssp.sspDetailsRequested}")
+    private String sspDetailsRequestedRoutingKey;
 
     // ------------ Core AAM communication ----------------
 
@@ -204,6 +225,13 @@ public class RabbitManager {
                     this.informationModelExchangeDurable,
                     this.informationModelExchangeAutodelete,
                     this.informationModelExchangeInternal,
+                    null);
+
+            this.channel.exchangeDeclare(this.sspExchangeName,
+                    this.sspExchangeType,
+                    this.sspExchangeDurable,
+                    this.sspExchangeAutodelete,
+                    this.sspExchangeInternal,
                     null);
 
             this.channel.exchangeDeclare(this.resourceExchangeName,
@@ -329,10 +357,9 @@ public class RabbitManager {
         }
     }
 
-    /**
-     * Interaction with Registry
-     */
-
+    // #################################################
+    // Interaction with Registry
+    // #################################################
 
     /**
      * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
@@ -404,6 +431,77 @@ public class RabbitManager {
         return sendRegistryPlatformMessage(this.platformExchangeName, this.platformModificationRequestedRoutingKey, platform);
     }
 
+    /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
+     * regarding SSPs
+     *
+     * @param exchangeName name of the exchange to send message to
+     * @param routingKey   routing key to send message to
+     * @param smartSpace   smartSpace to be sent
+     * @return response from the consumer or null if timeout occurs
+     */
+    public SspRegistryResponse sendRegistrySmartSpaceMessage(String exchangeName, String routingKey,
+                                                             SmartSpace smartSpace) throws CommunicationException {
+
+        log.trace("sendRegistrySmartSpaceMessage");
+
+        try {
+
+            String message = mapper.writeValueAsString(smartSpace);
+
+            String responseMsg = this.sendRpcMessage(exchangeName, routingKey, message, "application/json");
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                SspRegistryResponse response = mapper.readValue(responseMsg, SspRegistryResponse.class);
+                log.trace("Received response from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in response from Registry.", e);
+                throw new CommunicationException(e);
+            }
+
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc resource message", e);
+        }
+        return null;
+    }
+
+
+    /**
+     * Method used to send RPC request to create smartSpace.
+     *
+     * @param smartSpace smartSpace to be created
+     */
+    public SspRegistryResponse sendSmartSpaceCreationRequest(SmartSpace smartSpace) throws CommunicationException  {
+        log.debug("sendSmartSpaceCreationRequest to Registry for: " + ReflectionToStringBuilder.toString(smartSpace));
+        return sendRegistrySmartSpaceMessage(this.sspExchangeName, this.sspCreationRequestedRoutingKey, smartSpace);
+    }
+
+    /**
+     * Method used to send RPC request to remove smartSpace.
+     *
+     * @param smartSpace smartSpace to be removed
+     */
+    public SspRegistryResponse sendSmartSpaceRemovalRequest(SmartSpace smartSpace) throws CommunicationException  {
+        log.debug("sendSmartSpaceRemovalRequest to Registry for: " + ReflectionToStringBuilder.toString(smartSpace));
+        return sendRegistrySmartSpaceMessage(this.sspExchangeName, this.sspRemovalRequestedRoutingKey, smartSpace);
+    }
+
+    /**
+     * Method used to send RPC request to modify smartSpace.
+     *
+     * @param smartSpace smartSpace to be modified
+     */
+    public SspRegistryResponse sendSmartSpaceModificationRequest(SmartSpace smartSpace) throws CommunicationException  {
+        log.debug("sendSmartSpaceModificationRequest to Registry for: " + ReflectionToStringBuilder.toString(smartSpace));
+        return sendRegistrySmartSpaceMessage(this.sspExchangeName, this.sspModificationRequestedRoutingKey, smartSpace);
+    }
+
 
     /**
      * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
@@ -431,8 +529,34 @@ public class RabbitManager {
             log.error("Error in response from Registry.", e);
             throw new CommunicationException(e);
         }
+    }
 
+    /**
+     * Helper method that provides JSON marshalling, unmarshalling and RabbitMQ communication with the Registry
+     *
+     * @param sspId     id of the ssp which want the details
+     * @return response from the consumer or null if timeout occurs
+     */
+    public SspRegistryResponse sendGetSSPDetailsMessage(String sspId) throws CommunicationException {
 
+        log.debug("sendGetSSPDetailsMessage for platform: " + sspId);
+
+        String responseMsg = this.sendRpcMessage(this.sspExchangeName, this.sspDetailsRequestedRoutingKey,
+                sspId, "text/plain");
+
+        if (responseMsg == null)
+            return null;
+
+        try {
+            SspRegistryResponse response = mapper.readValue(responseMsg, SspRegistryResponse.class);
+            log.trace("Received response from Registry.");
+            return response;
+
+        } catch (Exception e){
+
+            log.error("Error in response from Registry.", e);
+            throw new CommunicationException(e);
+        }
     }
 
     /**
@@ -609,9 +733,9 @@ public class RabbitManager {
     }
 
 
-    /**
-     * Interaction with AAM
-     */
+    // #################################################
+    // Interaction with AAM
+    // #################################################
 
     /**
      * Method used to send RPC request to register user.
@@ -656,7 +780,7 @@ public class RabbitManager {
      * @return response status
      */
     public RevocationResponse sendRevocationRequest(RevocationRequest request) throws CommunicationException {
-        log.debug("sendUserManagementRequest to AAM: " + ReflectionToStringBuilder.toString(request));
+        log.debug("sendRevocationRequest to AAM: " + ReflectionToStringBuilder.toString(request));
         try {
             String message = mapper.writeValueAsString(request);
 
@@ -849,7 +973,7 @@ public class RabbitManager {
 
         log.debug("Publish federation creation: " + federation);
 
-        String message = null;
+        String message;
         try {
             message = mapper.writeValueAsString(federation);
             this.publishMessage(this.federationExchangeName, this.federationCreatedRoutingKey, message, "application/json");
@@ -868,7 +992,7 @@ public class RabbitManager {
 
         log.debug("Publish federation update: " + federation);
 
-        String message = null;
+        String message;
         try {
             message = mapper.writeValueAsString(federation);
             this.publishMessage(this.federationExchangeName, this.federationUpdatedRoutingKey, message, "application/json");

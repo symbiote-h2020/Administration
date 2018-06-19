@@ -36,11 +36,11 @@ public class FederationNotificationService {
         this.authorizationService = authorizationService;
     }
 
-    public void notifyAboutFederationUpdate(Federation federation) {
+    void notifyAboutFederationUpdate(Federation federation) {
         notifyAboutFederationUpdate(federation, federation.getMembers());
     }
 
-    public void notifyAboutFederationUpdate(Federation federation, List<FederationMember> memberList) {
+    void notifyAboutFederationUpdate(Federation federation, List<FederationMember> memberList) {
         HttpHeaders httpHeaders = authorizationService.getHttpHeadersWithSecurityRequest();
         HttpEntity<Federation> httpEntity = new HttpEntity<>(federation, httpHeaders);
 
@@ -65,12 +65,12 @@ public class FederationNotificationService {
         }
     }
 
-    public void notifyAboutFederationDeletion(Federation federation) {
+    void notifyAboutFederationDeletion(Federation federation) {
         HttpHeaders httpHeaders = authorizationService.getHttpHeadersWithSecurityRequest();
         HttpEntity<Federation> httpEntity = new HttpEntity<>(federation, httpHeaders);
 
         for (FederationMember member : federation.getMembers()) {
-            ResponseEntity federationNotificationResponse = null;
+            ResponseEntity federationNotificationResponse;
 
             try {
                 federationNotificationResponse = restTemplate.exchange(

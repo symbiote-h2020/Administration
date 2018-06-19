@@ -40,18 +40,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void success() throws Exception {
-        String platform1Url = platformUrl + "/" + platformId;
-        String platformId2 = platformId + "2";
-        String platform2Url = platformUrl + "/" + platformId2;
-        String platformId3 = platformId + "3";
-        String platform3Url = platformUrl + "/" + platformId3;
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform1Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform2Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform3Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform3Id));
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(new HttpHeaders())
@@ -65,18 +60,18 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
-                        contains(platformId, platformId2, platformId3)))
+                        contains(platform1Id, platform2Id, platform3Id)))
                 .andRespond(withSuccess());
         mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
-                        contains(platformId, platformId2, platformId3)))                .andRespond(withSuccess());
+                        contains(platform1Id, platform2Id, platform3Id)))                .andRespond(withSuccess());
         mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
-                        contains(platformId, platformId2, platformId3)))
+                        contains(platform1Id, platform2Id, platform3Id)))
                 .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
@@ -151,8 +146,8 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         List<QoSConstraint> qosConstraints = new ArrayList<>(Arrays.asList(qosConstraint1, qosConstraint2));
         federation.setSlaConstraints(qosConstraints);
 
-        FederationMember member1 = new FederationMember("valid", platformUrl);
-        FederationMember member2 = new FederationMember("invalid.", platformUrl + "2");
+        FederationMember member1 = new FederationMember("valid", platform1Url);
+        FederationMember member2 = new FederationMember("invalid.", platform1Url + "2");
         List<FederationMember> members = new ArrayList<>(Arrays.asList(member1, member2));
         federation.setMembers(members);
 
@@ -183,15 +178,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void memberDoesNotExist() throws Exception {
-        String platformId2 = platformId + "2";
-        String platformId3 = platformId + "3";
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId2));
+        doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform1Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform2Id));
         doReturn(samplePlatformResponseFail()).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId3));
+                .sendGetPlatformDetailsMessage(eq(platform3Id));
 
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
@@ -199,7 +192,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error")
-                        .value("The platform with id " + platformId3 + " was not found"));
+                        .value("The platform with id " + platform3Id + " was not found"));
 
         List<Federation> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
@@ -243,16 +236,14 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void informationModelDoesNotExist() throws Exception {
-        String platformId2 = platformId + "2";
-        String platformId3 = platformId + "3";
         String dummyInfoModelId = "dummy";
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform1Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform2Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform3Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform3Id));
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
 
@@ -273,15 +264,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void informationModelRequestRegistryUnreachable() throws Exception {
-        String platformId2 = platformId + "2";
-        String platformId3 = platformId + "3";
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform1Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform2Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform3Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform3Id));
         doReturn(null).when(rabbitManager)
                 .sendListInfoModelsRequest();
 
@@ -300,18 +289,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void cannotContactFederationManagers() throws Exception {
-        String platform1Url = platformUrl + "/" + platformId;
-        String platformId2 = platformId + "2";
-        String platform2Url = platformUrl + "/" + platformId2;
-        String platformId3 = platformId + "3";
-        String platform3Url = platformUrl + "/" + platformId3;
 
-        doReturn(samplePlatformResponseSuccess(platformId)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId));
-        doReturn(samplePlatformResponseSuccess(platformId2)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId2));
-        doReturn(samplePlatformResponseSuccess(platformId3)).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId3));
+        doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform1Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform2Id));
+        doReturn(samplePlatformRegistryResponseSuccess(platform3Id)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform3Id));
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(new HttpHeaders())

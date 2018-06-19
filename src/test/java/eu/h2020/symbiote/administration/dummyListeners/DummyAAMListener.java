@@ -2,8 +2,6 @@ package eu.h2020.symbiote.administration.dummyListeners;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.h2020.symbiote.enabler.messaging.model.NotEnoughResourcesAvailable;
-import eu.h2020.symbiote.enabler.messaging.model.ResourcesUpdated;
 import eu.h2020.symbiote.model.mim.Federation;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

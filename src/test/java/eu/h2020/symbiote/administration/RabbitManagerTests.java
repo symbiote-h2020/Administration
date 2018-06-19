@@ -6,16 +6,17 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
+import eu.h2020.symbiote.core.cci.SspRegistryResponse;
+import eu.h2020.symbiote.core.internal.ClearDataRequest;
+import eu.h2020.symbiote.core.internal.ClearDataResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.ResourceListResponse;
 import eu.h2020.symbiote.model.mim.Platform;
+import eu.h2020.symbiote.model.mim.SmartSpace;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.ErrorResponseContainer;
-import eu.h2020.symbiote.security.communication.payloads.OwnedService;
-import eu.h2020.symbiote.security.communication.payloads.PlatformManagementResponse;
-import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
+import eu.h2020.symbiote.security.communication.payloads.*;
 import org.junit.Test;
 import org.mockito.Spy;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         boolean communicationCaught = false;
 
         // Successful Message
-        doReturn(serialize(samplePlatformResponseSuccess()))
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
@@ -73,7 +74,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         // Do not call readValue as it might fail
         doThrow(new IOException()).when(om).readValue(any(String.class), eq(PlatformRegistryResponse.class));
-        doReturn(serialize(samplePlatformResponseSuccess()))
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
         try {
@@ -83,7 +84,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
@@ -98,7 +99,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
     @Test
     public void sendPlatformCreationRequestSuccess() throws Exception {
 
-        doReturn(serialize(samplePlatformResponseSuccess()))
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
@@ -130,7 +131,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         
         Platform newPlatform = samplePlatform();
         newPlatform.setDescription(Collections.singletonList("Changed description"));
-        PlatformRegistryResponse newResponse = samplePlatformResponseSuccess();
+        PlatformRegistryResponse newResponse = samplePlatformRegistryResponseSuccess();
         newResponse.setBody(newPlatform);
         String serializedResponse = serialize(newResponse);
 
@@ -143,7 +144,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNotNull(response);
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().getId());
-        assertEquals(platformId, response.getBody().getId());
+        assertEquals(platform1Id, response.getBody().getId());
         assertEquals("Changed description", response.getBody().getDescription().get(0));
         assertEquals(200, response.getStatus());
     }
@@ -151,11 +152,133 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
     @Test
     public void sendPlatformRemovalRequest() throws Exception {
 
-        doReturn(serialize(samplePlatformResponseSuccess()))
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
             .when(rabbitManager)
             .sendRpcMessage(any(), any(), any(), eq("application/json"));
 
         PlatformRegistryResponse response = rabbitManager.sendPlatformRemovalRequest(sampleEmptyPlatform());
+
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void sendRegistrySmartSpaceMessage() throws Exception {
+
+        boolean communicationCaught = false;
+
+        // Successful Message
+        doReturn(serialize(sampleSspRegistryResponseSuccess()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        SspRegistryResponse response = rabbitManager.sendRegistrySmartSpaceMessage("exchangeName",
+                "routingKey", sampleSmartSpace());
+
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertNotNull(response.getBody().getId());
+        assertEquals(200, response.getStatus());
+
+        // Return null
+        doReturn(null)
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        response = rabbitManager.sendRegistrySmartSpaceMessage("exchangeName",
+                "routingKey", sampleSmartSpace());
+
+        assertNull(response);
+
+        // Throw Exception while deseriallizing the response
+        ObjectMapper om = spy(new ObjectMapper());
+        rabbitManager.setMapper(om);
+
+
+        // Do not call readValue as it might fail
+        doThrow(new IOException()).when(om).readValue(any(String.class), eq(SspRegistryResponse.class));
+        doReturn(serialize(sampleSspRegistryResponseSuccess()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+        try {
+            rabbitManager.sendRegistrySmartSpaceMessage("exchangeName",
+                    "routingKey", sampleSmartSpace());
+        } catch (CommunicationException e) {
+            communicationCaught = true;
+        }
+
+        assertTrue(communicationCaught);
+
+        // Throw JsonProcessingException while serializing the request
+        // Call writeValueAsString
+        when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
+        response = rabbitManager.sendRegistrySmartSpaceMessage("exchangeName",
+                "routingKey", sampleSmartSpace());
+
+        assertNull(response);
+
+    }
+
+    @Test
+    public void sendSmartSpaceCreationRequestSuccess() throws Exception {
+
+        doReturn(serialize(sampleSspRegistryResponseSuccess()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        SspRegistryResponse response = rabbitManager.sendSmartSpaceCreationRequest(sampleSmartSpace());
+
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertNotNull(response.getBody().getId());
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void sendSmartSpaceCreationRequestFail() throws Exception {
+
+        doReturn(serialize(sampleSspRegistryResponseFail()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        SspRegistryResponse response = rabbitManager.sendSmartSpaceCreationRequest(sampleSmartSpace());
+
+        assertNotNull(response);
+        assertNull(response.getBody());
+        assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    public void sendSmartSpaceModificationRequest() throws Exception {
+
+        SmartSpace newSmartSpace = sampleSmartSpace();
+        newSmartSpace.setDescription(Collections.singletonList("Changed description"));
+        SspRegistryResponse newResponse = sampleSspRegistryResponseSuccess();
+        newResponse.setBody(newSmartSpace);
+        String serializedResponse = serialize(newResponse);
+
+        doReturn(serializedResponse)
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        SspRegistryResponse response = rabbitManager.sendSmartSpaceModificationRequest(newSmartSpace);
+
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertNotNull(response.getBody().getId());
+        assertEquals(ssp1Id, response.getBody().getId());
+        assertEquals("Changed description", response.getBody().getDescription().get(0));
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void sendSmartSpaceRemovalRequest() throws Exception {
+
+        doReturn(serialize(sampleSspRegistryResponseSuccess()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        SspRegistryResponse response = rabbitManager.sendSmartSpaceRemovalRequest(sampleSmartSpace());
 
         assertNotNull(response);
         assertEquals(200, response.getStatus());
@@ -167,7 +290,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         boolean communicationCaught = false;
 
         // Successful Message
-        doReturn(serialize(samplePlatformResponseSuccess()))
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("text/plain"));
 
@@ -194,7 +317,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
 
         // Do not call readValue as it might fail
         doThrow(new IOException()).when(om).readValue(any(String.class), eq(PlatformRegistryResponse.class));
-        doReturn(serialize(samplePlatformResponseSuccess()))
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("text/plain"));
         try {
@@ -203,10 +326,53 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
-
+        assertTrue(communicationCaught);
     }
 
+    @Test
+    public void sendGetSSPDetailsMessage() throws Exception {
+        boolean communicationCaught = false;
+
+        // Successful Message
+        doReturn(serialize(sampleSspRegistryResponseSuccess()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("text/plain"));
+
+        SspRegistryResponse response = rabbitManager.sendGetSSPDetailsMessage(ssp1Id);
+
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertNotNull(response.getBody().getId());
+        assertEquals(200, response.getStatus());
+
+        // Return null
+        doReturn(null)
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("text/plain"));
+
+        response = rabbitManager.sendGetSSPDetailsMessage(ssp1Id);
+
+        assertNull(response);
+
+        // Throw Exception while deserializing the response
+        ObjectMapper om = spy(new ObjectMapper());
+        rabbitManager.setMapper(om);
+
+
+        // Do not call readValue as it might fail
+        doThrow(new IOException()).when(om).readValue(any(String.class), eq(SspRegistryResponse.class));
+        doReturn(serialize(samplePlatformRegistryResponseSuccess()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("text/plain"));
+        try {
+            rabbitManager.sendGetSSPDetailsMessage(ssp1Id);
+        } catch (CommunicationException e) {
+            communicationCaught = true;
+        }
+
+        assertTrue(communicationCaught);
+
+    }
 
     @Test
     public void sendListInfoModelsRequest() throws Exception {
@@ -250,7 +416,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw IOException while deserializing the ErrorResponseContainer
         doThrow(new IOException()).when(om).readValue(any(String.class), eq(ErrorResponseContainer.class));
@@ -302,7 +468,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw IOException while deserializing the ErrorResponseContainer
         doThrow(new IOException()).when(om).readValue(any(String.class), eq(ErrorResponseContainer.class));
@@ -362,7 +528,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().get(0).getId());
         assertEquals(200, response.getStatus());
-        assertEquals(resourcelId, response.getBody().get(0).getId());
+        assertEquals(resourceId, response.getBody().get(0).getId());
 
         // Return null
         doReturn(null)
@@ -389,12 +555,62 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
         when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
         response = rabbitManager.sendRegistryResourcesRequest(sampleCoreResourceRegistryRequest());
+
+        assertNull(response);
+    }
+
+    @Test
+    public void sendClearDataRequest() throws Exception {
+        boolean communicationCaught = false;
+
+        // Successful Message
+        doReturn(serialize(new ClearDataResponse(200, "Done", "done")))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        ClearDataResponse response = rabbitManager.sendClearDataRequest(new ClearDataRequest());
+
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertEquals(200, response.getStatus());
+
+        // Return null
+        doReturn(null)
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        response = rabbitManager.sendClearDataRequest(new ClearDataRequest());
+
+        assertNull(response);
+
+        // Throw Exception while deserializing the response
+        ObjectMapper om = spy(new ObjectMapper());
+        rabbitManager.setMapper(om);
+
+
+        // Do not call readValue as it might fail
+        doThrow(new IOException()).when(om).readValue(any(String.class), eq(ClearDataRequest.class));
+        doReturn(serialize(sampleErrorResponse()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+        try {
+            rabbitManager.sendClearDataRequest(new ClearDataRequest());
+        } catch (CommunicationException e) {
+            communicationCaught = true;
+        }
+
+        assertTrue(communicationCaught);
+
+        // Throw JsonProcessingException while serializing the request
+        // Call writeValueAsString
+        when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
+        response = rabbitManager.sendClearDataRequest(new ClearDataRequest());
 
         assertNull(response);
     }
@@ -428,7 +644,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw Exception while deserializing the response
         communicationCaught = false;
@@ -447,7 +663,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
@@ -457,6 +673,61 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNull(response);
     }
 
+    @Test
+    public void sendRevocationRequest() throws Exception {
+
+        boolean communicationCaught = false;
+
+        // Successful Message
+        doReturn(serialize(new RevocationResponse(true, HttpStatus.OK)))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        RevocationResponse response = rabbitManager.sendRevocationRequest(new RevocationRequest());
+
+        assertNotNull(response);
+        assertTrue(response.isRevoked());
+        assertEquals(HttpStatus.OK, response.getStatus());
+
+        // Return null
+        doReturn(null)
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        try {
+            rabbitManager.sendRevocationRequest(new RevocationRequest());
+        } catch (CommunicationException e) {
+            communicationCaught = true;
+        }
+
+        assertTrue(communicationCaught);
+
+        // Throw Exception while deserializing the response
+        communicationCaught = false;
+        ObjectMapper om = spy(new ObjectMapper());
+        rabbitManager.setMapper(om);
+
+
+        // Do not call readValue as it might fail
+        doThrow(new IOException()).when(om).readValue(any(String.class), eq(RevocationRequest.class));
+        doReturn(serialize(sampleErrorResponse()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+        try {
+            rabbitManager.sendRevocationRequest(new RevocationRequest());
+        } catch (CommunicationException e) {
+            communicationCaught = true;
+        }
+
+        assertTrue(communicationCaught);
+
+        // Throw JsonProcessingException while serializing the request
+        // Call writeValueAsString
+        when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
+        response = rabbitManager.sendRevocationRequest(new RevocationRequest());
+
+        assertNull(response);
+    }
 
     @Test
     public void sendManagePlatformRequest() throws Exception {
@@ -499,7 +770,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
@@ -509,6 +780,56 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         assertNull(response);
     }
 
+    @Test
+    public void sendManageSSPRequest() throws Exception {
+
+        boolean communicationCaught = false;
+
+        // Successful Message
+        doReturn(serialize(sampleSmartSpaceManagementResponse(ManagementStatus.OK)))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        SmartSpaceManagementResponse response = rabbitManager.sendManageSSPRequest(sampleSmartSpaceManagementRequest(OperationType.CREATE));
+
+        assertNotNull(response);
+        assertEquals(ManagementStatus.OK, response.getManagementStatus());
+
+        // Return null
+        doReturn(null)
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+
+        response = rabbitManager.sendManageSSPRequest(sampleSmartSpaceManagementRequest(OperationType.CREATE));
+
+        assertNull(response);
+
+
+        // Throw Exception while deserializing the response
+        ObjectMapper om = spy(new ObjectMapper());
+        rabbitManager.setMapper(om);
+
+
+        // Do not call readValue as it might fail
+        doThrow(new IOException()).when(om).readValue(any(String.class), eq(SmartSpaceManagementResponse.class));
+        doReturn(serialize(sampleErrorResponse()))
+                .when(rabbitManager)
+                .sendRpcMessage(any(), any(), any(), eq("application/json"));
+        try {
+            rabbitManager.sendManageSSPRequest(sampleSmartSpaceManagementRequest(OperationType.CREATE));
+        } catch (CommunicationException e) {
+            communicationCaught = true;
+        }
+
+        assertTrue(communicationCaught);
+
+        // Throw JsonProcessingException while serializing the request
+        // Call writeValueAsString
+        when(om.writeValueAsString(any(String.class))).thenThrow(new JsonProcessingException("") {});
+        response = rabbitManager.sendManageSSPRequest(sampleSmartSpaceManagementRequest(OperationType.CREATE));
+
+        assertNull(response);
+    }
 
     @Test
     public void sendLoginRequest() throws Exception {
@@ -550,7 +871,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString
@@ -601,7 +922,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
             communicationCaught = true;
         }
 
-        assertEquals(true, communicationCaught);
+        assertTrue(communicationCaught);
 
         // Throw JsonProcessingException while serializing the request
         // Call writeValueAsString

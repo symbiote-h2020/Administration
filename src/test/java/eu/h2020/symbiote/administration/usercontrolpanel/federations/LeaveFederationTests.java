@@ -55,7 +55,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("federationId", federationId)
-                .param("platformId", platformId))
+                .param("platformId", platform1Id))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("The federation does not exist"));
     }
@@ -123,17 +123,17 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
         mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(2)))
-                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platformId, platformId2)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platform1Id, platformId2)))
                 .andRespond(withSuccess());
         mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(2)))
-                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platformId, platformId2)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platform1Id, platformId2)))
                 .andRespond(withSuccess());
         mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(2)))
-                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platformId, platformId2)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId", contains(platform1Id, platformId2)))
                 .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")

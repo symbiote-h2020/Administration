@@ -164,25 +164,4 @@ public class RegisterController {
     public void setRabbitManager(RabbitManager rabbitManager){
         this.rabbitManager = rabbitManager;
     }
-
-    private Map<String, Object> getAllAttributes(CoreUser coreUser, BindingResult bindingResult) {
-        Map<String, Object> map = new HashMap<>();
-        map.put("allRoles", UserRoleValueTextMapping.getList());
-
-        List<String> errors = bindingResult.getFieldErrors().stream()
-                .map(FieldError::getField)
-                .collect(Collectors.toList());
-
-        if (!errors.contains("validUsername"))
-            map.put("usernameSelected", coreUser.getUsername());
-        if (!errors.contains("recoveryMail"))
-            map.put("emailSelected", coreUser.getUsername());
-        if (!errors.contains("role") && coreUser.getRole() != UserRole.NULL)
-            map.put("roleSelected", coreUser.getUsername());
-        if (coreUser.getRole() == UserRole.NULL)
-            map.put("error_role", "Choose a valid User Role");
-
-        return map;
-    }
-
 }

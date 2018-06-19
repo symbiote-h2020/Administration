@@ -43,7 +43,7 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
                 .sendPlatformCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_platform")
@@ -52,8 +52,8 @@ public class RegisterPlatformTests extends UserControlPanelBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name")
-                        .value(platformName))
-                .andExpect(jsonPath("$.interworkingServices[*].url", containsInAnyOrder(platformUrl)));
+                        .value(platform1Name))
+                .andExpect(jsonPath("$.interworkingServices[*].url", containsInAnyOrder(platform1Url)));
     }
 
     @Test

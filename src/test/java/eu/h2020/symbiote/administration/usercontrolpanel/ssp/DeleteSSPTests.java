@@ -24,13 +24,15 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
         // Delete Platform Successfully
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
+        doReturn(sampleSspRegistryResponseSuccess()).when(rabbitManager)
+                .sendSmartSpaceRemovalRequest(any());
         doReturn(sampleSmartSpaceManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManageSSPRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("sspIdToDelete", sspId))
+                .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isOk());
     }
 
@@ -57,7 +59,7 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("sspIdToDelete", sspId))
+                .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM unreachable"));
     }
@@ -71,7 +73,7 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("sspIdToDelete", sspId))
+                .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM threw communication exception: error"));
     }
@@ -81,13 +83,15 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
         // AAM returns error
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
+        doReturn(sampleSspRegistryResponseSuccess()).when(rabbitManager)
+                .sendSmartSpaceRemovalRequest(any());
         doReturn(sampleSmartSpaceManagementResponse(ManagementStatus.ERROR)).when(rabbitManager)
                 .sendManageSSPRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("sspIdToDelete", sspId))
+                .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("AAM says that the SSP does not exist!"));
     }
@@ -97,13 +101,15 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
         // AAM returns null
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
+        doReturn(sampleSspRegistryResponseSuccess()).when(rabbitManager)
+                .sendSmartSpaceRemovalRequest(any());
         doReturn(null).when(rabbitManager)
                 .sendManageSSPRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("sspIdToDelete", sspId))
+                .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM unreachable!"));
     }
@@ -113,13 +119,15 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
         // Registry throws CommunicationException
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
+        doReturn(sampleSspRegistryResponseSuccess()).when(rabbitManager)
+                .sendSmartSpaceRemovalRequest(any());
         doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendManageSSPRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/delete_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("sspIdToDelete", sspId))
+                .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM threw CommunicationException: error"));
     }

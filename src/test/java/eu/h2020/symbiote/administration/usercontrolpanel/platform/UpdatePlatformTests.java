@@ -62,7 +62,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .sendListInfoModelsRequest();
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
                 .sendPlatformModificationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/update_platform")
@@ -71,7 +71,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name")
-                        .value(platformName));
+                        .value(platform1Name));
     }
 
     @Test

@@ -1,12 +1,16 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.ssp;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.SSPDetails;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
 import org.springframework.http.MediaType;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -26,6 +30,8 @@ public class RegisterSSPTests extends UserControlPanelBaseTestClass {
         // Register ssp successfully
         doReturn(sampleSmartSpaceManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManageSSPRequest(any());
+        doReturn(sampleSspRegistryResponseSuccess()).when(rabbitManager)
+                .sendSmartSpaceCreationRequest(any());
 
         mockMvc.perform(post("/administration/user/cpanel/register_ssp")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
@@ -33,7 +39,7 @@ public class RegisterSSPTests extends UserControlPanelBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleSSPDetails())))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name")
-                        .value(sspName));
+                        .value(ssp1Name));
     }
     
     @Test
@@ -100,7 +106,14 @@ public class RegisterSSPTests extends UserControlPanelBaseTestClass {
     public void invalidArguments() throws Exception {
         // Invalid Arguments Check
 
-        SSPDetails sspDetails = new SSPDetails("a", "a", "dummy", "dummy", null);
+        SSPDetails sspDetails = new SSPDetails(
+                "a",
+                "a",
+                new ArrayList<>(Collections.singleton(new Description("a"))),
+                "dummy",
+                "dummy",
+                null,
+                null);
 
 
         mockMvc.perform(post("/administration/user/cpanel/register_ssp")
@@ -115,11 +128,11 @@ public class RegisterSSPTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error_name")
                         .value("Length must be between 3 and 30 characters"))
                 .andExpect(jsonPath("$.error_externalAddress")
-                        .value("must match \"^(https:\\/\\/www\\.|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}" +
-                                "[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$\""))
+                        .value("must match \"^(\\Z|((https:\\/\\/www\\.|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}" +
+                                "[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?))$\""))
                 .andExpect(jsonPath("$.error_siteLocalAddress")
-                        .value("must match \"^(https:\\/\\/www\\.|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}" +
-                                "[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?$\""))
+                        .value("must match \"^(\\Z|((https:\\/\\/www\\.|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}" +
+                                "[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?))$\""))
                 .andExpect(jsonPath("$.error_exposingSiteLocalAddress")
                         .value("may not be null"));
     }

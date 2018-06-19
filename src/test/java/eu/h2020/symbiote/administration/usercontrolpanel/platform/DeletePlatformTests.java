@@ -24,7 +24,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         // Delete Platform Successfully
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
         doReturn(samplePlatformManagementResponse(ManagementStatus.OK)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
@@ -32,7 +32,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isOk());
     }
 
@@ -58,7 +58,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM unreachable"));
     }
@@ -72,7 +72,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM threw communication exception: error"));
     }
@@ -88,7 +88,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(samplePlatformResponseFail().getMessage()));
     }
@@ -104,7 +104,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Registry unreachable!"));
     }
@@ -120,7 +120,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Registry threw communication exception: error"));
     }
@@ -130,7 +130,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         // AAM returns error
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
         doReturn(samplePlatformManagementResponse(ManagementStatus.ERROR)).when(rabbitManager)
                 .sendManagePlatformRequest(any());
@@ -138,7 +138,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("AAM says that the Platform does not exist!"));
     }
@@ -148,7 +148,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         // AAM returns null
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
         doReturn(null).when(rabbitManager)
                 .sendManagePlatformRequest(any());
@@ -156,7 +156,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM unreachable!"));
     }
@@ -166,7 +166,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         // Registry throws CommunicationException
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
                 .sendPlatformRemovalRequest(any());
         doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendManagePlatformRequest(any());
@@ -174,7 +174,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_platform")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("platformIdToDelete", platformId))
+                .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("AAM threw communication exception: error"));
     }

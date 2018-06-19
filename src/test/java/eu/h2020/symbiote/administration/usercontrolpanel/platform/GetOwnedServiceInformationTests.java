@@ -31,9 +31,15 @@ public class GetOwnedServiceInformationTests extends UserControlPanelBaseTestCla
 
         doAnswer(invocation -> {
             String platformId = (String) invocation.getArguments()[0];
-            return samplePlatformResponseSuccess(platformId);
+            return samplePlatformRegistryResponseSuccess(platformId);
         }).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
+
+        doAnswer(invocation -> {
+            String sspId = (String) invocation.getArguments()[0];
+            return sampleSspRegistryResponseSuccess(sspId);
+        }).when(rabbitManager)
+                .sendGetSSPDetailsMessage(any());
 
         mockMvc.perform(post("/administration/user/cpanel/list_user_services")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
@@ -41,10 +47,10 @@ public class GetOwnedServiceInformationTests extends UserControlPanelBaseTestCla
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("All the owned service details were successfully received"))
                 .andExpect(jsonPath("$.availablePlatforms[*].id",
-                        containsInAnyOrder(platformId, platformId + "2", platformId + "3", platformId + "4")))
+                        containsInAnyOrder(platform1Id, platform2Id, platform3Id, platform4Id)))
                 .andExpect(jsonPath("$.unavailablePlatforms", hasSize(0)))
                 .andExpect(jsonPath("$.availableSSPs[*].id",
-                        containsInAnyOrder(sspId, sspId + "2")))
+                        containsInAnyOrder(ssp1Id, ssp2Id)))
                 .andExpect(jsonPath("$.unavailableSSPs", hasSize(0)));
     }
 
@@ -54,11 +60,14 @@ public class GetOwnedServiceInformationTests extends UserControlPanelBaseTestCla
 
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
-        doReturn(samplePlatformResponseSuccess()).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(eq(platformId));
+        doReturn(samplePlatformRegistryResponseSuccess()).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(platform1Id));
         doReturn(samplePlatformResponseFail()).when(rabbitManager)
-                .sendGetPlatformDetailsMessage(AdditionalMatchers.not(eq(platformId)));
-
+                .sendGetPlatformDetailsMessage(AdditionalMatchers.not(eq(platform1Id)));
+        doReturn(sampleSspRegistryResponseSuccess()).when(rabbitManager)
+                .sendGetSSPDetailsMessage(eq(ssp1Id));
+        doReturn(sampleSspRegistryResponseFail()).when(rabbitManager)
+                .sendGetSSPDetailsMessage(AdditionalMatchers.not(eq(ssp1Id)));
 
         mockMvc.perform(post("/administration/user/cpanel/list_user_services")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
@@ -67,10 +76,14 @@ public class GetOwnedServiceInformationTests extends UserControlPanelBaseTestCla
                 .andExpect(jsonPath("$.message")
                         .value("Could NOT all the service information"))
                 .andExpect(jsonPath("$.availablePlatforms.length()").value(1))
-                .andExpect(jsonPath("$.availablePlatforms[0].id").value(platformId))
-                .andExpect(jsonPath("$.availableSSPs[*].id",
-                        containsInAnyOrder(sspId, sspId + "2")))
-                .andExpect(jsonPath("$.unavailableSSPs", hasSize(0)));
+                .andExpect(jsonPath("$.availablePlatforms[0].id").value(platform1Id))
+                .andExpect(jsonPath("$.unavailablePlatforms.length()").value(3))
+                .andExpect(jsonPath("$.unavailablePlatforms",
+                        containsInAnyOrder(platform2Name, platform3Name, platform4Name)))
+                .andExpect(jsonPath("$.availableSSPs.length()").value(1))
+                .andExpect(jsonPath("$.availableSSPs[0].id").value(ssp1Id))
+                .andExpect(jsonPath("$.unavailableSSPs.length()").value(1))
+                .andExpect(jsonPath("$.unavailableSSPs").value(ssp2Name));
     }
 
     @Test

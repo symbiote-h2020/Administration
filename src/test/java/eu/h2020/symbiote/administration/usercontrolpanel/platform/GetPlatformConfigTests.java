@@ -130,7 +130,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
         // Checking application.properties of CloudConfigProperties
         String fileEntry = zipFiles.get("CloudConfigProperties/application.properties");
-        assertTrue(fileEntry.contains("platform.id=" + platformId));
+        assertTrue(fileEntry.contains("platform.id=" + platform1Id));
         assertTrue(fileEntry.contains("rabbit.host=${spring.rabbitmq.host}"));
         assertTrue(fileEntry.contains("rabbit.username=guest"));
         assertTrue(fileEntry.contains("rabbit.password=guest"));
@@ -140,9 +140,9 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("symbIoTe.core.cloud.interface.url="
                 + cloudCoreInterfaceAddress));
         assertTrue(fileEntry.contains("symbIoTe.interworking.interface.url="
-                + platformUrl + "/cloudCoreInterface"));
+                + platform1Url + "/cloudCoreInterface"));
         assertTrue(fileEntry.contains("symbIoTe.localaam.url="
-                + platformUrl + "/paam"));
+                + platform1Url + "/paam"));
 
         switch (deploymentType) {
             case DOCKER:
@@ -160,7 +160,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         String nginxConf = zipFiles.get("nginx.conf");
         assertEquals(fileEntry, nginxConf);
 
-        assertTrue(fileEntry.contains("server_name  " + platformName + ";"));
+        assertTrue(fileEntry.contains("server_name  " + platform1Name + ";"));
         assertTrue(fileEntry.contains("proxy_pass  " + coreInterfaceAddress + "/;"));
         assertTrue(fileEntry.contains("proxy_pass  " + cloudCoreInterfaceAddress + "/;"));
         assertTrue(fileEntry.contains("listen " + platformPort + " ssl"));
@@ -177,7 +177,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
         // Checking nginx-ngrok.conf
         fileEntry = zipFiles.get("nginx-ngrok.conf");
-        assertTrue(fileEntry.contains("server_name  " + platformName + ";"));
+        assertTrue(fileEntry.contains("server_name  " + platform1Name + ";"));
         assertTrue(fileEntry.contains("proxy_pass  " + coreInterfaceAddress + "/;"));
         assertTrue(fileEntry.contains("proxy_pass  " + cloudCoreInterfaceAddress + "/;"));
         assertTrue(fileEntry.contains("#listen " + platformPort + " ssl"));
@@ -227,7 +227,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("coreAAMAddress=" + coreInterfaceAddress));
         assertTrue(fileEntry.contains("serviceOwnerUsername=" + username));
         assertTrue(fileEntry.contains("serviceOwnerPassword=" + password));
-        assertTrue(fileEntry.contains("serviceId=" + platformId));
+        assertTrue(fileEntry.contains("serviceId=" + platform1Id));
         assertTrue(fileEntry.contains("keyStoreFileName=" + aamKeystoreName));
         assertTrue(fileEntry.contains("keyStorePassword=" + aamKeystorePassword));
         assertTrue(fileEntry.contains("aamCertificateAlias=paam"));

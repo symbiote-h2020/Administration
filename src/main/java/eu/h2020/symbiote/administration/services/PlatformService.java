@@ -148,13 +148,7 @@ public class PlatformService {
                             } else {
                                 log.warn("Registration Failed: " + registryResponse.getMessage());
 
-                                sendPlatformDeleteMessageToAAM(new PlatformManagementRequest(
-                                        aamRequest.getAamOwnerCredentials(),
-                                        aamRequest.getPlatformOwnerCredentials(),
-                                        aamRequest.getPlatformInterworkingInterfaceAddress(),
-                                        aamRequest.getPlatformInstanceFriendlyName(),
-                                        aamRequest.getPlatformInstanceId(),
-                                        OperationType.DELETE));
+                                sendPlatformDeleteMessageToAAM(aamRequest);
 
                                 responseBody.put("platformRegistrationError", registryResponse.getMessage());
                                 return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
