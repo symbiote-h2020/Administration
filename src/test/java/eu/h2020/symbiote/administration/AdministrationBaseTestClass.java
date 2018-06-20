@@ -105,7 +105,7 @@ public abstract class AdministrationBaseTestClass {
     protected String platform3Name = createPlatformName(platform3Id);
 
     protected String platform4Id = "test4Plat";
-    private String platform4Url = createPlatformUrl(platform4Id);
+    protected String platform4Url = createPlatformUrl(platform4Id);
     protected String platform4Name = createPlatformName(platform4Id);
 
     protected String ssp1Id = "test1SSP";

@@ -5,17 +5,16 @@ import eu.h2020.symbiote.administration.communication.rabbit.exceptions.Communic
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.InvitationRequest;
 import eu.h2020.symbiote.administration.services.FederationService;
+import eu.h2020.symbiote.administration.services.InformationModelService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.ClearDataRequest;
 import eu.h2020.symbiote.core.internal.ClearDataResponse;
-import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,17 +39,20 @@ import java.util.List;
 public class AdminCpanelController {
     private static Log log = LogFactory.getLog(AdminCpanelController.class);
 
-    private RabbitManager rabbitManager;
-    private FederationService federationService;
+    private final RabbitManager rabbitManager;
+    private final FederationService federationService;
+    private final InformationModelService informationModelService;
 
     @Autowired
     public AdminCpanelController(RabbitManager rabbitManager,
-                                 FederationService federationService,
-                                 @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
-                                 @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
+                                 InformationModelService informationModelService,
+                                 FederationService federationService) {
 
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
+
+        Assert.notNull(informationModelService,"InformationModelService can not be null!");
+        this.informationModelService = informationModelService;
 
         Assert.notNull(federationService,"FederationService can not be null!");
         this.federationService = federationService;
@@ -109,7 +111,7 @@ public class AdminCpanelController {
         log.debug("POST request on /administration/admin/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
 
         // Get InformationModelList from Registry
-        ResponseEntity<?> responseEntity = getInformationModels();
+        ResponseEntity<?> responseEntity = informationModelService.getInformationModels();
         if (responseEntity.getStatusCode() != HttpStatus.OK)
             return responseEntity;
         else {
@@ -171,38 +173,6 @@ public class AdminCpanelController {
     public ResponseEntity<?> inviteToFederation(@Valid @RequestBody InvitationRequest invitationRequest, Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/federation_invite :" + invitationRequest);
-        return federationService.inviteToFederation(invitationRequest, principal, true);
-    }
-
-
-    private ResponseEntity<?> getInformationModels() {
-        try {
-            InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
-            if (informationModelListResponse != null && informationModelListResponse.getStatus() == HttpStatus.OK.value()) {
-                return new ResponseEntity<>(informationModelListResponse.getBody(),
-                        new HttpHeaders(), HttpStatus.OK);
-
-            } else {
-                if (informationModelListResponse != null)
-                    return new ResponseEntity<>(informationModelListResponse.getMessage(),
-                            new HttpHeaders(), HttpStatus.valueOf(informationModelListResponse.getStatus()));
-                else
-                    return new ResponseEntity<>("Could not retrieve the information models from registry",
-                            new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-            }
-        } catch (CommunicationException e) {
-            log.warn("Communication exception while retrieving the information models", e);
-            return new ResponseEntity<>("Communication exception while retrieving the information models: " +
-                    e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-        }
-    }
-
-    /**
-     * Used for testing
-     */
-    public void setRabbitManager(RabbitManager rabbitManager){
-        this.rabbitManager = rabbitManager;
+        return federationService.inviteToFederation(invitationRequest, principal,true);
     }
 }

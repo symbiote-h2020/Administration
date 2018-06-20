@@ -74,7 +74,7 @@ public class DeletePlatformTests extends UserControlPanelBaseTestClass {
                 .with(csrf().asHeader())
                 .param("platformIdToDelete", platform1Id))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("AAM threw communication exception: error"));
+                .andExpect(content().string("AAM threw Communication Exception: error"));
     }
 
     @Test

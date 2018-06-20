@@ -551,6 +551,15 @@ public class UserCpanelController {
         return federationService.inviteToFederation(invitationRequest, principal, false);
     }
 
+    @PostMapping("/administration/user/cpanel/federation/handleInvitation")
+    public ResponseEntity<?> acceptInvitation(@RequestParam String federationId, @RequestParam String platformId,
+                                              @RequestParam Boolean accepted, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/federation/handleInvitation for federationId = "
+                + federationId + " platformId = " + platformId + " accepted = " + accepted);
+        return federationService.handleInvitationResponse(federationId, platformId, accepted, principal);
+    }
+
     /**
      * Used for testing
      */

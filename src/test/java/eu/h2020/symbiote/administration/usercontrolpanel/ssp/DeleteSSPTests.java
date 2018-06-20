@@ -75,7 +75,7 @@ public class DeleteSSPTests extends UserControlPanelBaseTestClass {
                 .with(csrf().asHeader())
                 .param("sspIdToDelete", ssp1Id))
                 .andExpect(status().isInternalServerError())
-                .andExpect(content().string("AAM threw communication exception: error"));
+                .andExpect(content().string("AAM threw Communication Exception: error"));
     }
 
     @Test

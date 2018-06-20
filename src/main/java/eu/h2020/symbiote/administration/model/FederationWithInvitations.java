@@ -45,7 +45,7 @@ public class FederationWithInvitations extends Federation {
         openInvitations.put(invitation.getInvitedPlatformId(), invitation);
     }
 
-    public void closeInvitation(FederationInvitation invitation) {
-        openInvitations.remove(invitation.getInvitedPlatformId());
+    public void closeInvitation(String platformId) {
+        openInvitations.remove(platformId);
     }
 }

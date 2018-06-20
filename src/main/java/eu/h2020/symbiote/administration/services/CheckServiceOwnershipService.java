@@ -94,7 +94,7 @@ public class CheckServiceOwnershipService {
                         new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } catch (CommunicationException e) {
-            String message = "AAM threw communication exception";
+            String message = "AAM threw Communication Exception";
             log.warn(message, e);
             return new ResponseEntity<>(message + ": " + e.getMessage(),
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);

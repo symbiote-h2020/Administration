@@ -40,14 +40,13 @@ public class FederationInvitation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         FederationInvitation that = (FederationInvitation) o;
-        return Objects.equals(getInvitedPlatformId(), that.getInvitedPlatformId()) &&
-                Objects.equals(getInvitationDate(), that.getInvitationDate());
+        return Objects.equals(getInvitedPlatformId(), that.getInvitedPlatformId());
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(getInvitedPlatformId(), getInvitationDate());
+        return Objects.hash(getInvitedPlatformId());
     }
 
     @Override

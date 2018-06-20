@@ -102,7 +102,7 @@ public class FederationService {
         ResponseEntity ownedPlatformsResponse = ownedServicesService.getOwnedPlatformDetails(principal);
         if (ownedPlatformsResponse.getStatusCode() != HttpStatus.OK) {
             responseBody.put("error", ownedPlatformsResponse.getBody());
-            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), ownedPlatformsResponse.getStatusCode());
         }
         Set<String> ownedPlatforms = ((Set<OwnedService>) ownedPlatformsResponse.getBody()).stream()
                 .map(OwnedService::getServiceInstanceId)
@@ -236,12 +236,14 @@ public class FederationService {
                 return ownedPlatformDetailsResponse;
         }
 
+        // Check if the federation exists
         Optional<FederationWithInvitations> federation = federationRepository.findById(federationId);
         if (!federation.isPresent()) {
             responseBody.put("error", "The federation does not exist");
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
 
+        // Check if the platform is member of the federations
         ResponseEntity<?> isPlatformMember =  isPlatformMemberOfFederation(federation.get(), platformId);
         if (isPlatformMember.getStatusCode() != HttpStatus.OK)
             return isPlatformMember;
@@ -249,6 +251,7 @@ public class FederationService {
         int memberIndex = (Integer) isPlatformMember.getBody();
 
 
+        // Check if the platform is the only member of the federation
         if (isPlatformTheOnlyMemberOfFederation(federation.get(), platformId)) {
             federationRepository.deleteById(federationId);
             federationNotificationService.notifyAboutFederationDeletion(federation.get());
@@ -279,11 +282,10 @@ public class FederationService {
     }
 
     public ResponseEntity<?> inviteToFederation(InvitationRequest invitationRequest, Principal principal, boolean isAdmin) {
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
 
         Map<String, Object> responseBody = new HashMap<>();
 
+        // Check if the federation exists
         Optional<FederationWithInvitations> federation = federationRepository.findById(invitationRequest.getFederationId());
         if (!federation.isPresent()) {
             responseBody.put("error", "The federation does not exist");
@@ -297,7 +299,7 @@ public class FederationService {
             ResponseEntity ownedPlatformsResponse = ownedServicesService.getOwnedPlatformDetails(principal);
             if (ownedPlatformsResponse.getStatusCode() != HttpStatus.OK) {
                 responseBody.put("error", ownedPlatformsResponse.getBody());
-                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), ownedPlatformsResponse.getStatusCode());
             }
 
             Set<String> ownedPlatforms = ((Set<OwnedService>) ownedPlatformsResponse.getBody()).stream()
@@ -346,6 +348,52 @@ public class FederationService {
 
         responseBody.put(federation.get().getId(), federation.get());
         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    public ResponseEntity handleInvitationResponse(String federationId, String platformId, boolean accepted, Principal principal) {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        Map<String, Object> responseBody = new HashMap<>();
+
+        // Check if the federation exists
+        Optional<FederationWithInvitations> federation = federationRepository.findById(federationId);
+        if (!federation.isPresent()) {
+            responseBody.put("error", "The federation does not exist");
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NOT_FOUND);
+        }
+
+        // Check if the user owns the platform
+        ResponseEntity<?> ownedPlatformDetailsResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                platformId, user, OwnedService.ServiceType.PLATFORM);
+        if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK) {
+            responseBody.put("error", ownedPlatformDetailsResponse.getBody());
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), ownedPlatformDetailsResponse.getStatusCode());
+        }
+
+        // Handle the invitation
+        federation.get().closeInvitation(platformId);
+        if (accepted) {
+            federation.get().getMembers().add(
+                    new FederationMember(
+                            platformId,
+                            ((OwnedService) ownedPlatformDetailsResponse.getBody()).getPlatformInterworkingInterfaceAddress()
+                    )
+            );
+
+            // Inform the Federation Managers of the platform members
+            federationNotificationService.notifyAboutFederationUpdate(federation.get(), federation.get().getMembers());
+
+            // Publish to federation queue
+            rabbitManager.publishFederationUpdate(federation.get());
+        }
+
+        // Save the changes to the database
+        federationRepository.save(federation.get());
+
+        responseBody.put(federation.get().getId(), federation.get());
+        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.OK);
+
     }
 
     private ResponseEntity<?> isPlatformMemberOfFederation(Federation federation, String platformId) {
