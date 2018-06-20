@@ -522,11 +522,11 @@ public class UserCpanelController {
 
     @PostMapping("/administration/user/cpanel/create_federation")
     public ResponseEntity<?> createFederation(@Valid @RequestBody Federation federation,
-                                              BindingResult bindingResult) {
+                                              BindingResult bindingResult, Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/create_federation with RequestBody: "
                 + ReflectionToStringBuilder.toString(federation));
-        return federationService.createFederation(federation, bindingResult);
+        return federationService.createFederation(federation, bindingResult, principal);
     }
 
     @PostMapping("/administration/user/cpanel/delete_federation")

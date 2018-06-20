@@ -125,6 +125,50 @@ public class OwnedServicesService {
         return new ResponseEntity<>(response, new HttpHeaders(), httpStatus);
     }
 
+    public ResponseEntity getOwnedPlatformIds(Principal principal) {
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String responseMessage;
+        HttpStatus httpStatus;
+
+        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), ""),
+                new UserDetails(
+                        new Credentials(user.getUsername(), ""),
+                        "",
+                        UserRole.NULL,
+                        new HashMap<>(),
+                        new HashMap<>()
+                ),
+                OperationType.CREATE
+        );
+
+        // Get OwnedPlatformDetails from AAM
+        try {
+            Set<OwnedService> ownedServicesSet =
+                    rabbitManager.sendOwnedServiceDetailsRequest(ownedPlatformDetailsRequest);
+            if (ownedServicesSet != null) {
+                Set<String> response = ownedServicesSet.stream()
+                        .filter(ownedService -> ownedService.getServiceType().equals(OwnedService.ServiceType.PLATFORM))
+                        .map(OwnedService::getServiceInstanceId)
+                        .collect(Collectors.toSet());
+                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
+            } else {
+                responseMessage = "AAM responded with null";
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+                log.warn(responseMessage);
+            }
+        } catch (CommunicationException e) {
+            responseMessage = "AAM threw CommunicationException: " + e.getMessage();
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            log.warn(responseMessage, e);
+        }
+
+        return new ResponseEntity<>(responseMessage, new HttpHeaders(), httpStatus);
+    }
+
     private void divideServices(Set<OwnedService> ownedServicesSet, Set<OwnedService> ownedPlatformDetailsSet,
                                 Set<OwnedService> ownedSSPDetailsSet) {
         for (OwnedService ownedService : ownedServicesSet) {

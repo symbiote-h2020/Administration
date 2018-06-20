@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
 import eu.h2020.symbiote.administration.admincontrolpanel.AdminControlPanelBaseTestClass;
-import eu.h2020.symbiote.model.mim.Federation;
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
 
@@ -22,10 +22,10 @@ public class ListFederationsTests extends AdminControlPanelBaseTestClass {
 
     @Test
     public void success() throws Exception {
-        Federation federation1 = sampleFederationRequest();
-        Federation federation2 = sampleFederationRequest();
+        FederationWithInvitations federation1 = sampleSavedFederation();
+        FederationWithInvitations federation2 = sampleSavedFederation();
         federation2.setId(federationId + "2");
-        List<Federation> federationList = new ArrayList<>();
+        List<FederationWithInvitations> federationList = new ArrayList<>();
         federationList.add(federation1);
         federationList.add(federation2);
         federationRepository.save(federationList);

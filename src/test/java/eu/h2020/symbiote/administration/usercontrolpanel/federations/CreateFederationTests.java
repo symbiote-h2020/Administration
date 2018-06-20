@@ -1,6 +1,7 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -20,6 +21,7 @@ import static eu.h2020.symbiote.administration.services.FederationNotificationSe
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -41,12 +43,21 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
 
+        Federation federationRequest = sampleFederationRequest();
+        String newMemberId = "newMemberId";
+        FederationMember newMember = new FederationMember(newMemberId, "");
+        federationRequest.getMembers().add(newMember);
+
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform1Id));
         doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform2Id));
         doReturn(samplePlatformRegistryResponseSuccess(platform3Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform3Id));
+        doReturn(samplePlatformRegistryResponseSuccess(newMemberId)).when(rabbitManager)
+                .sendGetPlatformDetailsMessage(eq(newMemberId));
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager)
                 .sendListInfoModelsRequest();
         doReturn(new HttpHeaders())
@@ -77,20 +88,23 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/create_federation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(federationRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Federation Registration was successful!"))
                 .andExpect(jsonPath("$.federation.id").value(federationId));
 
         mockServer.verify();
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
         assertEquals(federationId, federations.get(0).getId());
         assertEquals(3, federations.get(0).getMembers().size());
         assertEquals(platform1Url, federations.get(0).getMembers().get(0).getInterworkingServiceURL());
         assertEquals(platform2Url, federations.get(0).getMembers().get(1).getInterworkingServiceURL());
         assertEquals(platform3Url, federations.get(0).getMembers().get(2).getInterworkingServiceURL());
+        assertEquals(1, federations.get(0).getOpenInvitations().size());
+        assertNotNull(federations.get(0).getOpenInvitations().get(newMemberId).getInvitedPlatformId());
+        assertEquals(newMemberId, federations.get(0).getOpenInvitations().get(newMemberId).getInvitedPlatformId());
 
         // Verify that AAM received the messages
         while(dummyAAMListener.federationMessagesCreated() == 0)
@@ -102,14 +116,13 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
         // Reset the original request factory of restTemplate to unbind it from the mockServer
         restTemplate.setRequestFactory(originalRequestFactory);
-
     }
 
     @Test
     public void federationExists() throws Exception {
 
         // Save the federation
-        Federation federation = sampleFederationRequest();
+        FederationWithInvitations federation = sampleSavedFederation();
         federationRepository.save(federation);
 
         // Change the federation name and send creation request
@@ -179,6 +192,8 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     @Test
     public void memberDoesNotExist() throws Exception {
 
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform1Id));
         doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
@@ -194,13 +209,15 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error")
                         .value("The platform with id " + platform3Id + " was not found"));
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
     }
 
     @Test
     public void getPlatformDetailsRegistryUnreachable() throws Exception {
 
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(null).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
 
@@ -212,13 +229,15 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error")
                         .value("Registry unreachable!"));
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
     }
 
     @Test
     public void getPlatformDetailsCommunicationException() throws Exception {
 
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doThrow(new CommunicationException("error")).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(any());
 
@@ -230,7 +249,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error")
                         .value("Registry threw CommunicationException: error"));
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
     }
 
@@ -238,6 +257,8 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     public void informationModelDoesNotExist() throws Exception {
         String dummyInfoModelId = "dummy";
 
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform1Id));
         doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
@@ -258,13 +279,15 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error")
                         .value("The information model with id " + dummyInfoModelId + " was not found"));
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
     }
 
     @Test
     public void informationModelRequestRegistryUnreachable() throws Exception {
 
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform1Id));
         doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
@@ -283,13 +306,15 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error")
                         .value("Could not retrieve the information models from registry"));
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(0, federations.size());
     }
 
     @Test
     public void cannotContactFederationManagers() throws Exception {
 
+        doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
         doReturn(samplePlatformRegistryResponseSuccess(platform1Id)).when(rabbitManager)
                 .sendGetPlatformDetailsMessage(eq(platform1Id));
         doReturn(samplePlatformRegistryResponseSuccess(platform2Id)).when(rabbitManager)
@@ -311,7 +336,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.message").value("Federation Registration was successful!"))
                 .andExpect(jsonPath("$.federation.id").value(federationId));
 
-        List<Federation> federations = federationRepository.findAll();
+        List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
         assertEquals(federationId, federations.get(0).getId());
         assertEquals(3, federations.get(0).getMembers().size());

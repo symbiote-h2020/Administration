@@ -2,6 +2,8 @@ package eu.h2020.symbiote.administration.services;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.FederationInvitation;
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.Federation;
@@ -30,6 +32,7 @@ public class FederationService {
     private final RabbitManager rabbitManager;
     private final FederationRepository federationRepository;
     private final PlatformService platformService;
+    private final OwnedServicesService ownedServicesService;
     private final CheckServiceOwnershipService checkServiceOwnershipService;
     private final InformationModelService informationModelService;
     private final ValidationService validationService;
@@ -39,6 +42,7 @@ public class FederationService {
     public FederationService(RabbitManager rabbitManager,
                              FederationRepository federationRepository,
                              PlatformService platformService,
+                             OwnedServicesService ownedServicesService,
                              CheckServiceOwnershipService checkServiceOwnershipService,
                              InformationModelService informationModelService,
                              ValidationService validationService,
@@ -52,6 +56,9 @@ public class FederationService {
 
         Assert.notNull(platformService,"PlatformService can not be null!");
         this.platformService = platformService;
+
+        Assert.notNull(ownedServicesService,"OwnedServicesService can not be null!");
+        this.ownedServicesService = ownedServicesService;
 
         Assert.notNull(checkServiceOwnershipService,"CheckServiceOwnershipService can not be null!");
         this.checkServiceOwnershipService = checkServiceOwnershipService;
@@ -75,19 +82,28 @@ public class FederationService {
     }
 
     public ResponseEntity<?> createFederation(Federation federation,
-                                              BindingResult bindingResult) {
+                                              BindingResult bindingResult,
+                                              Principal principal) {
 
         Map<String, Object> responseBody = new HashMap<>();
 
         if (bindingResult.hasErrors())
             return validationService.getRequestErrors(bindingResult);
 
-        Optional<Federation> existingFederation = federationRepository.findById(federation.getId());
+        Optional<FederationWithInvitations> existingFederation = federationRepository.findById(federation.getId());
         if (existingFederation.isPresent()) {
             responseBody.put("error", "The federation with id '" + federation.getId() +
                     "' already exists!");
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
+
+        // Get user services
+        ResponseEntity ownedPlatformsResponse = ownedServicesService.getOwnedPlatformIds(principal);
+        if (ownedPlatformsResponse.getStatusCode() != HttpStatus.OK) {
+            responseBody.put("error", ownedPlatformsResponse.getBody());
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        Set<String> ownedPlatforms = ((Set<String>) ownedPlatformsResponse.getBody());
 
         // Checking if all the platform members exist
         for (FederationMember member : federation.getMembers()) {
@@ -123,14 +139,40 @@ public class FederationService {
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
 
+        // Creating the FederationWithInvitation
+        HashMap<String, FederationInvitation> invitations = new HashMap<>();
+        ArrayList<FederationMember> newMembers = new ArrayList<>();
+        for (FederationMember member : federation.getMembers()) {
+            if (ownedPlatforms.contains(member.getPlatformId())) {
+                newMembers.add(member);
+            } else {
+                invitations.put(member.getPlatformId(),
+                        new FederationInvitation(
+                                member.getPlatformId(),
+                                FederationInvitation.InvitationStatus.PENDING,
+                                new Date()));
+            }
+        }
+
+        FederationWithInvitations federationWithInvitations = new FederationWithInvitations(
+                federation.getId(),
+                federation.getName(),
+                federation.isPublic(),
+                federation.getInformationModel(),
+                federation.getSlaConstraints(),
+                newMembers,
+                invitations
+        );
+
+
         // Inform the Federation Managers of the platform members
-        federationNotificationService.notifyAboutFederationUpdate(federation);
+        federationNotificationService.notifyAboutFederationUpdate(federationWithInvitations);
 
         // Publish to federation queue
-        rabbitManager.publishFederationCreation(federation);
+        rabbitManager.publishFederationCreation(federationWithInvitations);
 
         // Storing the new federation
-        federation = federationRepository.save(federation);
+        federation = federationRepository.save(federationWithInvitations);
         responseBody.put("message", "Federation Registration was successful!");
         responseBody.put("federation", federation);
         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.CREATED);
@@ -145,7 +187,7 @@ public class FederationService {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
 
-        Optional<Federation> federationToDelete = federationRepository.findById(federationIdToDelete);
+        Optional<FederationWithInvitations> federationToDelete = federationRepository.findById(federationIdToDelete);
         if (!federationToDelete.isPresent()) {
             response.put("error", "The federation was not found");
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.NOT_FOUND);
@@ -191,7 +233,7 @@ public class FederationService {
                 return ownedPlatformDetailsResponse;
         }
 
-        Optional<Federation> federation = federationRepository.findById(federationId);
+        Optional<FederationWithInvitations> federation = federationRepository.findById(federationId);
         if (!federation.isPresent()) {
             responseBody.put("error", "The federation does not exist");
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NOT_FOUND);

@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.admincontrolpanel.federations;
 
 import eu.h2020.symbiote.administration.admincontrolpanel.AdminControlPanelBaseTestClass;
-import eu.h2020.symbiote.model.mim.Federation;
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
 import org.springframework.http.HttpMethod;
@@ -32,7 +32,7 @@ public class LeaveFederationAdminTests extends AdminControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
 
-        Federation federation = sampleSavedFederation();
+        FederationWithInvitations federation = sampleSavedFederation();
         federationRepository.save(federation);
 
         String platformId1 = federation.getMembers().get(0).getPlatformId();

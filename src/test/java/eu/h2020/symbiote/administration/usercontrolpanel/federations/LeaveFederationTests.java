@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
-import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
 import org.springframework.http.HttpMethod;
@@ -65,7 +65,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
-        Federation federation = sampleSavedFederationWithSinglePlatform();
+        FederationWithInvitations federation = sampleSavedFederationWithSinglePlatform();
         federationRepository.save(federation);
 
         String platformId = federation.getMembers().get(0).getPlatformId();
@@ -108,7 +108,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
-        Federation federation = sampleSavedFederation();
+        FederationWithInvitations federation = sampleSavedFederation();
         federationRepository.save(federation);
 
         String platformId1 = federation.getMembers().get(0).getPlatformId();

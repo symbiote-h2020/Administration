@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
-import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
 import org.springframework.http.HttpMethod;
@@ -37,7 +37,7 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
-        Federation federation = sampleFederationRequest();
+        FederationWithInvitations federation = sampleSavedFederation();
         federation.getMembers().remove(2);
         federation.getMembers().remove(0);
         federation.getMembers().get(0).setPlatformId("dummy");
@@ -65,7 +65,7 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void platformIsNotOnlyMemberFederation() throws Exception {
-        Federation federation = sampleFederationRequest();
+        FederationWithInvitations federation = sampleSavedFederation();
         federationRepository.save(federation);
 
 
@@ -82,7 +82,7 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
-        Federation federation = sampleSavedFederationWithSinglePlatform();
+        FederationWithInvitations federation = sampleSavedFederationWithSinglePlatform();
         String platformId = federation.getMembers().get(0).getPlatformId();
         String platform1Url = federation.getMembers().get(0).getInterworkingServiceURL();
         federationRepository.save(federation);

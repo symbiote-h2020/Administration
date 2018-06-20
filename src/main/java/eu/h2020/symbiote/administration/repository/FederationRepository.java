@@ -1,6 +1,6 @@
 package eu.h2020.symbiote.administration.repository;
 
-import eu.h2020.symbiote.model.mim.Federation;
+import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
@@ -13,10 +13,10 @@ import java.util.Optional;
  * @since 3/1/2018.
  */
 @RepositoryRestResource(collectionResourceRel = "federations", path = "federations")
-public interface FederationRepository extends MongoRepository<Federation, String> {
-    Optional<Federation> findById(String federationId);
+public interface FederationRepository extends MongoRepository<FederationWithInvitations, String> {
+    Optional<FederationWithInvitations> findById(String federationId);
 
-    List<Federation> findAllByIsPublic(Boolean isPublic);
+    List<FederationWithInvitations> findAllByIsPublic(Boolean isPublic);
 
-    Optional<Federation> deleteById(String id);
+    Optional<FederationWithInvitations> deleteById(String id);
 }

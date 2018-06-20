@@ -10,7 +10,10 @@ import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.core.cci.SspRegistryResponse;
-import eu.h2020.symbiote.core.internal.*;
+import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
+import eu.h2020.symbiote.core.internal.InformationModelListResponse;
+import eu.h2020.symbiote.core.internal.RDFFormat;
+import eu.h2020.symbiote.core.internal.ResourceListResponse;
 import eu.h2020.symbiote.model.cim.Resource;
 import eu.h2020.symbiote.model.mim.Comparator;
 import eu.h2020.symbiote.model.mim.*;
@@ -532,23 +535,38 @@ public abstract class AdministrationBaseTestClass {
         return federation;
     }
 
-    protected Federation sampleSavedFederation() {
+    protected FederationWithInvitations sampleSavedFederation() {
         Federation federation = sampleFederationRequest();
 
         federation.getMembers().get(0).setInterworkingServiceURL(platform1Url);
         federation.getMembers().get(1).setInterworkingServiceURL(platform2Url);
         federation.getMembers().get(2).setInterworkingServiceURL(platform3Url);
 
-        return federation;
+        return new FederationWithInvitations(
+                federation.getId(),
+                federation.getName(),
+                federation.isPublic(),
+                federation.getInformationModel(),
+                federation.getSlaConstraints(),
+                federation.getMembers(),
+                new HashMap<>());
     }
 
-    protected Federation sampleSavedFederationWithSinglePlatform() {
+    protected FederationWithInvitations sampleSavedFederationWithSinglePlatform() {
         Federation federation = sampleFederationRequest();
 
         federation.getMembers().get(0).setInterworkingServiceURL(platform1Url);
         federation.getMembers().remove(2);
         federation.getMembers().remove(1);
-        return federation;
+
+        return new FederationWithInvitations(
+                federation.getId(),
+                federation.getName(),
+                federation.isPublic(),
+                federation.getInformationModel(),
+                federation.getSlaConstraints(),
+                federation.getMembers(),
+                new HashMap<>());
     }
 
     ErrorResponseContainer sampleErrorResponse() {
