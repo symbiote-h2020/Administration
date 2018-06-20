@@ -60,7 +60,7 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
                 .with(csrf().asHeader())
                 .param("federationIdToDelete", federationId))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").value("The federation was not found"));
+                .andExpect(jsonPath("$.error").value("The federation does not exist"));
     }
 
     @Test

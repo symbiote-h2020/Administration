@@ -3,6 +3,7 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.InvitationRequest;
 import eu.h2020.symbiote.administration.services.FederationService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
@@ -22,11 +23,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.security.Principal;
 import java.util.List;
 
@@ -166,6 +165,13 @@ public class AdminCpanelController {
         log.debug("POST request on /administration/user/cpanel/leave_federation for federationId = "
                 + federationId + " platformId = " + platformId);
         return federationService.leaveFederation(federationId, platformId, principal, true);
+    }
+
+    @PostMapping("/administration/admin/cpanel/federation_invite")
+    public ResponseEntity<?> inviteToFederation(@Valid @RequestBody InvitationRequest invitationRequest, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/federation_invite :" + invitationRequest);
+        return federationService.inviteToFederation(invitationRequest, principal, true);
     }
 
 

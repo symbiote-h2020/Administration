@@ -71,7 +71,7 @@ public class OwnedServicesService {
         String responseMessage;
         HttpStatus httpStatus;
 
-        UserManagementRequest ownedPlatformDetailsRequest = new UserManagementRequest(
+        UserManagementRequest ownedServiceDetailsRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                 new Credentials(user.getUsername(), ""),
                 new UserDetails(
@@ -87,7 +87,7 @@ public class OwnedServicesService {
         // Get OwnedPlatformDetails from AAM
         try {
             Set<OwnedService> ownedServicesSet =
-                    rabbitManager.sendOwnedServiceDetailsRequest(ownedPlatformDetailsRequest);
+                    rabbitManager.sendOwnedServiceDetailsRequest(ownedServiceDetailsRequest);
             if (ownedServicesSet != null) {
 
                 // Distinguish Platforms from SSPs
@@ -125,7 +125,7 @@ public class OwnedServicesService {
         return new ResponseEntity<>(response, new HttpHeaders(), httpStatus);
     }
 
-    public ResponseEntity getOwnedPlatformIds(Principal principal) {
+    public ResponseEntity getOwnedPlatformDetails(Principal principal) {
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -150,9 +150,8 @@ public class OwnedServicesService {
             Set<OwnedService> ownedServicesSet =
                     rabbitManager.sendOwnedServiceDetailsRequest(ownedPlatformDetailsRequest);
             if (ownedServicesSet != null) {
-                Set<String> response = ownedServicesSet.stream()
+                Set<OwnedService> response = ownedServicesSet.stream()
                         .filter(ownedService -> ownedService.getServiceType().equals(OwnedService.ServiceType.PLATFORM))
-                        .map(OwnedService::getServiceInstanceId)
                         .collect(Collectors.toSet());
                 return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
             } else {

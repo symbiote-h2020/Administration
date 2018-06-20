@@ -4,6 +4,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.FederationInvitation;
 import eu.h2020.symbiote.administration.model.FederationWithInvitations;
+import eu.h2020.symbiote.administration.model.InvitationRequest;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
 import eu.h2020.symbiote.model.mim.Federation;
@@ -98,12 +99,14 @@ public class FederationService {
         }
 
         // Get user services
-        ResponseEntity ownedPlatformsResponse = ownedServicesService.getOwnedPlatformIds(principal);
+        ResponseEntity ownedPlatformsResponse = ownedServicesService.getOwnedPlatformDetails(principal);
         if (ownedPlatformsResponse.getStatusCode() != HttpStatus.OK) {
             responseBody.put("error", ownedPlatformsResponse.getBody());
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        Set<String> ownedPlatforms = ((Set<String>) ownedPlatformsResponse.getBody());
+        Set<String> ownedPlatforms = ((Set<OwnedService>) ownedPlatformsResponse.getBody()).stream()
+                .map(OwnedService::getServiceInstanceId)
+                .collect(Collectors.toSet());
 
         // Checking if all the platform members exist
         for (FederationMember member : federation.getMembers()) {
@@ -189,7 +192,7 @@ public class FederationService {
 
         Optional<FederationWithInvitations> federationToDelete = federationRepository.findById(federationIdToDelete);
         if (!federationToDelete.isPresent()) {
-            response.put("error", "The federation was not found");
+            response.put("error", "The federation does not exist");
             return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.NOT_FOUND);
         } else if (!isAdmin) {
             if (federationToDelete.get().getMembers().size() > 1) {
@@ -269,6 +272,76 @@ public class FederationService {
         // Publish to federation queue
         rabbitManager.publishFederationUpdate(federation.get());
 
+        federationRepository.save(federation.get());
+
+        responseBody.put(federation.get().getId(), federation.get());
+        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> inviteToFederation(InvitationRequest invitationRequest, Principal principal, boolean isAdmin) {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        Map<String, Object> responseBody = new HashMap<>();
+
+        Optional<FederationWithInvitations> federation = federationRepository.findById(invitationRequest.getFederationId());
+        if (!federation.isPresent()) {
+            responseBody.put("error", "The federation does not exist");
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NOT_FOUND);
+        }
+
+        // Check if the user owns a platform in federation
+        if (!isAdmin) {
+
+            // Get user services
+            ResponseEntity ownedPlatformsResponse = ownedServicesService.getOwnedPlatformDetails(principal);
+            if (ownedPlatformsResponse.getStatusCode() != HttpStatus.OK) {
+                responseBody.put("error", ownedPlatformsResponse.getBody());
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            Set<String> ownedPlatforms = ((Set<OwnedService>) ownedPlatformsResponse.getBody()).stream()
+                    .map(OwnedService::getServiceInstanceId)
+                    .collect(Collectors.toSet());
+            Set<String> federationMembers = federation.get().getMembers().stream()
+                    .map(FederationMember::getPlatformId).collect(Collectors.toSet());
+            Set<String> intersection = new HashSet<>(federationMembers);
+            intersection.retainAll(ownedPlatforms);
+
+            if (intersection.isEmpty()) {
+                String message = "You do not own any of the federation members in order to invite other platforms";
+                responseBody.put("error", message);
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            }
+
+            // If the user owns the invited platforms add them immediately to the federation members and remove
+            // the invitation
+            HashSet<String> newInvitedPlatforms = new HashSet<>(invitationRequest.getInvitedPlatforms());
+            Map<String, OwnedService> ownedPlatformsMap = ((Set<OwnedService>) ownedPlatformsResponse.getBody()).stream()
+                    .collect(Collectors.toMap(OwnedService::getServiceInstanceId, ownedService -> ownedService));
+            ArrayList<FederationMember> newMembers = new ArrayList<>(federation.get().getMembers());
+
+            for (String invitedMemberId : invitationRequest.getInvitedPlatforms()) {
+                if (ownedPlatforms.contains(invitedMemberId)) {
+                    newMembers.add(new FederationMember(
+                            invitedMemberId,
+                            ownedPlatformsMap.get(invitedMemberId).getPlatformInterworkingInterfaceAddress()));
+                    newInvitedPlatforms.remove(invitedMemberId);
+                }
+            }
+            federation.get().setMembers(newMembers);
+            invitationRequest = new InvitationRequest(invitationRequest.getFederationId(), newInvitedPlatforms);
+
+        }
+
+        // Create the new invitations
+        federation.get().openInvitations(invitationRequest.getInvitedPlatforms().stream()
+                .map(invitedMember -> new FederationInvitation(invitedMember,
+                        FederationInvitation.InvitationStatus.PENDING,
+                        new Date()))
+                .collect(Collectors.toSet()));
+
+        // Store the invitations
         federationRepository.save(federation.get());
 
         responseBody.put(federation.get().getId(), federation.get());

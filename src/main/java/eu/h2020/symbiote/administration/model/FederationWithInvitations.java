@@ -10,11 +10,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Document(collection = "federation")
 public class FederationWithInvitations extends Federation {
-    private HashMap<String, FederationInvitation> openInvitations;
+    private Map<String, FederationInvitation> openInvitations;
 
     @JsonCreator
     public FederationWithInvitations(@JsonProperty("id") String id,
@@ -23,7 +24,7 @@ public class FederationWithInvitations extends Federation {
                                      @JsonProperty("informationModel") InformationModel informationModel,
                                      @JsonProperty("slaConstraints") List<QoSConstraint> slaConstraints,
                                      @JsonProperty("members") List<FederationMember> members,
-                                     @JsonProperty("openInvitations") HashMap<String, FederationInvitation> openInvitations) {
+                                     @JsonProperty("openInvitations") Map<String, FederationInvitation> openInvitations) {
         setId(id);
         setName(name);
         setPublic(isPublic);
@@ -33,7 +34,7 @@ public class FederationWithInvitations extends Federation {
         this.openInvitations = openInvitations != null ? openInvitations : new HashMap<>();
     }
 
-    public HashMap<String, FederationInvitation> getOpenInvitations() { return openInvitations; }
+    public Map<String, FederationInvitation> getOpenInvitations() { return openInvitations; }
 
     public void openInvitations(Set<FederationInvitation> invitations) {
         for (FederationInvitation invitation : invitations)

@@ -190,6 +190,21 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     }
 
     @Test
+    public void aamThrowsException() throws Exception {
+
+        doThrow(new CommunicationException("error")).when(rabbitManager)
+                .sendOwnedServiceDetailsRequest(any());
+
+        mockMvc.perform(post("/administration/user/cpanel/create_federation")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleFederationRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error")
+                        .value("AAM threw CommunicationException: error"));
+    }
+
+    @Test
     public void memberDoesNotExist() throws Exception {
 
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)

@@ -225,7 +225,6 @@ public class UserCpanelController {
         Map<String, String> errorsResponse = new HashMap<>();
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
         UserRole role = user.getRole();
 
         if (bindingResult.hasErrors()) {
@@ -543,6 +542,13 @@ public class UserCpanelController {
         log.debug("POST request on /administration/user/cpanel/leave_federation for federationId = "
                 + federationId + " platformId = " + platformId);
         return federationService.leaveFederation(federationId, platformId, principal, false);
+    }
+
+    @PostMapping("/administration/user/cpanel/federation_invite")
+    public ResponseEntity<?> inviteToFederation(@Valid @RequestBody InvitationRequest invitationRequest, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/federation_invite :" + invitationRequest);
+        return federationService.inviteToFederation(invitationRequest, principal, false);
     }
 
     /**
