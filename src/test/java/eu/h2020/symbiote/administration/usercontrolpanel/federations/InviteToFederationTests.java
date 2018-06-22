@@ -90,7 +90,8 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
     public void success() throws Exception {
         // In this test, we invite 1 platform which is owned by the user i.e. platform2Id and one that it is not owned
         // i.e. dummyPlatform. The platform2Id should be added immediately to the Federation members, whereas the
-        // other one should just be invited
+        // other one should just be invited. We invite platform2Id twice, to make sure that it is stored only once as
+        // a federation member
 
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
@@ -102,7 +103,7 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
         String dummyPlatform = "dummyPlatform";
         InvitationRequest invitationRequest = new InvitationRequest(
                 federationId,
-                new HashSet<>(Arrays.asList(platform2Id, dummyPlatform))
+                new HashSet<>(Arrays.asList(platform2Id, platform2Id, dummyPlatform))
                 );
 
         mockMvc.perform(post("/administration/user/cpanel/federation_invite")

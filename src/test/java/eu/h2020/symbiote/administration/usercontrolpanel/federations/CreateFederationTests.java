@@ -43,10 +43,15 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
     @Test
     public void success() throws Exception {
 
+        // Here, we invite 3 owned platforms to the federation i.e. platform1Id, platform2Id, platform3Id,
+        // and another platform (not owned) named newMemberId. The owned platforms should be added automatically to
+        // the federation, whereas a invitation should be sent to the newMemberId. Platform1Id is invited twice to make
+        // sure that it is added only once as a member
+
         Federation federationRequest = sampleFederationRequest();
         String newMemberId = "newMemberId";
-        FederationMember newMember = new FederationMember(newMemberId, "");
-        federationRequest.getMembers().add(newMember);
+        federationRequest.getMembers().add(new FederationMember(newMemberId, ""));
+        federationRequest.getMembers().add(new FederationMember(platform1Id, ""));
 
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());

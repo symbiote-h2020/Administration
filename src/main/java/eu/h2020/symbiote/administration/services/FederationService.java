@@ -108,6 +108,20 @@ public class FederationService {
                 .map(OwnedService::getServiceInstanceId)
                 .collect(Collectors.toSet());
 
+        // Filtering the same platforms
+        Set<String> memberIds = federation.getMembers().stream().map(FederationMember::getPlatformId).collect(Collectors.toSet());
+        federation.setMembers(
+                federation.getMembers().stream()
+                .filter(federationMember -> {
+                    if (memberIds.contains(federationMember.getPlatformId())) {
+                        memberIds.remove(federationMember.getPlatformId());
+                        return true;
+                    } else
+                        return false;
+                })
+                .collect(Collectors.toList())
+        );
+
         // Checking if all the platform members exist
         for (FederationMember member : federation.getMembers()) {
             ResponseEntity registryResponse = platformService.getPlatformDetailsFromRegistry(member.getPlatformId());
@@ -291,6 +305,15 @@ public class FederationService {
             responseBody.put("error", "The federation does not exist");
             return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.NOT_FOUND);
         }
+
+        // Filtering the same platforms
+        Set<String> memberIds = federation.get().getMembers().stream().map(FederationMember::getPlatformId).collect(Collectors.toSet());
+        invitationRequest = new InvitationRequest(
+                invitationRequest.getFederationId(),
+                invitationRequest.getInvitedPlatforms().stream()
+                        .filter(invitedPlatformId -> !memberIds.contains(invitedPlatformId))
+                .collect(Collectors.toSet())
+        );
 
         // Check if the user owns a platform in federation
         if (!isAdmin) {

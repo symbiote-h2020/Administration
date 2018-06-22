@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 
@@ -284,16 +287,23 @@ public class RabbitManager {
      * @return response from the consumer or null if timeout occurs
      */
     public String sendRpcMessage(String exchangeName, String routingKey, String message, String contentType) {
-        // Todo: Replace QueueingConsumer
-        QueueingConsumer consumer = new QueueingConsumer(channel);
+        String correlationId = UUID.randomUUID().toString();
+        final BlockingQueue<String> response = new ArrayBlockingQueue<>(1);
+        DefaultConsumer consumer = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+                    throws IOException {
+                if (properties.getCorrelationId().equals(correlationId)) {
+                    response.offer(new String(body, "UTF-8"));
+                }
+            }
+        };
 
         try {
             // log.debug("Sending message...");
 
             String replyQueueName = this.channel.queueDeclare().getQueue();
-            String responseMsg;
 
-            String correlationId = UUID.randomUUID().toString();
             AMQP.BasicProperties props = new AMQP.BasicProperties()
                     .builder()
                     .correlationId(correlationId)
@@ -301,26 +311,11 @@ public class RabbitManager {
                     .replyTo(replyQueueName)
                     .build();
 
-
-            this.channel.basicConsume(replyQueueName, true, consumer);
             this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
-            while (true) {
-                QueueingConsumer.Delivery delivery = consumer.nextDelivery(rabbitTimeout);
-                if (delivery == null){
-                    log.info("Timeout in response retrieval");
-                    return null;
-                }
+            this.channel.basicConsume(replyQueueName, true, consumer);
 
-                if (delivery.getProperties().getCorrelationId().equals(correlationId)) {
-                    responseMsg = new String(delivery.getBody());
-                    break;
-                } else {
-                    log.info("Wrong correlationID in response message");
-                }
-            }
 
-            // log.debug("Received response: " + responseMsg);
-            return responseMsg;
+            return response.poll(rabbitTimeout, TimeUnit.MILLISECONDS);
         } catch (IOException | InterruptedException e) {
             log.warn("", e);
         } finally {
@@ -341,7 +336,7 @@ public class RabbitManager {
      * @param message      message to be sent
      * @param contentType  the content type of the message
      */
-    public void publishMessage(String exchangeName, String routingKey, String message, String contentType) {
+    private void publishMessage(String exchangeName, String routingKey, String message, String contentType) {
 
         try {
             AMQP.BasicProperties props = new AMQP.BasicProperties()
