@@ -466,6 +466,15 @@ public class UserCpanelController {
         return sspService.registerSSP(sspDetails, bindingResult, principal);
     }
 
+    @PostMapping("/administration/user/cpanel/update_ssp")
+    public ResponseEntity<?> updateSSP(@Valid @RequestBody SSPDetails sspDetails,
+                                       BindingResult bindingResult, Principal principal) {
+
+        log.debug("POST request on /administration/user/cpanel/update_ssp");
+
+        return sspService.updateSSP(sspDetails, bindingResult, principal);
+    }
+
     @PostMapping("/administration/user/cpanel/delete_ssp")
     public ResponseEntity<?> deleteSSP(@RequestParam String sspIdToDelete, Principal principal) {
 

@@ -20,7 +20,7 @@ import java.util.List;
 public class PlatformDetails {
 
     @NotNull
-    @Pattern(regexp="^(\\Z|[\\w-]{4,})$")
+    @Pattern(regexp="^(\\Z|[\\w-]{4,})$", message = "{validation.service.id}")
     @Size(max=30)
     private String id;
 

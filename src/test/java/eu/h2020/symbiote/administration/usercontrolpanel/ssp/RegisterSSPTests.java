@@ -124,16 +124,14 @@ public class RegisterSSPTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error")
                         .value("Invalid Arguments"))
                 .andExpect(jsonPath("$.error_id")
-                        .value("must match \"^(\\Z|[\\w-]{4,})$\""))
+                        .value(serviceIdValidationMessage))
                 .andExpect(jsonPath("$.error_name")
                         .value("Length must be between 3 and 30 characters"))
                 .andExpect(jsonPath("$.error_externalAddress")
-                        .value("must match \"^(\\Z|((https:\\/\\/www\\.|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}" +
-                                "[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?))$\""))
+                        .value(httpsUrlValidationMessage))
                 .andExpect(jsonPath("$.error_siteLocalAddress")
-                        .value("must match \"^(\\Z|((https:\\/\\/www\\.|https:\\/\\/)?[a-z0-9]+([\\-\\.]{1}" +
-                                "[a-z0-9]+)*\\.[a-z]{2,5}(:[0-9]{1,5})?(\\/.*)?))$\""))
+                        .value(httpsUrlValidationMessage))
                 .andExpect(jsonPath("$.error_exposingSiteLocalAddress")
-                        .value("may not be null"));
+                        .value(notNullValidationMessage));
     }
 }

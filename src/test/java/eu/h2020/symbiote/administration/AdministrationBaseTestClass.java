@@ -39,6 +39,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
@@ -52,6 +53,7 @@ import java.util.*;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
 @ActiveProfiles("test")
+@TestPropertySource("/ValidationMessages.properties")
 public abstract class AdministrationBaseTestClass {
 
     private static Log log = LogFactory.getLog(AdministrationBaseTestClass.class);
@@ -82,6 +84,18 @@ public abstract class AdministrationBaseTestClass {
     protected String paamValidityMillis;
     @Value("${aam.environment.coreInterfaceAddress}")
     protected String coreInterfaceAddress;
+
+    @Value("${javax.validation.constraints.NotNull.message}")
+    protected String notNullValidationMessage;
+
+    @Value("${validation.https.url}")
+    protected String httpsUrlValidationMessage;
+
+    @Value("${validation.service.id}")
+    protected String serviceIdValidationMessage;
+
+    @Value("${validation.user.id}")
+    protected String userIdValidationMessage;
 
     // ===== Helper Values & Methods ====
 
@@ -252,8 +266,12 @@ public abstract class AdministrationBaseTestClass {
     }
 
     protected SSPDetails sampleSSPDetails() {
+        return sampleSSPDetails(ssp1Id);
+    }
+
+    protected SSPDetails sampleSSPDetails(String id) {
         return new SSPDetails(
-                ssp1Id,
+                id,
                 ssp1Name,
                 new ArrayList<>(Collections.singleton(new Description(sspDescription))),
                 sspExternalAddress,

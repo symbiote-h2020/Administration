@@ -73,10 +73,10 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
         mockMvc.perform(post("/administration/register")
                 .with(csrf().asHeader()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.validUsername").value("may not be null"))
-                .andExpect(jsonPath("$.validationErrors.validPassword").value("may not be null"))
-                .andExpect(jsonPath("$.validationErrors.recoveryMail").value("may not be null"))
-                .andExpect(jsonPath("$.validationErrors.role").value("may not be null"));
+                .andExpect(jsonPath("$.validationErrors.validUsername").value(notNullValidationMessage))
+                .andExpect(jsonPath("$.validationErrors.validPassword").value(notNullValidationMessage))
+                .andExpect(jsonPath("$.validationErrors.recoveryMail").value(notNullValidationMessage))
+                .andExpect(jsonPath("$.validationErrors.role").value(notNullValidationMessage));
     }
 
     @Test
@@ -89,8 +89,10 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", mail)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.validUsername").value("must match \"^[\\w-]{4,}$\""))
-                .andExpect(jsonPath("$.validationErrors.validPassword").value("Length must be between 4 and 30 characters"));
+                .andExpect(jsonPath("$.validationErrors.validUsername")
+                        .value(userIdValidationMessage))
+                .andExpect(jsonPath("$.validationErrors.validPassword")
+                        .value("Length must be between 4 and 30 characters"));
     }
 
     @Test

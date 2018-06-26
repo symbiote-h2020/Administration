@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
+import org.hibernate.validator.constraints.Email;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +32,7 @@ public class CoreUser extends User {
     /* -------- Properties -------- */
     
     @NotNull
-    @Pattern(regexp="^[\\w-]{4,}$")
+    @Pattern(regexp="^[\\w-]{4,}$", message = "{validation.user.id}")
     @Size(max=30)
     @Id
     private String validUsername;
@@ -41,9 +42,7 @@ public class CoreUser extends User {
     private String validPassword;
 
     @NotNull
-    @Pattern(regexp="^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\s@\"]+)*)" +
-            "|(\".+\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}])" +
-            "|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$")
+    @Email
     private String recoveryMail;
 
     @NotNull

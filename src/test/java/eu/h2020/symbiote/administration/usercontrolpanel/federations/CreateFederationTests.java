@@ -183,11 +183,11 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$.error_informationModel_id")
                         .value("must match \"^[\\w-]+$\""))
                 .andExpect(jsonPath("$.error_slaConstraints_metric[1]")
-                        .value("may not be null"))
+                        .value(notNullValidationMessage))
                 .andExpect(jsonPath("$.error_slaConstraints_comparator[1]")
-                        .value("may not be null"))
+                        .value(notNullValidationMessage))
                 .andExpect(jsonPath("$.error_slaConstraints_threshold[0]")
-                        .value("may not be null"))
+                        .value(notNullValidationMessage))
                 .andExpect(jsonPath("$.error_members_platformId[1]")
                         .value("must match \"^[\\w-]{4,}$\""));
 

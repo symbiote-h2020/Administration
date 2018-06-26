@@ -6,6 +6,7 @@ import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.SSPDetails;
 import eu.h2020.symbiote.core.cci.SspRegistryResponse;
+import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.InterworkingService;
 import eu.h2020.symbiote.model.mim.SmartSpace;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
@@ -29,18 +30,16 @@ import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SSPService {
     private static Log log = LogFactory.getLog(SSPService.class);
 
-    private RabbitManager rabbitManager;
-    private CheckServiceOwnershipService checkServiceOwnershipService;
-    private ValidationService validationService;
+    private final RabbitManager rabbitManager;
+    private final CheckServiceOwnershipService checkServiceOwnershipService;
+    private final ValidationService validationService;
+    private final InformationModelService informationModelService;
     private String aaMOwnerUsername;
     private String aaMOwnerPassword;
 
@@ -49,6 +48,7 @@ public class SSPService {
     public SSPService(RabbitManager rabbitManager,
                       ValidationService validationService,
                       CheckServiceOwnershipService checkServiceOwnershipService,
+                      InformationModelService informationModelService,
                       @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                       @Value("${aam.deployment.owner.password}") String aaMOwnerPassword) {
 
@@ -60,6 +60,9 @@ public class SSPService {
 
         Assert.notNull(validationService,"ValidationService can not be null!");
         this.validationService = validationService;
+
+        Assert.notNull(informationModelService,"InformationModelService can not be null!");
+        this.informationModelService = informationModelService;
 
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
@@ -189,6 +192,143 @@ public class SSPService {
         }
     }
 
+    public ResponseEntity<?> updateSSP(SSPDetails sspDetails, BindingResult bindingResult,
+                                       Principal principal) {
+
+        // Checking if the user owns the ssp
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        List<String> validInfoModelIds = new ArrayList<>();
+        ResponseEntity<?> listOfInformationModels = informationModelService.getInformationModels();
+
+        if (listOfInformationModels.getStatusCode() != HttpStatus.OK) {
+            log.debug("Could not get information models from Registry");
+            return new ResponseEntity<>(listOfInformationModels.getBody(), new HttpHeaders(), listOfInformationModels.getStatusCode());
+        } else {
+            for (InformationModel informationModel: (List<InformationModel>) listOfInformationModels.getBody()) {
+                validInfoModelIds.add(informationModel.getId());
+            }
+        }
+
+        if (isSSPRequestInvalid(bindingResult, sspDetails, validInfoModelIds))
+            return validationService.getRequestErrors(bindingResult);
+
+        ResponseEntity<?> ownedPlatformDetailsResponse = checkServiceOwnershipService.checkIfUserOwnsService(
+                sspDetails.getId(), user, OwnedService.ServiceType.SMART_SPACE);
+        if (ownedPlatformDetailsResponse.getStatusCode() != HttpStatus.OK)
+            return ownedPlatformDetailsResponse;
+
+
+        Map<String, Object> responseBody = new HashMap<>();
+
+        // Remove ending slashed from sspDetails external and local addresses
+        sspDetails = new SSPDetails(
+                sspDetails.getId(),
+                sspDetails.getName(),
+                sspDetails.getDescription(),
+                sspDetails.getExternalAddress().replaceFirst("\\/+$", ""),
+                sspDetails.getSiteLocalAddress().replaceFirst("\\/+$", ""),
+                sspDetails.getInformationModelId(),
+                sspDetails.getExposingSiteLocalAddress()
+        );
+
+
+        try {
+            // If form is valid, construct the SmartSpaceManagementRequest to the AAM
+            SmartSpaceManagementRequest aamRequest = new SmartSpaceManagementRequest(
+                    new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                    new Credentials(user.getUsername(), password),
+                    sspDetails.getExternalAddress(),
+                    sspDetails.getSiteLocalAddress(),
+                    sspDetails.getName(),
+                    OperationType.UPDATE,
+                    sspDetails.getId(),
+                    sspDetails.getExposingSiteLocalAddress()
+            );
+
+            SmartSpaceManagementResponse aamResponse = rabbitManager.sendManageSSPRequest(aamRequest);
+            if(aamResponse != null) {
+                log.debug("AAM responded with: " + aamResponse.getManagementStatus());
+
+                if (aamResponse.getManagementStatus() == ManagementStatus.OK) {
+                    // If AAM responds with OK construct the SSP update request and send it to registry
+                    SmartSpace registryRequest = new SmartSpace();
+                    registryRequest.setId(sspDetails.getId()); // To take into account the empty id
+                    registryRequest.setName(sspDetails.getName());
+
+                    InterworkingService interworkingService = new InterworkingService();
+                    interworkingService.setUrl(sspDetails.getExternalAddress());
+                    interworkingService.setInformationModelId(sspDetails.getInformationModelId());
+
+                    registryRequest.setInterworkingServices(new ArrayList<>(Collections.singletonList(interworkingService)));
+
+                    // FIll in the descriptions. The first comment is the platform description
+                    ArrayList<String> descriptions = new ArrayList<>();
+                    for (Description description : sspDetails.getDescription())
+                        descriptions.add(description.getDescription());
+                    registryRequest.setDescription(descriptions);
+
+                    try {
+                        SspRegistryResponse registryResponse = rabbitManager.sendSmartSpaceModificationRequest(registryRequest);
+                        if (registryResponse != null) {
+                            if (registryResponse.getStatus() == HttpStatus.OK.value()) {
+                                // SSP updated successfully
+                                log.info("SSP " + registryRequest.getId() + " updated successfully!");
+                                return new ResponseEntity<>(new SSPDetails(registryRequest, (OwnedService) ownedPlatformDetailsResponse.getBody()),
+                                        new HttpHeaders(), HttpStatus.OK);
+
+                            } else {
+                                log.warn("Update Failed: " + registryResponse.getMessage());
+
+                                sendSSPUndoMessageToAAM((OwnedService) ownedPlatformDetailsResponse.getBody(), user, password);
+
+                                responseBody.put("sspUpdateError", registryResponse.getMessage());
+                                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.valueOf(registryResponse.getStatus()));
+                            }
+                        } else {
+                            log.warn("Registry unreachable!");
+
+                            sendSSPUndoMessageToAAM((OwnedService) ownedPlatformDetailsResponse.getBody(), user, password);
+
+                            responseBody.put("sspUpdateError", "Registry unreachable!");
+                            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                        }
+                    } catch (CommunicationException e) {
+                        log.info("", e);
+                        log.warn("Registry threw communication exception: " + e.getMessage());
+
+                        sendSSPUndoMessageToAAM((OwnedService) ownedPlatformDetailsResponse.getBody(), user, password);
+
+                        responseBody.put("sspUpdateError", "Registry threw CommunicationException");
+                        return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+                    }
+
+                } else if (aamResponse.getManagementStatus() == ManagementStatus.PLATFORM_EXISTS) {
+                    log.info("AAM says that the Platform exists!");
+                    responseBody.put("sspUpdateError", "AAM says that the Platform exists!");
+                    return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+                } else {
+                    log.info("AAM says that there was an ERROR");
+                    responseBody.put("sspUpdateError", "AAM says that there was an ERROR");
+                    return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                log.warn("AAM unreachable!");
+                responseBody.put("sspUpdateError", "AAM unreachable!");
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (CommunicationException | InvalidArgumentsException e) {
+            log.info("", e);
+            String message = "AAM threw CommunicationException: " + e.getMessage();
+            log.warn(message);
+            responseBody.put("sspUpdateError", message);
+            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+    }
+
     public ResponseEntity<?> deleteSSP(String sspIdToDelete, Principal principal) {
 
         // Checking if the user owns the ssp
@@ -299,7 +439,7 @@ public class SSPService {
         }
     }
 
-    public ResponseEntity getSSPDetailsFromRegistry(String sspId) {
+    ResponseEntity getSSPDetailsFromRegistry(String sspId) {
 
         try {
             SspRegistryResponse registryResponse = rabbitManager.sendGetSSPDetailsMessage(sspId);
@@ -322,6 +462,49 @@ public class SSPService {
             log.warn(message, e);
             return new ResponseEntity<>("Registry threw CommunicationException: " + e.getMessage(),
                     new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private boolean isSSPRequestInvalid(BindingResult bindingResult, SSPDetails sspDetails,
+                                        List<String> validInfoModelIds) {
+        boolean invalidInfoModel = false;
+
+        if (!validInfoModelIds.contains(sspDetails.getInformationModelId())) {
+            log.debug("The information model id is not valid");
+            invalidInfoModel = true;
+        }
+
+        return bindingResult.hasErrors() || invalidInfoModel;
+    }
+
+    private void sendSSPUndoMessageToAAM(OwnedService sspDetails, CoreUser user, String password) {
+
+        // Send deletion message to AAM
+        try {
+            SmartSpaceManagementRequest aamRequest = new SmartSpaceManagementRequest(
+                    new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                    new Credentials(user.getUsername(), password),
+                    sspDetails.getExternalAddress(),
+                    sspDetails.getSiteLocalAddress(),
+                    sspDetails.getInstanceFriendlyName(),
+                    OperationType.CREATE,
+                    sspDetails.getServiceInstanceId(),
+                    sspDetails.isExposingSiteLocalAddress());
+
+            SmartSpaceManagementResponse aamResponse = rabbitManager.sendManageSSPRequest(aamRequest);
+
+            // Todo: Check what happens when platform deletion request is not successful at this stage
+            if (aamResponse != null) {
+                if (aamResponse.getManagementStatus() == ManagementStatus.OK) {
+                    log.info("Changes in Platform" + aamRequest.getInstanceId() + " were reverted in AAM");
+                } else {
+                    log.info("Changes in Platform" + aamRequest.getInstanceId() + " were NOT reverted in AAM");
+                }
+            } else {
+                log.warn("AAM unreachable during platform undo request");
+            }
+        } catch (CommunicationException | InvalidArgumentsException e) {
+            log.info("", e);
         }
     }
 }

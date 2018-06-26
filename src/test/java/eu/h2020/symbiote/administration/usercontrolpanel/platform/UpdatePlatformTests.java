@@ -24,7 +24,7 @@ public class UpdatePlatformTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void doesNotOwnPlatform() throws Exception {
-        // The user does not own the platform which tries to delete
+        // The user does not own the platform which tries to update
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
         PlatformDetails notOwningPlatform = samplePlatformDetails();
