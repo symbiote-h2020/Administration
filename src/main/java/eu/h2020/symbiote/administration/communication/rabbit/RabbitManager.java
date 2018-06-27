@@ -251,6 +251,13 @@ public class RabbitManager {
                     this.aamExchangeInternal,
                     null);
 
+            this.channel.exchangeDeclare(this.federationExchangeName,
+                    this.federationExchangeType,
+                    this.federationExchangeDurable,
+                    this.federationExchangeAutodelete,
+                    this.federationExchangeInternal,
+                    null);
+
         } catch (IOException | TimeoutException e) {
             log.info("", e);
         }
@@ -975,7 +982,6 @@ public class RabbitManager {
         } catch (JsonProcessingException e) {
             log.warn("Failed to publish federation creation due to", e);
         }
-
     }
 
     /**
@@ -994,7 +1000,6 @@ public class RabbitManager {
         } catch (JsonProcessingException e) {
             log.warn("Failed to publish federation update due to", e);
         }
-
     }
 
     /**
