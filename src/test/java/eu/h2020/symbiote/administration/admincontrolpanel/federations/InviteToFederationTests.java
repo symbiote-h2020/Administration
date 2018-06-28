@@ -35,7 +35,7 @@ public class InviteToFederationTests extends AdminControlPanelBaseTestClass {
         federationRepository.save(federation);
 
         InvitationRequest invitationRequest = new InvitationRequest(
-                federationId,
+                federation.getId(),
                 new HashSet<>(Arrays.asList(platform2Id, platform3Id))
         );
 

@@ -73,9 +73,9 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
         MockRestServiceServer mockServer =
                 MockRestServiceServer.bindTo(restTemplate).build();
-        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL + "/" + federationId))
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL + "/" + federation.getId()))
                 .andExpect(method(HttpMethod.DELETE))
-                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federation.getId()))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(1)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         contains(platformId)))
@@ -84,7 +84,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/leave_federation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("federationId", federationId)
+                .param("federationId", federation.getId())
                 .param("platformId", platformId))
                 .andExpect(status().isNoContent())
                 .andExpect(jsonPath("$.deleted").value(true));

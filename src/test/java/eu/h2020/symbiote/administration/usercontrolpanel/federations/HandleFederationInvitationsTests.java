@@ -115,13 +115,13 @@ public class HandleFederationInvitationsTests extends UserControlPanelBaseTestCl
         mockMvc.perform(post("/administration/user/cpanel/federation/handleInvitation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("federationId", federationId)
+                .param("federationId", federation.getId())
                 .param("platformId", invitedMemberId)
                 .param("accepted", "false"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$." + federationId + ".openInvitations").isEmpty())
-                .andExpect(jsonPath("$." + federationId + ".members", hasSize(1)))
-                .andExpect(jsonPath("$." + federationId + ".members[*].platformId", contains(platform1Id)));
+                .andExpect(jsonPath("$." + federation.getId() + ".openInvitations").isEmpty())
+                .andExpect(jsonPath("$." + federation.getId() + ".members", hasSize(1)))
+                .andExpect(jsonPath("$." + federation.getId() + ".members[*].platformId", contains(platform1Id)));
 
         // Test what is stored in the database
         federations = federationRepository.findAll();

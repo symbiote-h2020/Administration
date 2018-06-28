@@ -89,9 +89,9 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
 
         MockRestServiceServer mockServer =
                 MockRestServiceServer.bindTo(restTemplate).build();
-        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL + "/" + federationId))
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL + "/" + federation.getId()))
                 .andExpect(method(HttpMethod.DELETE))
-                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federation.getId()))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(1)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         contains(platformId)))
@@ -101,11 +101,11 @@ public class DeleteFederationTests extends UserControlPanelBaseTestClass {
         mockMvc.perform(post("/administration/user/cpanel/delete_federation")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .param("federationIdToDelete", federationId))
+                .param("federationIdToDelete", federation.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$." + federationId + ".members.length()").value(1))
-                .andExpect(jsonPath("$." + federationId + ".members[*].platformId", contains(platformId)))
-                .andExpect(jsonPath("$." + federationId + ".id").value(federationId));
+                .andExpect(jsonPath("$." + federation.getId() + ".members.length()").value(1))
+                .andExpect(jsonPath("$." + federation.getId() + ".members[*].platformId", contains(platformId)))
+                .andExpect(jsonPath("$." + federation.getId() + ".id").value(federation.getId()));
 
         mockServer.verify();
 

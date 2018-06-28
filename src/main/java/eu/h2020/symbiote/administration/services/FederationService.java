@@ -1,6 +1,7 @@
 package eu.h2020.symbiote.administration.services;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.helpers.AuthorizationServiceHelper;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.FederationInvitation;
 import eu.h2020.symbiote.administration.model.FederationWithInvitations;
@@ -11,6 +12,7 @@ import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.FederationMember;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.security.communication.payloads.OwnedService;
+import eu.h2020.symbiote.security.communication.payloads.SecurityRequest;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,7 @@ public class FederationService {
     private final InformationModelService informationModelService;
     private final ValidationService validationService;
     private final FederationNotificationService federationNotificationService;
+    private final AuthorizationService authorizationService;
 
     @Autowired
     public FederationService(RabbitManager rabbitManager,
@@ -47,7 +50,8 @@ public class FederationService {
                              CheckServiceOwnershipService checkServiceOwnershipService,
                              InformationModelService informationModelService,
                              ValidationService validationService,
-                             FederationNotificationService federationNotificationService) {
+                             FederationNotificationService federationNotificationService,
+                             AuthorizationService authorizationService) {
 
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
@@ -72,6 +76,10 @@ public class FederationService {
 
         Assert.notNull(federationNotificationService,"FederationNotificationService can not be null!");
         this.federationNotificationService = federationNotificationService;
+
+        Assert.notNull(authorizationService,"AuthorizationService can not be null!");
+        this.authorizationService = authorizationService;
+
     }
 
 
@@ -417,6 +425,21 @@ public class FederationService {
         responseBody.put(federation.get().getId(), federation.get());
         return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.OK);
 
+    }
+
+    public ResponseEntity joinedFederations(String platformId, HttpHeaders httpHeaders) {
+        log.trace("Joined federations request for platformId = " + platformId + " and httpHeaders = " + httpHeaders);
+
+        ResponseEntity securityChecks = AuthorizationServiceHelper.checkJoinedFederationsRequestAndCreateServiceResponse(
+                authorizationService, platformId, httpHeaders);
+
+        if (securityChecks.getStatusCode() != HttpStatus.OK)
+            return securityChecks;
+
+        List<FederationWithInvitations> response = federationRepository.findAllByPlatformMember(platformId);
+
+        return AuthorizationServiceHelper.addSecurityService(response, new HttpHeaders(),
+                HttpStatus.OK, (String) securityChecks.getBody());
     }
 
     private ResponseEntity<?> isPlatformMemberOfFederation(Federation federation, String platformId) {

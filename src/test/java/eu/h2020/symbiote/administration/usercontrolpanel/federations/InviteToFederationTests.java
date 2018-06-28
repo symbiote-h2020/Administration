@@ -102,7 +102,7 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
 
         String dummyPlatform = "dummyPlatform";
         InvitationRequest invitationRequest = new InvitationRequest(
-                federationId,
+                federation.getId(),
                 new HashSet<>(Arrays.asList(platform2Id, platform2Id, dummyPlatform))
                 );
 
@@ -111,12 +111,12 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(invitationRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$." + federationId + ".openInvitations.*", hasSize(1)))
-                .andExpect(jsonPath("$." + federationId + ".openInvitations." + dummyPlatform).exists())
-                .andExpect(jsonPath("$." + federationId + ".members", hasSize(2)))
-                .andExpect(jsonPath("$." + federationId + ".members[*].platformId",
+                .andExpect(jsonPath("$." + federation.getId() + ".openInvitations.*", hasSize(1)))
+                .andExpect(jsonPath("$." + federation.getId() + ".openInvitations." + dummyPlatform).exists())
+                .andExpect(jsonPath("$." + federation.getId() + ".members", hasSize(2)))
+                .andExpect(jsonPath("$." + federation.getId() + ".members[*].platformId",
                         containsInAnyOrder(platform1Id, platform2Id)))
-                .andExpect(jsonPath("$." + federationId + ".members[*].interworkingServiceURL",
+                .andExpect(jsonPath("$." + federation.getId() + ".members[*].interworkingServiceURL",
                         containsInAnyOrder(platform1Url, platform2Url)));
 
         // Check what is store in the database

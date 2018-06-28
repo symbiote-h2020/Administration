@@ -141,11 +141,13 @@ public abstract class AdministrationBaseTestClass {
     String resourceId = "resource_id";
 
     protected String federationId = "federationId";
+    protected String federationIdSinglePlatformId = "federationIdSinglePlatformId";
 
     protected String componentsKeystorePassword = "comp_pass";
     protected String aamKeystoreName = "keystore";
     protected String aamKeystorePassword = "aampass";
     protected Long tokenValidity = 100L;
+    protected String serviceResponse = "serviceResponse";
 
     protected String serialize(Object o) throws Exception {
 
@@ -578,7 +580,7 @@ public abstract class AdministrationBaseTestClass {
         federation.getMembers().remove(1);
 
         return new FederationWithInvitations(
-                federation.getId(),
+                federationIdSinglePlatformId,
                 federation.getName(),
                 federation.isPublic(),
                 federation.getInformationModel(),

@@ -14,6 +14,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 
 /**
@@ -38,7 +39,7 @@ public class WebSecurityConfig {
         private CustomAuthenticationProvider authProvider;
 
         @Override
-        protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        protected void configure(AuthenticationManagerBuilder auth) {
 
             auth.authenticationProvider(authProvider).eraseCredentials(false);
         }
@@ -112,6 +113,18 @@ public class WebSecurityConfig {
 
     @Configuration
     @Order(3)
+    public static class ComponentControllerWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+
+            http.antMatcher("/administration/generic/**").cors().and()
+                    .csrf().disable();
+        }
+    }
+
+    @Configuration
+    @Order(4)
     public static class GeneralWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
         @Override
@@ -126,10 +139,10 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Collections.singletonList("*"));
         configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "OPTIONS", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Origin", "X-Requested-With", "Content-Type", "Accept", "x-xsrf-token"));
-        configuration.setExposedHeaders(Arrays.asList("Content-Disposition"));
+        configuration.setExposedHeaders(Collections.singletonList("Content-Disposition"));
         configuration.setMaxAge(3600L);
         configuration.setAllowCredentials(true);
 
