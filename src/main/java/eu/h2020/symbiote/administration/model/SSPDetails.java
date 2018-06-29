@@ -70,23 +70,6 @@ public class SSPDetails {
         this.exposingSiteLocalAddress = exposingSiteLocalAddress;
     }
 
-    public SSPDetails(SmartSpace smartSpace, OwnedService sspService) {
-        this.id = smartSpace.getId();
-        this.name = smartSpace.getName();
-        this.externalAddress = sspService.getExternalAddress();
-        this.siteLocalAddress = sspService.getSiteLocalAddress();
-
-        this.informationModelId = smartSpace.getInterworkingServices() != null &&
-                smartSpace.getInterworkingServices().get(0) != null ?
-                smartSpace.getInterworkingServices().get(0).getInformationModelId() : null;
-        this.exposingSiteLocalAddress = sspService.isExposingSiteLocalAddress();
-
-        ArrayList<Description> descriptions = new ArrayList<>();
-        for (String description : smartSpace.getDescription())
-            descriptions.add(new Description(description));
-        this.description = descriptions;
-    }
-
     public String getId() { return id; }
 
     public String getName() { return name; }

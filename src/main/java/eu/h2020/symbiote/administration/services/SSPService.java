@@ -276,7 +276,7 @@ public class SSPService {
                             if (registryResponse.getStatus() == HttpStatus.OK.value()) {
                                 // SSP updated successfully
                                 log.info("SSP " + registryRequest.getId() + " updated successfully!");
-                                return new ResponseEntity<>(new SSPDetails(registryRequest, (OwnedService) ownedPlatformDetailsResponse.getBody()),
+                                return new ResponseEntity<>(sspDetails,
                                         new HttpHeaders(), HttpStatus.OK);
 
                             } else {
