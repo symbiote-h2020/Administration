@@ -25,7 +25,6 @@ public class MvcConfig extends WebMvcConfigurerAdapter {
         registry.addViewController("/administration/denied").setViewName("denied");
     }
 
-    // Resolve
     @Bean
     public TemplateResolver templateResolver() {
         ServletContextTemplateResolver templateResolver = new ServletContextTemplateResolver();

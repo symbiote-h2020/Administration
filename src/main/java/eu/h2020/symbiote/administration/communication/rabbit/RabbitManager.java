@@ -3,7 +3,7 @@ package eu.h2020.symbiote.administration.communication.rabbit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
@@ -12,6 +12,7 @@ import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.Platform;
 import eu.h2020.symbiote.model.mim.SmartSpace;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -891,6 +892,7 @@ public class RabbitManager {
         log.debug("sendLoginRequest to AAM: " + ReflectionToStringBuilder.toString(userCredentials));
 
         try {
+            // Todo: change the Operation type to READ
             UserManagementRequest request = new UserManagementRequest(
                     new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                     new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),
@@ -898,8 +900,11 @@ public class RabbitManager {
                             new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),
                             "",
                             UserRole.NULL,
+                            AccountStatus.ACTIVE,
                             new HashMap<>(),
-                            new HashMap<>()
+                            new HashMap<>(),
+                            true,
+                            true
                     ),
                     OperationType.CREATE
             );

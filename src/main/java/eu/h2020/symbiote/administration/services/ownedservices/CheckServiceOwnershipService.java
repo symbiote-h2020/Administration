@@ -1,8 +1,9 @@
 package eu.h2020.symbiote.administration.services.ownedservices;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
@@ -54,8 +55,11 @@ public class CheckServiceOwnershipService {
                         new Credentials(user.getUsername(), ""),
                         "",
                         UserRole.NULL,
+                        AccountStatus.ACTIVE,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        false
                 ),
                 OperationType.CREATE
         );

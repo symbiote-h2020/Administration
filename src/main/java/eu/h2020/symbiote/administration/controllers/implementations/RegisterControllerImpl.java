@@ -1,12 +1,16 @@
-package eu.h2020.symbiote.administration.controllers;
+package eu.h2020.symbiote.administration.controllers.implementations;
 
 
 import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericErrorException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
+import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
-import eu.h2020.symbiote.administration.repository.UserRepository;
+import eu.h2020.symbiote.administration.services.user.UserService;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -27,9 +31,7 @@ import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 
 import javax.validation.Valid;
@@ -41,13 +43,14 @@ import java.util.Map;
 /**
  * Spring controller, handles user registration views and form validation.
  *
- * @author Tilemachos Pechlivanoglou (ICOM)
+ * @author Vasilis Glykantzis (ICOM)
  */
 @Controller
 @CrossOrigin
-public class RegisterController {
+public class RegisterControllerImpl implements RegisterController {
 
-    private static Log log = LogFactory.getLog(RegisterController.class);
+    private static Log log = LogFactory.getLog(RegisterControllerImpl.class);
+    public static final String USER_ACCOUNT_ACTIVATED_MESSAGE = "User account confirmed";
 
 	@Value("${aam.deployment.owner.username}")
 	private String aaMOwnerUsername;
@@ -56,25 +59,23 @@ public class RegisterController {
 	private String aaMOwnerPassword;
 
     private RabbitManager rabbitManager;
-    private UserRepository userRepository;
+    private UserService userService;
     private ApplicationEventPublisher eventPublisher;
 
-
-
     @Autowired
-    public RegisterController(RabbitManager rabbitManager, UserRepository userRepository, ApplicationEventPublisher eventPublisher) {
+    public RegisterControllerImpl(RabbitManager rabbitManager, UserService userService, ApplicationEventPublisher eventPublisher) {
         Assert.notNull(rabbitManager,"RabbitManager can not be null!");
         this.rabbitManager = rabbitManager;
 
-        Assert.notNull(userRepository,"UserRepository can not be null!");
-        this.userRepository = userRepository;
+        Assert.notNull(userService,"UserService can not be null!");
+        this.userService = userService;
 
         Assert.notNull(eventPublisher,"EventPublisher can not be null!");
         this.eventPublisher = eventPublisher;
     }
 
     // The CoreUser argument is needed so that the template can associate form attributes with a CoreUser
-	@GetMapping("/administration/register")
+    @Override
 	public String coreUserRegisterForm(Model model) {
 		log.debug("GET request on /administration/register");
 
@@ -82,14 +83,14 @@ public class RegisterController {
 	    return "index";
 	}
 
-    @GetMapping("/administration/register/roles")
+    @Override
     public ResponseEntity<List<UserRoleValueTextMapping>> getUserRoles() {
         log.debug("GET request on /administration/register/roles");
 
         return new ResponseEntity<>(UserRoleValueTextMapping.getList(), new HttpHeaders(), HttpStatus.OK);
     }
 
-    @PostMapping("/administration/register")
+    @Override
     public ResponseEntity<Map<String, Object>> coreUserRegister(@Valid CoreUser coreUser,
                                                                 BindingResult bindingResult,
                                                                 WebRequest webRequest) {
@@ -129,8 +130,11 @@ public class RegisterController {
                         new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
                         coreUser.getRecoveryMail(),
                         UserRole.SERVICE_OWNER,
+                        AccountStatus.NEW,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        false
                 ),
                 OperationType.CREATE
         );
@@ -157,7 +161,7 @@ public class RegisterController {
                             HttpStatus.INTERNAL_SERVER_ERROR);
                 }
                 coreUser.clearSensitiveData();
-                userRepository.save(coreUser);
+                userService.saveUser(coreUser);
                 return new ResponseEntity<>(response, new HttpHeaders(),
                         HttpStatus.CREATED);
             } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
@@ -174,6 +178,20 @@ public class RegisterController {
             return  new ResponseEntity<>(response, new HttpHeaders(),
                     HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @Override
+    public String confirmRegistration(String token) throws CommunicationException, GenericErrorException {
+        log.trace("Get on /administration/registrationConfirm with token = " + token);
+
+        // Get and verify that the token is not expired
+        VerificationToken verificationToken = userService.verifyToken(token);
+
+        userService.activateUserAccount(verificationToken);
+        userService.deleteVerificationToken(verificationToken);
+
+        return USER_ACCOUNT_ACTIVATED_MESSAGE;
+
     }
 
     /**

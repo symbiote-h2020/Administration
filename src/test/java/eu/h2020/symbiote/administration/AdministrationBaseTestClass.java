@@ -2,7 +2,7 @@ package eu.h2020.symbiote.administration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
@@ -18,6 +18,7 @@ import eu.h2020.symbiote.model.cim.Resource;
 import eu.h2020.symbiote.model.mim.Comparator;
 import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.security.commons.Certificate;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -82,6 +83,9 @@ public abstract class AdministrationBaseTestClass {
     protected String paamValidityMillis;
     @Value("${aam.environment.coreInterfaceAddress}")
     protected String coreInterfaceAddress;
+
+    @Value("${verificationToken.expirationTime.hours}")
+    protected Integer tokenExpirationTimeInHours;
 
     // ===== Helper Values & Methods ====
 
@@ -153,7 +157,7 @@ public abstract class AdministrationBaseTestClass {
         return grantedAuths;
     }
 
-    private CoreUser sampleCoreUser(UserRole role) {
+    protected CoreUser sampleCoreUser(UserRole role) {
         return new CoreUser(username, password, true, true,
                 true, true, sampleUserAuthorities(), mail, role,
                 true, true, true, true,
@@ -405,8 +409,11 @@ public abstract class AdministrationBaseTestClass {
                     new Credentials(username, password),
                         mail,
                         role,
+                        AccountStatus.ACTIVE,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        true
                 ),
                 OperationType.CREATE
             );
@@ -425,8 +432,11 @@ public abstract class AdministrationBaseTestClass {
                 new Credentials(username, password),
                 mail,
                 UserRole.SERVICE_OWNER,
+                AccountStatus.ACTIVE,
                 new HashMap<>(),
-                clients
+                clients,
+                true,
+                true
         ));
     }
 
