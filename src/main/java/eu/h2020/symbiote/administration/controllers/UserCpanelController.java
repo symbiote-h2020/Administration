@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.controllers;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.administration.services.federation.FederationService;
@@ -11,6 +11,7 @@ import eu.h2020.symbiote.administration.services.platform.PlatformService;
 import eu.h2020.symbiote.administration.services.ssp.SSPService;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.security.commons.Certificate;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
@@ -192,8 +193,11 @@ public class UserCpanelController {
                         new Credentials(user.getUsername(), password),
                         message.getNewEmail(),
                         user.getRole(),
+                        AccountStatus.ACTIVE,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        false
                 ),
                 OperationType.UPDATE
         );
@@ -306,8 +310,11 @@ public class UserCpanelController {
                         new Credentials(user.getUsername(), message.getNewPassword()),
                         user.getRecoveryMail(),
                         user.getRole(),
+                        AccountStatus.ACTIVE,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        false
                 ),
                 OperationType.UPDATE
         );
@@ -350,8 +357,11 @@ public class UserCpanelController {
                         new Credentials(user.getUsername(), password),
                         "",
                         user.getRole(),
+                        AccountStatus.ACTIVE,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        false
                 ),
                 OperationType.DELETE
         );

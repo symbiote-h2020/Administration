@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.controllers;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.InvitationRequest;
 import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;

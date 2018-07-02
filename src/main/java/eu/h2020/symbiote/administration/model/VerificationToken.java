@@ -8,7 +8,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class VerificationToken {
-    private static final int EXPIRATION = 60 * 24;
 
     @Id
     private String id;
@@ -17,26 +16,34 @@ public class VerificationToken {
 
     private CoreUser user;
 
-    private Date expiryDate;
+    private Date expirationDate;
 
     @PersistenceConstructor
-    public VerificationToken(String id, String token, CoreUser user, Date expiryDate) {
+    public VerificationToken(String id, String token, CoreUser user, Date expirationDate) {
         this.id = id;
         this.token = token;
         this.user = user;
-        this.expiryDate = expiryDate;
+        this.expirationDate = expirationDate;
     }
 
-    public VerificationToken(String token, CoreUser user) {
+    public VerificationToken(String token, CoreUser user, int expirationTimeInHours) {
         this.token = token;
         this.user = user;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
+        this.expirationDate = calculateExpiryDate(expirationTimeInHours);
     }
 
-    private Date calculateExpiryDate(int expiryTimeInMinutes) {
+    public String getId() { return id; }
+
+    public String getToken() { return token; }
+
+    public CoreUser getUser() { return user; }
+
+    public Date getExpirationDate() { return expirationDate; }
+
+    private Date calculateExpiryDate(int expirationTimeInHours) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Timestamp(cal.getTime().getTime()));
-        cal.add(Calendar.MINUTE, expiryTimeInMinutes);
+        cal.add(Calendar.HOUR, expirationTimeInHours);
         return new Date(cal.getTime().getTime());
     }
 
@@ -46,7 +53,7 @@ public class VerificationToken {
                 "id=" + id +
                 ", token='" + token + '\'' +
                 ", user=" + user +
-                ", expiryDate=" + expiryDate +
+                ", expirationDate=" + expirationDate +
                 '}';
     }
 }

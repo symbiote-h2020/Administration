@@ -1,7 +1,7 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
 import eu.h2020.symbiote.administration.model.FederationWithInvitations;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.model.mim.*;
 import eu.h2020.symbiote.security.commons.enums.UserRole;

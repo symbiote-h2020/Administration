@@ -3,7 +3,7 @@ package eu.h2020.symbiote.administration.application.listeners;
 import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.services.email.GmailService;
-import eu.h2020.symbiote.administration.services.user.IUserService;
+import eu.h2020.symbiote.administration.services.user.UserService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,18 +16,17 @@ import org.springframework.util.Assert;
 import java.util.UUID;
 
 @Component
-public class RegistrationListener implements
-        ApplicationListener<OnRegistrationCompleteEvent> {
+public class RegistrationListener implements ApplicationListener<OnRegistrationCompleteEvent> {
 
     private static Log log = LogFactory.getLog(RegistrationListener.class);
 
-    private IUserService userService;
+    private UserService userService;
     private MessageSource messages;
     private GmailService gmailService;
     private String administrationUrl;
 
     @Autowired
-    public RegistrationListener(IUserService userService, MessageSource messages, GmailService gmailService,
+    public RegistrationListener(UserService userService, MessageSource messages, GmailService gmailService,
                                 @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress) {
         this.userService = userService;
         this.messages = messages;
@@ -55,11 +54,10 @@ public class RegistrationListener implements
 
             String recipientAddress = event.getEmail();
             String subject = "Registration Confirmation";
-            String confirmationUrl
-                    = event.getAppUrl() + "/registrationConfirm.html?token=" + token;
-            String message = messages.getMessage("message.regSucc", null, event.getLocale()) + administrationUrl + confirmationUrl;
+            String confirmationUrl = event.getAppUrl() + "/registrationConfirm.html?token=" + token;
+            String message = messages.getMessage("message.successfulRegistration", null, event.getLocale()) + administrationUrl + confirmationUrl;
 
-            log.debug("confirmUrl = " + confirmationUrl);
+            log.debug(" confirmUrl = " + confirmationUrl);
             gmailService.sendMessage(recipientAddress, subject, message);
         } catch (Throwable e) {
             log.warn("Exception thrown during registrationEvent", e);
