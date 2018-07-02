@@ -41,7 +41,10 @@ import java.util.Map;
 public class RegisterControllerImpl implements RegisterController {
 
     private static Log log = LogFactory.getLog(RegisterControllerImpl.class);
-    public static final String USER_ACCOUNT_ACTIVATED_MESSAGE = "User account confirmed";
+    public static final String USER_ACCOUNT_ACTIVATED_MESSAGE = "Your account has been activated";
+    public static final String SUCCESSFUL_REGISTRATION_MESSAGE = "Please, login with your new credentials";
+    public static final String VERIFY_EMAIL = "We have sent you an email. Please, click on the link to verify your " +
+            "account and then login with your new credentials";
 
     @Value("${aam.deployment.owner.username}")
     private String aaMOwnerUsername;
@@ -103,6 +106,7 @@ public class RegisterControllerImpl implements RegisterController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("validationErrors", new HashMap<>());
+        response.put("successMessage", emailVerificationEnabled ? VERIFY_EMAIL : SUCCESSFUL_REGISTRATION_MESSAGE);
         return response;
     }
 
