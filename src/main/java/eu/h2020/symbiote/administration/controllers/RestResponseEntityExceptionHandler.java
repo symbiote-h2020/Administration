@@ -1,6 +1,8 @@
 package eu.h2020.symbiote.administration.controllers;
 
-import eu.h2020.symbiote.administration.exceptions.generic.GenericErrorException;
+import eu.h2020.symbiote.administration.exceptions.ValidationException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachable;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
@@ -25,10 +27,20 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return e.getMessage();
     }
 
-    @ExceptionHandler(value = {CommunicationException.class, GenericErrorException.class})
+    @ExceptionHandler(value = {CommunicationException.class, GenericBadRequestException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     protected Map<String, Object> handleCommunicationExceptions(Exception e) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("errorMessage", e.getMessage());
+        return response;
+    }
+
+    @ExceptionHandler(value = {GenericInternalServerErrorException.class})
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    protected Map<String, Object> handleGenericInternalServerErrorException(GenericInternalServerErrorException e) {
 
         Map<String, Object> response = new HashMap<>();
         response.put("errorMessage", e.getMessage());
@@ -42,6 +54,16 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
         Map<String, Object> response = new HashMap<>();
         response.put("errorMessage", e.getMessage());
+        return response;
+    }
+
+    @ExceptionHandler(value = {ValidationException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    protected Map<String, Object> handleValidationException(ValidationException e) {
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("validationErrors", e.getValidationErrors());
         return response;
     }
 }

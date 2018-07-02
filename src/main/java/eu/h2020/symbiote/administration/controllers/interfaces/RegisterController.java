@@ -1,7 +1,9 @@
 package eu.h2020.symbiote.administration.controllers.interfaces;
 
 
-import eu.h2020.symbiote.administration.exceptions.generic.GenericErrorException;
+import eu.h2020.symbiote.administration.exceptions.ValidationException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
@@ -31,12 +33,15 @@ public interface RegisterController {
     ResponseEntity<List<UserRoleValueTextMapping>> getUserRoles();
 
     @PostMapping("/administration/register")
-    ResponseEntity<Map<String, Object>> coreUserRegister(@Valid CoreUser coreUser,
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    Map<String, Object> coreUserRegister(@Valid CoreUser coreUser,
                                                          BindingResult bindingResult,
-                                                         WebRequest webRequest);
+                                                         WebRequest webRequest)
+            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException, ValidationException;
 
     @GetMapping("/administration/registrationConfirm")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    String confirmRegistration(@RequestParam("token") String token) throws CommunicationException, GenericErrorException;
+    String confirmRegistration(@RequestParam("token") String token) throws CommunicationException, GenericBadRequestException;
 }

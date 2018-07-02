@@ -1,8 +1,8 @@
 package eu.h2020.symbiote.administration.exceptions.generic;
 
-public class GenericErrorException extends Exception {
+public class GenericBadRequestException extends Exception {
 
-    public GenericErrorException(String s) {
+    public GenericBadRequestException(String s) {
         super("An error occurred : " + s);
     }
 }

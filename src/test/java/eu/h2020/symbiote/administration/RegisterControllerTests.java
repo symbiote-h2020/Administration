@@ -27,9 +27,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 /**
@@ -156,7 +154,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", mail)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.errorMessage").value("Authorization Manager is unreachable!"));
+                .andExpect(jsonPath("$.errorMessage").value("The component AAM is unreachable"));
     }
 
     @Test
@@ -185,7 +183,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", mail)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage").value("Username exist!"));
+                .andExpect(jsonPath("$.errorMessage").value("An error occurred : Username exists!"));
     }
 
     @Test
@@ -200,7 +198,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", mail)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage").value("Authorization Manager responded with ERROR!"));
+                .andExpect(jsonPath("$.errorMessage").value("An error occurred : ERROR"));
     }
 
     @Test
