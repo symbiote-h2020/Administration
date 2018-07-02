@@ -1,8 +1,11 @@
 package eu.h2020.symbiote.administration.services.user;
 
+import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.application.listeners.RegistrationListener;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.exceptions.generic.GenericErrorException;
+import eu.h2020.symbiote.administration.exceptions.ValidationException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachable;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
@@ -22,11 +25,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -34,27 +42,29 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService {
     private static Log log = LogFactory.getLog(RegistrationListener.class);
 
-    private final RabbitManager rabbitManager;
-    private final VerificationTokenRepository tokenRepository;
-    private final UserRepository userRepository;
+    private RabbitManager rabbitManager;
+    private VerificationTokenRepository tokenRepository;
+    private UserRepository userRepository;
+    private ApplicationEventPublisher eventPublisher;
 
-    @Value("${aam.deployment.owner.username}")
     private String aaMOwnerUsername;
-
-    @Value("${aam.deployment.owner.password}")
     private String aaMOwnerPassword;
     private Integer tokenExpirationTimeInHours;
+    private Boolean emailVerificationEnabled;
 
     @Autowired
     public UserServiceImpl(RabbitManager rabbitManager,
                            VerificationTokenRepository tokenRepository,
                            UserRepository userRepository,
+                           ApplicationEventPublisher eventPublisher,
                            @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                            @Value("${aam.deployment.owner.password}") String aaMOwnerPassword,
-                           @Value("${verificationToken.expirationTime.hours}") Integer tokenExpirationTimeInHours) {
+                           @Value("${verificationToken.expirationTime.hours}") Integer tokenExpirationTimeInHours,
+                           @Value("${symbiote.core.administration.email.verification}") Boolean emailVerificationEnabled) {
         this.rabbitManager = rabbitManager;
         this.tokenRepository = tokenRepository;
         this.userRepository = userRepository;
+        this.eventPublisher = eventPublisher;
 
         Assert.notNull(tokenExpirationTimeInHours,"tokenExpirationTimeInHours can not be null!");
         this.tokenExpirationTimeInHours = tokenExpirationTimeInHours;
@@ -64,6 +74,9 @@ public class UserServiceImpl implements UserService {
 
         Assert.notNull(aaMOwnerPassword,"aaMOwnerPassword can not be null!");
         this.aaMOwnerPassword = aaMOwnerPassword;
+
+        Assert.notNull(emailVerificationEnabled,"emailVerificationEnabled can not be null!");
+        this.emailVerificationEnabled = emailVerificationEnabled;
     }
 
     @Override
@@ -103,7 +116,78 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void activateUserAccount(VerificationToken verificationToken) throws CommunicationException, GenericErrorException {
+    public void validateUserRegistrationForm(CoreUser coreUser, BindingResult bindingResult) throws ValidationException {
+        boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL);
+
+        if (bindingResult.hasErrors() || invalidUserRole) {
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            Map<String, Object> response = new HashMap<>();
+            Map<String, String> errorMessages = new HashMap<>();
+
+            for (FieldError fieldError : errors) {
+                String errorMessage = fieldError.getDefaultMessage();
+                String errorField = fieldError.getField();
+                errorMessages.put(errorField, errorMessage);
+                log.debug(errorField + ": " + errorMessage);
+
+            }
+
+            if (invalidUserRole)
+                errorMessages.put("role", "Invalid User Role");
+
+            response.put("validationErrors", errorMessages);
+
+            throw new ValidationException("Invalid Arguments", errorMessages);
+        }
+    }
+
+    @Override
+    public void createUserAccount(CoreUser coreUser, WebRequest webRequest)
+            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException {
+
+        // Construct the UserManagementRequest
+        UserManagementRequest userRegistrationRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
+                new UserDetails(
+                        new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
+                        coreUser.getRecoveryMail(),
+                        UserRole.SERVICE_OWNER,
+                        emailVerificationEnabled ? AccountStatus.NEW : AccountStatus.ACTIVE,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        true,
+                        false
+                ),
+                OperationType.CREATE
+        );
+
+        ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userRegistrationRequest);
+
+        if (managementStatus == null) {
+            throw new EntityUnreachable("AAM");
+
+        } else if(managementStatus == ManagementStatus.OK ) {
+            if (emailVerificationEnabled) {
+                try {
+                    String appUrl = webRequest.getContextPath();
+                    eventPublisher.publishEvent(new OnRegistrationCompleteEvent
+                            (coreUser, webRequest.getLocale(), appUrl, coreUser.getRecoveryMail()));
+                } catch (Exception me) {
+                    throw new GenericInternalServerErrorException("Could not send verification email");
+                }
+            }
+
+            coreUser.clearSensitiveData();
+            saveUser(coreUser);
+        } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
+            throw new GenericBadRequestException("Username exists!");
+        } else
+            throw new GenericBadRequestException(managementStatus.toString());
+    }
+
+    @Override
+    public void activateUserAccount(VerificationToken verificationToken) throws CommunicationException, GenericBadRequestException {
         CoreUser coreUser = verificationToken.getUser();
 
         // Todo: change the consents below to read them from token
@@ -129,7 +213,7 @@ public class UserServiceImpl implements UserService {
         if (managementStatus == null)
             throw new EntityUnreachable("AAM");
         else if (managementStatus != ManagementStatus.OK)
-            throw new GenericErrorException(managementStatus.toString());
+            throw new GenericBadRequestException(managementStatus.toString());
     }
 
     private Long convertDateToHours(Date date) {

@@ -2,11 +2,11 @@ package eu.h2020.symbiote.administration;
 
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.authentication.AAMProblemException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
 import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
