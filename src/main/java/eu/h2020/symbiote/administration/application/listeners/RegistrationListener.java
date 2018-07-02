@@ -55,7 +55,8 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
             String recipientAddress = event.getEmail();
             String subject = "Registration Confirmation";
             String confirmationUrl = event.getAppUrl() + "/registrationConfirm.html?token=" + token;
-            String message = messages.getMessage("message.successfulRegistration", null, event.getLocale()) + administrationUrl + confirmationUrl;
+            String message = messages.getMessage("message.successfulRegistration", null, event.getLocale()) +
+                    " " + administrationUrl + confirmationUrl;
 
             log.debug(" confirmUrl = " + confirmationUrl);
             gmailService.sendMessage(recipientAddress, subject, message);

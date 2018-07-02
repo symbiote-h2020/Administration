@@ -166,7 +166,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("validPassword", password)
                 .param("recoveryMail", mail)
                 .param("role", "SERVICE_OWNER"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
     }
 
     @Test
@@ -313,6 +314,6 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     }
 
     private enum TokenStatus {
-        VALID, INVALID;
+        VALID, INVALID
     }
 }
