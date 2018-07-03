@@ -43,6 +43,5 @@ public interface RegisterController {
 
     @GetMapping("/registrationConfirm")
     @ResponseStatus(HttpStatus.OK)
-    @ResponseBody
     String confirmRegistration(@RequestParam("token") String token) throws CommunicationException, GenericBadRequestException;
 }

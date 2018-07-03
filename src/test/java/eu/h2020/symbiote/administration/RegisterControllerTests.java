@@ -22,6 +22,8 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
@@ -177,6 +179,31 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
+
+        TimeUnit.MILLISECONDS.sleep(200);
+
+        List<VerificationToken> tokens = tokenRepository.findAll();
+        assertEquals(1, tokens.size());
+        assertEquals("", tokens.get(0).getUser().getValidPassword());
+        assertEquals("placeholder", tokens.get(0).getUser().getPassword());
+    }
+
+    @Test
+    public void replaceExistingToken() throws Exception {
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
+        createAndStoreVerificationToken(TokenStatus.VALID);
+
+        mockMvc.perform(post("/administration/register")
+                .with(csrf().asHeader())
+                .param("validUsername", username)
+                .param("validPassword", password)
+                .param("recoveryMail", mail)
+                .param("role", "SERVICE_OWNER"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
+
+        TimeUnit.MILLISECONDS.sleep(200);
+        assertEquals(1, tokenRepository.findAll().size());
     }
 
     @Test
@@ -232,7 +259,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("token", token))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("The token " + token + " was not found. Get a new verification token"));
+                .andExpect(view().name("error"));
     }
 
     @Test
@@ -243,7 +270,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("The token " + verificationToken.getToken() + " has been expired"));
+                .andExpect(view().name("error"));
 
         assertEquals(0, tokenRepository.findAll().size());
     }
@@ -292,14 +319,14 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void confirmAccountSuccess() throws Exception {
-        when(rabbitManager.sendUserManagementRequest(any())).thenReturn(ManagementStatus.OK);
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
         VerificationToken verificationToken = createAndStoreVerificationToken(TokenStatus.VALID);
 
         mockMvc.perform(get("/administration/registrationConfirm")
                 .with(csrf().asHeader())
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(RegisterControllerImpl.USER_ACCOUNT_ACTIVATED_MESSAGE));
+                .andExpect(view().name("email_verification_success"));
 
         assertEquals(0, tokenRepository.findAll().size());
     }

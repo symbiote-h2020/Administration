@@ -1,6 +1,5 @@
 package eu.h2020.symbiote.administration.controllers.implementations;
 
-
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
 import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
@@ -41,7 +40,6 @@ import java.util.Map;
 public class RegisterControllerImpl implements RegisterController {
 
     private static Log log = LogFactory.getLog(RegisterControllerImpl.class);
-    public static final String USER_ACCOUNT_ACTIVATED_MESSAGE = "Your account has been activated";
     public static final String SUCCESSFUL_REGISTRATION_MESSAGE = "Please, login with your new credentials";
     public static final String VERIFY_EMAIL = "We have sent you an email. Please, click on the link to verify your " +
             "account and then login with your new credentials";
@@ -101,6 +99,7 @@ public class RegisterControllerImpl implements RegisterController {
         log.debug("POST request on /administration/register");
         log.debug("CoreUser = " + ReflectionToStringBuilder.toString(coreUser));
 
+        coreUser.clearSensitiveData();
         userService.validateUserRegistrationForm(coreUser, bindingResult);
         userService.createUserAccount(coreUser, webRequest);
 
@@ -120,6 +119,6 @@ public class RegisterControllerImpl implements RegisterController {
         userService.activateUserAccount(verificationToken);
         userService.deleteVerificationToken(verificationToken);
 
-        return USER_ACCOUNT_ACTIVATED_MESSAGE;
+        return "email_verification_success";
     }
 }

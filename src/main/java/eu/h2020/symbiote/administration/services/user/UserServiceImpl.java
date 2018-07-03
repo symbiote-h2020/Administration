@@ -33,10 +33,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.WebRequest;
 
 import java.security.Principal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -80,6 +77,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void createVerificationToken(CoreUser user, String tokenString) {
         log.debug("Got tokenString " + tokenString + " for user = " + user);
+        tokenRepository.deleteByUser_ValidUsername(user.getValidUsername());
         VerificationToken token = new VerificationToken(tokenString, user, tokenExpirationTimeInHours);
         tokenRepository.save(token);
     }
@@ -89,21 +87,21 @@ public class UserServiceImpl implements UserService {
     public VerificationToken verifyToken(String token)
             throws VerificationTokenNotFoundException, VerificationTokenExpired {
 
-        VerificationToken verificationToken = tokenRepository.findOne(token);
+        Optional<VerificationToken> verificationToken = tokenRepository.findByToken(token);
 
-        if (verificationToken == null)
+        if (!verificationToken.isPresent())
             throw new VerificationTokenNotFoundException(token);
 
         // Get dates in days
         Long currentDate = convertDateToHours(new Date());
-        Long tokenExpirationDate = convertDateToHours(verificationToken.getExpirationDate());
+        Long tokenExpirationDate = convertDateToHours(verificationToken.get().getExpirationDate());
 
         if (currentDate > tokenExpirationDate) {
-            tokenRepository.delete(verificationToken);
+            tokenRepository.delete(verificationToken.get());
             throw new VerificationTokenExpired(token);
         }
 
-        return verificationToken;
+        return verificationToken.get();
     }
 
     @Override

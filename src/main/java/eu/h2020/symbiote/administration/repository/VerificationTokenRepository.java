@@ -14,4 +14,6 @@ import java.util.Optional;
 @RepositoryRestResource(collectionResourceRel = "federations", path = "federations")
 public interface VerificationTokenRepository extends MongoRepository<VerificationToken, String> {
     Optional<VerificationToken> findByToken(String token);
+
+    void deleteByUser_ValidUsername(String username);
 }

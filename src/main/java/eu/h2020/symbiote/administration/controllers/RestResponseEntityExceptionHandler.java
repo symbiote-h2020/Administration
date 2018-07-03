@@ -10,12 +10,17 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,10 +44,18 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler(value = {VerificationTokenNotFoundException.class, VerificationTokenExpired.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
-    protected String handleVerificationTokenException(Exception e) {
+    protected ModelAndView handleVerificationTokenException(HttpServletRequest request, Exception e) {
         log.warn("In handleVerificationTokenException", e);
-        return e.getMessage();
+
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.addObject("timestamp", new Date());
+        modelAndView.addObject("path", request.getContextPath());
+        modelAndView.addObject("error", HttpStatus.BAD_REQUEST.getReasonPhrase());
+        modelAndView.addObject("status", HttpStatus.BAD_REQUEST);
+        modelAndView.addObject("message", e.getMessage());
+        modelAndView.addObject("exception", VerificationTokenNotFoundException.class.getCanonicalName());
+        modelAndView.setViewName("error");
+        return modelAndView;
     }
 
     @ExceptionHandler(value = {EntityUnreachable.class})
