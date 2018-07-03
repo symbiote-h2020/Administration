@@ -298,7 +298,52 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
     }
 
     @Test
-    public void changePermissionSuccess() throws Exception {
+    public void changePermissionsTimeout() throws Exception {
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_permissions")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(
+                        new ChangePermissions(false))))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.changePermissionsError")
+                        .value("Authorization Manager is unreachable!"));
+    }
+
+    @Test
+    public void changePermissionsException() throws Exception {
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_permissions")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(
+                        new ChangePermissions(false))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.changePermissionsError")
+                        .value(sampleCommunicationException().getMessage()));
+    }
+
+    @Test
+    public void changePermissionsError() throws Exception {
+        doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/change_permissions")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(
+                        new ChangePermissions(false))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.changePermissionsError")
+                        .value("The Authorization Manager responded with ERROR"));
+
+    }
+
+    @Test
+    public void changePermissionsSuccess() throws Exception {
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
+
         mockMvc.perform(post("/administration/user/change_permissions")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())

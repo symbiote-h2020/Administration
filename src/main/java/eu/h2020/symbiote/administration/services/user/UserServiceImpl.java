@@ -3,35 +3,37 @@ package eu.h2020.symbiote.administration.services.user;
 import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.application.listeners.RegistrationListener;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.exceptions.ValidationException;
+import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachable;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
-import eu.h2020.symbiote.administration.model.CoreUser;
-import eu.h2020.symbiote.administration.model.VerificationToken;
+import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
+import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.Credentials;
-import eu.h2020.symbiote.security.communication.payloads.UserDetails;
-import eu.h2020.symbiote.security.communication.payloads.UserManagementRequest;
+import eu.h2020.symbiote.security.communication.payloads.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.context.request.WebRequest;
 
+import java.security.Principal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -118,7 +120,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void validateUserRegistrationForm(CoreUser coreUser, BindingResult bindingResult) throws ValidationException {
+    public void validateUserRegistrationForm(CoreUser coreUser, BindingResult bindingResult) throws ServiceValidationException {
         boolean invalidUserRole = (coreUser.getRole() == UserRole.NULL);
 
         if (bindingResult.hasErrors() || invalidUserRole) {
@@ -139,7 +141,7 @@ public class UserServiceImpl implements UserService {
 
             response.put("validationErrors", errorMessages);
 
-            throw new ValidationException("Invalid Arguments", errorMessages);
+            throw new ServiceValidationException("Invalid Arguments", errorMessages);
         }
     }
 
@@ -217,6 +219,280 @@ public class UserServiceImpl implements UserService {
             throw new EntityUnreachable("AAM");
         else if (managementStatus != ManagementStatus.OK)
             throw new GenericBadRequestException(managementStatus.toString());
+    }
+
+    @Override
+    public UserDetailsDTO getUserInformation(Principal principal)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachable {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+
+        UserDetailsResponse userDetailsResponse = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
+
+        if (userDetailsResponse == null)
+            throw new EntityUnreachable("AAM");
+        if (userDetailsResponse.getHttpStatus() != HttpStatus.OK)
+            throw new GenericHttpErrorException("Could not get the userDetails", userDetailsResponse.getHttpStatus());
+
+        String recoveryMail = userDetailsResponse.getUserDetails().getRecoveryMail();
+        String role = userDetailsResponse.getUserDetails().getRole().toString();
+        boolean serviceConsent = userDetailsResponse.getUserDetails().hasGrantedServiceConsent();
+        boolean analyticsAndResearchConsent = userDetailsResponse.getUserDetails().hasGrantedAnalyticsAndResearchConsent();
+        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
+
+        return new UserDetailsDTO(
+                user.getUsername(),
+                recoveryMail,
+                role,
+                serviceConsent,
+                serviceConsent,
+                analyticsAndResearchConsent,
+                clients);
+    }
+
+    @Override
+    public void changeEmail(ChangeEmailRequest message, BindingResult bindingResult, Principal principal)
+            throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        String errorName = "changeEmailError";
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = "Enter a valid email";
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+        }
+
+        if (errorsResponse.get("error_newEmailRetyped") == null &&
+                !message.getNewEmail().equals(message.getNewEmailRetyped())) {
+            String errorField = "error_newEmailRetyped";
+            String errorMessage = "The provided emails do not match";
+            log.debug(errorField + ": " + errorMessage);
+            errorsResponse.put(errorField, errorMessage);
+
+        }
+
+        if (errorsResponse.size() > 0) {
+            errorsResponse.put(errorName, "Invalid Arguments");
+            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
+        }
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), password),
+                        message.getNewEmail(),
+                        user.getRole(),
+                        AccountStatus.ACTIVE,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        user.isConditionsAccepted(),
+                        user.isAnalyticsAndResearchConsent()
+                ),
+                OperationType.UPDATE
+        );
+
+
+        handleUserManagementRequest(userUpdateRequest, errorName);
+    }
+
+    @Override
+    public void changePermissions(ChangePermissions message, BindingResult bindingResult, Principal principal)
+            throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        String errorName = "changePermissionsError";
+
+        if (bindingResult.hasErrors()) {
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = fieldError.getDefaultMessage();
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+
+            errorsResponse.put(errorName, "Invalid values");
+            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
+        }
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), password),
+                        user.getRecoveryMail(),
+                        user.getRole(),
+                        AccountStatus.ACTIVE,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        user.isConditionsAccepted(),
+                        message.isAnalyticsAndResearchConsent()
+                ),
+                OperationType.UPDATE
+        );
+
+        handleUserManagementRequest(userUpdateRequest, errorName);
+    }
+
+    @Override
+    public void changePassword(ChangePasswordRequest message, BindingResult bindingResult, Principal principal) throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        String errorName = "changePasswordError";
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = "Enter a valid password";
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+        }
+
+        if (errorsResponse.get("error_newPasswordRetyped") == null &&
+                !message.getNewPassword().equals(message.getNewPasswordRetyped())) {
+            String errorField = "error_newPasswordRetyped";
+            String errorMessage = "The provided passwords do not match";
+            log.debug(errorField + ": " + errorMessage);
+            errorsResponse.put(errorField, errorMessage);
+
+        }
+
+        if (!password.equals(message.getOldPassword())) {
+            String errorMessage = "Your old password is not correct";
+            String errorField = "error_oldPassword";
+            log.debug(errorField + ": " + errorMessage);
+            errorsResponse.put(errorField, errorMessage);
+        }
+
+        if (errorsResponse.size() > 0) {
+            errorsResponse.put(errorName, "Invalid Arguments");
+            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
+        }
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), message.getNewPassword()),
+                        user.getRecoveryMail(),
+                        user.getRole(),
+                        AccountStatus.ACTIVE,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        user.isConditionsAccepted(),
+                        user.isAnalyticsAndResearchConsent()
+                ),
+                OperationType.UPDATE
+        );
+
+        handleUserManagementRequest(userUpdateRequest, errorName);
+    }
+
+    @Override
+    public void deleteUser(Principal principal) throws GenericHttpErrorException {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        String errorName = "userDeletionError";
+
+        // Construct the UserManagementRequest
+        UserManagementRequest userDeleteRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), password),
+                        "",
+                        user.getRole(),
+                        AccountStatus.ACTIVE,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        user.isConditionsAccepted(),
+                        user.isAnalyticsAndResearchConsent()
+                ),
+                OperationType.DELETE
+        );
+
+        handleUserManagementRequest(userDeleteRequest, errorName);
+    }
+
+    @Override
+    public void deleteClient(String clientId, Principal principal) throws GenericHttpErrorException {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        String errorName = "clientDeletionError";
+
+        // Construct the UserManagementRequest
+        RevocationRequest revocationRequest = new RevocationRequest();
+        revocationRequest.setCredentials(new Credentials(user.getUsername(), password));
+        revocationRequest.setCredentialType(RevocationRequest.CredentialType.USER);
+        revocationRequest.setCertificateCommonName(user.getUsername() + "@" + clientId);
+
+        handleRevocationRequest(revocationRequest, errorName);
+
+    }
+
+    private void handleUserManagementRequest(UserManagementRequest userManagementRequest, String errorName)
+            throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+
+        try {
+            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userManagementRequest);
+
+            if (managementStatus == null) {
+                errorsResponse.put(errorName, "Authorization Manager is unreachable!");
+                throw new GenericHttpErrorException("Authorization Manager is unreachable!", errorsResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            } else if (managementStatus != ManagementStatus.OK) {
+                errorsResponse.put(errorName, "The Authorization Manager responded with ERROR");
+                throw new GenericHttpErrorException("The Authorization Manager responded with ERROR", errorsResponse, HttpStatus.BAD_REQUEST);
+            }
+        } catch (CommunicationException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericBadRequestException("Error", errorsResponse);
+        }
+    }
+
+    private void handleRevocationRequest(RevocationRequest revocationRequest, String errorName)
+            throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+
+        try {
+            RevocationResponse revocationResponse = rabbitManager.sendRevocationRequest(revocationRequest);
+
+            if (revocationResponse == null) {
+                errorsResponse.put(errorName, "Authorization Manager is unreachable!");
+                throw new GenericHttpErrorException("Authorization Manager is unreachable!", errorsResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            } else if (!revocationResponse.getStatus().is2xxSuccessful() || !revocationResponse.isRevoked()) {
+                errorsResponse.put(errorName, "The Authorization Manager responded with ERROR");
+                throw new GenericHttpErrorException("The Authorization Manager responded with ERROR", errorsResponse, HttpStatus.BAD_REQUEST);
+            }
+        } catch (CommunicationException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericBadRequestException("Error", errorsResponse);
+        }
     }
 
     private Long convertDateToHours(Date date) {

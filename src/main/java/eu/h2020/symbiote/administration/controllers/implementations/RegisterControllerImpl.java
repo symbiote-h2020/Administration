@@ -2,7 +2,7 @@ package eu.h2020.symbiote.administration.controllers.implementations;
 
 
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
-import eu.h2020.symbiote.administration.exceptions.ValidationException;
+import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
@@ -96,7 +96,7 @@ public class RegisterControllerImpl implements RegisterController {
     public Map<String, Object> coreUserRegister(@Valid CoreUser coreUser,
                                                 BindingResult bindingResult,
                                                 WebRequest webRequest)
-            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException, ValidationException {
+            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException, ServiceValidationException {
 
         log.debug("POST request on /administration/register");
         log.debug("CoreUser = " + ReflectionToStringBuilder.toString(coreUser));

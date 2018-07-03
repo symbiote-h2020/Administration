@@ -1,6 +1,7 @@
 package eu.h2020.symbiote.administration.controllers;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.UserRepository;
@@ -9,34 +10,24 @@ import eu.h2020.symbiote.administration.services.infomodel.InformationModelServi
 import eu.h2020.symbiote.administration.services.ownedservices.OwnedServicesService;
 import eu.h2020.symbiote.administration.services.platform.PlatformService;
 import eu.h2020.symbiote.administration.services.ssp.SSPService;
+import eu.h2020.symbiote.administration.services.user.UserService;
 import eu.h2020.symbiote.model.mim.Federation;
-import eu.h2020.symbiote.security.commons.Certificate;
-import eu.h2020.symbiote.security.commons.enums.AccountStatus;
-import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
-import eu.h2020.symbiote.security.commons.enums.OperationType;
-import eu.h2020.symbiote.security.commons.enums.UserRole;
-import eu.h2020.symbiote.security.communication.payloads.*;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.security.Principal;
-import java.util.*;
 
 /**
  * Spring controller for the User control panel, handles management views and form validation.
@@ -51,6 +42,7 @@ public class UserCpanelController {
 
     private RabbitManager rabbitManager;
     private UserRepository userRepository;
+    private UserService userService;
     private OwnedServicesService ownedServicesService;
     private PlatformService platformService;
     private SSPService sspService;
@@ -62,6 +54,7 @@ public class UserCpanelController {
     @Autowired
     public UserCpanelController(RabbitManager rabbitManager,
                                 UserRepository userRepository,
+                                UserService userService,
                                 OwnedServicesService ownedServicesService,
                                 PlatformService platformService,
                                 SSPService sspService,
@@ -75,6 +68,9 @@ public class UserCpanelController {
 
         Assert.notNull(userRepository,"UserRepository can not be null!");
         this.userRepository = userRepository;
+
+        Assert.notNull(userService,"UserService can not be null!");
+        this.userService = userService;
 
         Assert.notNull(ownedServicesService,"OwnedServicesService can not be null!");
         this.ownedServicesService = ownedServicesService;
@@ -104,322 +100,70 @@ public class UserCpanelController {
      * Registry is first polled and, if the platform isn't activated there, AAM is polled for them.
      */
     @GetMapping("/administration/user/cpanel")
-    public String userCPanel(Model model, Principal principal) {
+    public String userCPanel() {
 
         log.debug("GET request on /administration/user/cpanel");
-
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-
-        log.debug("User state is: " + ReflectionToStringBuilder.toString(user));
-        model.addAttribute("user", user);
-
         return "index";
     }
 
     @GetMapping("/administration/user/information")
-    public ResponseEntity<?> getUserInformation(Principal principal) {
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public UserDetailsDTO getUserInformation(Principal principal)
+            throws GenericHttpErrorException, CommunicationException {
         log.debug("GET request on /administration/user/information");
 
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
-
-        ResponseEntity userDetailsResponseEntity = getUserDetails(user, password);
-
-        if (userDetailsResponseEntity.getStatusCode() != HttpStatus.OK)
-            return userDetailsResponseEntity;
-
-        UserDetailsResponse userDetailsResponse = (UserDetailsResponse) userDetailsResponseEntity.getBody();
-        String recoveryMail = userDetailsResponse.getUserDetails().getRecoveryMail();
-        String role = userDetailsResponse.getUserDetails().getRole().toString();
-        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
-
-        Optional<CoreUser> storedUser = userRepository.findByValidUsername(user.getUsername());
-        UserDetailsDTO userDetailsDTO = storedUser.isPresent() ?
-                new UserDetailsDTO(user.getUsername(), recoveryMail, role, storedUser.get().isTermsAccepted(),
-                        storedUser.get().isConditionsAccepted(), storedUser.get().isAnalyticsAndResearchConsent(), clients) :
-                new UserDetailsDTO(user.getUsername(), recoveryMail, role, true,
-                        true, false, clients);
-
-        return new ResponseEntity<>(userDetailsDTO, new HttpHeaders(), HttpStatus.OK);
+        return userService.getUserInformation(principal);
     }
 
     @PostMapping("/administration/user/change_email")
-    public ResponseEntity<?> changeEmail(@Valid @RequestBody ChangeEmailRequest message,
-                                         BindingResult bindingResult,
-                                         Principal principal) {
+    @ResponseStatus(HttpStatus.OK)
+    public void changeEmail(@Valid @RequestBody ChangeEmailRequest message,
+                            BindingResult bindingResult,
+                            Principal principal)
+            throws GenericHttpErrorException {
         log.debug("POST request on /administration/user/change_email");
-
-        Map<String, String> errorsResponse = new HashMap<>();
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
-
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : errors) {
-                String errorMessage = "Enter a valid email";
-                String errorField = "error_" + fieldError.getField();
-                log.debug(errorField + ": " + errorMessage);
-                errorsResponse.put(errorField, errorMessage);
-            }
-        }
-
-        if (errorsResponse.get("error_newEmailRetyped") == null &&
-                !message.getNewEmail().equals(message.getNewEmailRetyped())) {
-            String errorField = "error_newEmailRetyped";
-            String errorMessage = "The provided emails do not match";
-            log.debug(errorField + ": " + errorMessage);
-            errorsResponse.put(errorField, errorMessage);
-
-        }
-
-        if (errorsResponse.size() > 0) {
-            errorsResponse.put("changeEmailError", "Invalid Arguments");
-            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        // Todo: fill in the attributes
-        // Construct the UserManagementRequest
-        UserManagementRequest userUpdateRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), password),
-                new UserDetails(
-                        new Credentials(user.getUsername(), password),
-                        message.getNewEmail(),
-                        user.getRole(),
-                        AccountStatus.ACTIVE,
-                        new HashMap<>(),
-                        new HashMap<>(),
-                        user.isConditionsAccepted(),
-                        user.isAnalyticsAndResearchConsent()
-                ),
-                OperationType.UPDATE
-        );
-
-        try {
-            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
-
-            if (managementStatus == null) {
-                errorsResponse.put("changeEmailError","Authorization Manager is unreachable!");
-                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-
-            } else if(managementStatus == ManagementStatus.OK ){
-                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
-                        HttpStatus.OK);
-            }
-        } catch (CommunicationException e) {
-            errorsResponse.put("changeEmailError",e.getMessage());
-            return  new ResponseEntity<>(errorsResponse, new HttpHeaders(),
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        errorsResponse.put("changeEmailError", "The Authorization Manager responded with ERROR");
-        return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        userService.changeEmail(message, bindingResult, principal);
     }
 
     @PostMapping("/administration/user/change_permissions")
-    public ResponseEntity<?> changePermissions(@Valid @RequestBody ChangePermissions message,
-                                               BindingResult bindingResult,
-                                               Principal principal) {
+    @ResponseStatus(HttpStatus.OK)
+    public void changePermissions(@Valid @RequestBody ChangePermissions message,
+                                  BindingResult bindingResult,
+                                  Principal principal)
+            throws GenericHttpErrorException {
         log.debug("POST request on /administration/user/change_email");
 
-        Map<String, String> errorsResponse = new HashMap<>();
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        UserRole role = user.getRole();
-
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : errors) {
-                String errorMessage = fieldError.getDefaultMessage();
-                String errorField = "error_" + fieldError.getField();
-                log.debug(errorField + ": " + errorMessage);
-                errorsResponse.put(errorField, errorMessage);
-            }
-
-            errorsResponse.put("changePermissionsError", "Invalid values");
-            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        CoreUser updatedUser = new CoreUser(user.getUsername(), "", false, false,
-                false, false, new ArrayList<>(),
-                "", role, user.isTermsAccepted(), user.isConditionsAccepted(),
-                message.isAnalyticsAndResearchConsent());
-        userRepository.save(updatedUser);
-        return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.OK);
+        userService.changePermissions(message, bindingResult, principal);
     }
 
     @PostMapping("/administration/user/change_password")
-    public ResponseEntity<?> changeEmail(@Valid @RequestBody ChangePasswordRequest message,
-                                         BindingResult bindingResult,
-                                         Principal principal) {
+    @ResponseStatus(HttpStatus.OK)
+    public void changePassword(@Valid @RequestBody ChangePasswordRequest message,
+                               BindingResult bindingResult,
+                               Principal principal)
+            throws GenericHttpErrorException {
         log.debug("POST request on /administration/user/change_password");
-
-        Map<String, String> errorsResponse = new HashMap<>();
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
-
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : errors) {
-                String errorMessage = "Enter a valid password";
-                String errorField = "error_" + fieldError.getField();
-                log.debug(errorField + ": " + errorMessage);
-                errorsResponse.put(errorField, errorMessage);
-            }
-        }
-
-        if (errorsResponse.get("error_newPasswordRetyped") == null &&
-                !message.getNewPassword().equals(message.getNewPasswordRetyped())) {
-            String errorField = "error_newPasswordRetyped";
-            String errorMessage = "The provided passwords do not match";
-            log.debug(errorField + ": " + errorMessage);
-            errorsResponse.put(errorField, errorMessage);
-
-        }
-
-        if (!password.equals(message.getOldPassword())) {
-            String errorMessage = "Your old password is not correct";
-            String errorField = "error_oldPassword";
-            log.debug(errorField + ": " + errorMessage);
-            errorsResponse.put(errorField, errorMessage);
-        }
-
-        if (errorsResponse.size() > 0) {
-            errorsResponse.put("changePasswordError", "Invalid Arguments");
-            return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        // Todo: fill in the attributes
-        // Construct the UserManagementRequest
-        UserManagementRequest userUpdateRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), password),
-                new UserDetails(
-                        new Credentials(user.getUsername(), message.getNewPassword()),
-                        user.getRecoveryMail(),
-                        user.getRole(),
-                        AccountStatus.ACTIVE,
-                        new HashMap<>(),
-                        new HashMap<>(),
-                        user.isConditionsAccepted(),
-                        user.isAnalyticsAndResearchConsent()
-                ),
-                OperationType.UPDATE
-        );
-
-        try {
-            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
-
-            if (managementStatus == null) {
-                errorsResponse.put("changePasswordError","Authorization Manager is unreachable!");
-                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-
-            } else if(managementStatus == ManagementStatus.OK ){
-                return new ResponseEntity<>(errorsResponse, new HttpHeaders(),
-                        HttpStatus.OK);
-            }
-        } catch (CommunicationException e) {
-            errorsResponse.put("changePasswordError",e.getMessage());
-            return  new ResponseEntity<>(errorsResponse, new HttpHeaders(),
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        errorsResponse.put("changePasswordError", "The Authorization Manager responded with ERROR");
-        return new ResponseEntity<>(errorsResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        userService.changePassword(message, bindingResult, principal);
     }
 
     @PostMapping("/administration/user/delete_user")
-    public ResponseEntity<?> deleteUser(Principal principal) {
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteUser(Principal principal)
+            throws GenericHttpErrorException {
         log.debug("POST request on /administration/user/delete_user");
-
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
-
-        // Construct the UserManagementRequest
-        UserManagementRequest userUpdateRequest = new UserManagementRequest(
-                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(user.getUsername(), password),
-                new UserDetails(
-                        new Credentials(user.getUsername(), password),
-                        "",
-                        user.getRole(),
-                        AccountStatus.ACTIVE,
-                        new HashMap<>(),
-                        new HashMap<>(),
-                        user.isConditionsAccepted(),
-                        user.isAnalyticsAndResearchConsent()
-                ),
-                OperationType.DELETE
-        );
-
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userUpdateRequest);
-
-            if (managementStatus == null) {
-                response.put("userDeletionError","Authorization Manager is unreachable!");
-                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-
-            } else if(managementStatus == ManagementStatus.OK ){
-                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.OK);
-            }
-        } catch (CommunicationException e) {
-            response.put("userDeletionError",e.getMessage());
-            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        response.put("userDeletionError", "The Authorization Manager responded with ERROR");
-        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        userService.deleteUser(principal);
     }
 
     @PostMapping("/administration/user/cpanel/delete_client")
-    public ResponseEntity<?> deleteClient(@RequestParam String clientIdToDelete, Principal principal) {
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteClient(@RequestParam String clientIdToDelete, Principal principal)
+            throws GenericHttpErrorException {
 
         log.debug("POST request on /administration/user/cpanel/delete_client for client with id: " +
                 clientIdToDelete);
 
-        Map<String, Object> response = new HashMap<>();
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
-
-        // Construct the UserManagementRequest
-        RevocationRequest revocationRequest = new RevocationRequest();
-        revocationRequest.setCredentials(new Credentials(user.getUsername(), password));
-        revocationRequest.setCredentialType(RevocationRequest.CredentialType.USER);
-        revocationRequest.setCertificateCommonName(user.getUsername() + "@" + clientIdToDelete);
-
-
-        try {
-            RevocationResponse revocationResponse = rabbitManager.sendRevocationRequest(revocationRequest);
-
-            if (revocationResponse == null) {
-                response.put("clientDeletionError", "Authorization Manager is unreachable!");
-                return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            } else  if (revocationResponse.getStatus().is2xxSuccessful() && revocationResponse.isRevoked()) {
-                log.debug("revocationResponse.status " + revocationResponse.getStatus());
-                log.debug("revocationResponse.isRevoked " + revocationResponse.isRevoked());
-                return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
-            }
-
-        } catch (CommunicationException e) {
-            response.put("clientDeletionError", e.getMessage());
-            return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
-        }
-
-        response.put("clientDeletionError", "Authorization Manager responded with ERROR");
-        return new ResponseEntity<>(response, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        userService.deleteClient(clientIdToDelete, principal);
     }
 
     @PostMapping("/administration/user/cpanel/list_user_services")
@@ -584,28 +328,6 @@ public class UserCpanelController {
      */
     public void setRabbitManager(RabbitManager rabbitManager){
         this.rabbitManager = rabbitManager;
-    }
-
-    private ResponseEntity getUserDetails(CoreUser user, String password) {
-        UserDetailsResponse response;
-        try {
-            response = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
-
-            if(response != null) {
-                if (response.getHttpStatus() != HttpStatus.OK) {
-                    log.debug("Could not get the userDetails");
-                    return new ResponseEntity<>(new HttpHeaders(), response.getHttpStatus());
-                } else {
-                    return new ResponseEntity<>(response, new HttpHeaders(), response.getHttpStatus());
-                }
-            } else {
-                return new ResponseEntity<>(new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch(CommunicationException e){
-            log.info(e.getMessage());
-            return new ResponseEntity<>(e.getErrorMessage(), new HttpHeaders(), e.getStatusCode());
-
-        }
     }
 
 }

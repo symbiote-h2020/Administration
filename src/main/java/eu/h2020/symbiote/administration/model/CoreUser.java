@@ -145,7 +145,6 @@ public class CoreUser extends User {
 
     public void clearSensitiveData() {
         this.validPassword = "";
-        this.recoveryMail = "";
     }
 
     @Override
