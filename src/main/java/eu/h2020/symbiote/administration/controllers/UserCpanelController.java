@@ -136,16 +136,13 @@ public class UserCpanelController {
         Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
 
         Optional<CoreUser> storedUser = userRepository.findByValidUsername(user.getUsername());
-        UserDetailsDDO userDetailsDDO = storedUser.isPresent() ?
-                new UserDetailsDDO(user.getUsername(), recoveryMail, role, storedUser.get().isTermsAccepted(),
-                        storedUser.get().isConditionsAccepted(), storedUser.get().isUsernamePermission(),
-                        storedUser.get().isEmailPermission(), storedUser.get().isPublicKeysPermission(),
-                        storedUser.get().isJwtPermission(), clients) :
-                new UserDetailsDDO(user.getUsername(), recoveryMail, role, true,
-                        true, false, false, false,
-                        false, clients);
+        UserDetailsDTO userDetailsDTO = storedUser.isPresent() ?
+                new UserDetailsDTO(user.getUsername(), recoveryMail, role, storedUser.get().isTermsAccepted(),
+                        storedUser.get().isConditionsAccepted(), storedUser.get().isAnalyticsAndResearchConsent(), clients) :
+                new UserDetailsDTO(user.getUsername(), recoveryMail, role, true,
+                        true, false, clients);
 
-        return new ResponseEntity<>(userDetailsDDO, new HttpHeaders(), HttpStatus.OK);
+        return new ResponseEntity<>(userDetailsDTO, new HttpHeaders(), HttpStatus.OK);
     }
 
     @PostMapping("/administration/user/change_email")
@@ -196,8 +193,8 @@ public class UserCpanelController {
                         AccountStatus.ACTIVE,
                         new HashMap<>(),
                         new HashMap<>(),
-                        true,
-                        false
+                        user.isConditionsAccepted(),
+                        user.isAnalyticsAndResearchConsent()
                 ),
                 OperationType.UPDATE
         );
@@ -251,9 +248,8 @@ public class UserCpanelController {
 
         CoreUser updatedUser = new CoreUser(user.getUsername(), "", false, false,
                 false, false, new ArrayList<>(),
-                "", role, true, true,
-                message.isUsernamePermission(), message.isEmailPermission(),
-                message.isPublicKeysPermission(), message.isJwtPermission());
+                "", role, user.isTermsAccepted(), user.isConditionsAccepted(),
+                message.isAnalyticsAndResearchConsent());
         userRepository.save(updatedUser);
         return new ResponseEntity<>(message, new HttpHeaders(), HttpStatus.OK);
     }
@@ -313,8 +309,8 @@ public class UserCpanelController {
                         AccountStatus.ACTIVE,
                         new HashMap<>(),
                         new HashMap<>(),
-                        true,
-                        false
+                        user.isConditionsAccepted(),
+                        user.isAnalyticsAndResearchConsent()
                 ),
                 OperationType.UPDATE
         );
@@ -360,8 +356,8 @@ public class UserCpanelController {
                         AccountStatus.ACTIVE,
                         new HashMap<>(),
                         new HashMap<>(),
-                        true,
-                        false
+                        user.isConditionsAccepted(),
+                        user.isAnalyticsAndResearchConsent()
                 ),
                 OperationType.DELETE
         );

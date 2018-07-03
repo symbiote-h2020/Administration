@@ -74,7 +74,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
             CoreUser user = new CoreUser(name, password, true, true, true,
                     true, grantedAuthorities, "", UserRole.SERVICE_OWNER,
-                    true, true, true,
                     true, true, true);
 
             return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
@@ -96,8 +95,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
                     CoreUser user = new CoreUser(name, password, true, true, true,
                             true, grantedAuthorities, response.getUserDetails().getRecoveryMail(),
-                            response.getUserDetails().getRole(), true, true,
-                            false, false, false, false);
+                            response.getUserDetails().getRole(), response.getUserDetails().hasGrantedServiceConsent(),
+                            response.getUserDetails().hasGrantedServiceConsent(), response.getUserDetails().hasGrantedAnalyticsAndResearchConsent());
 
                     return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
                 } else if (response.getHttpStatus() == HttpStatus.BAD_REQUEST) {

@@ -55,17 +55,7 @@ public class CoreUser extends User {
     private boolean conditionsAccepted;
 
     @NotNull
-    private boolean usernamePermission;
-
-    @NotNull
-    private boolean emailPermission;
-
-    @NotNull
-    private boolean publicKeysPermission;
-
-    @NotNull
-    private boolean jwtPermission;
-
+    private boolean analyticsAndResearchConsent;
 
     /* -------- Constructors -------- */
 
@@ -79,21 +69,18 @@ public class CoreUser extends User {
     /**
      * Constructor for use in UserDetails (Principal) object
      *
-     * @param username              username
-     * @param password              password
-     * @param recoveryMail          use email
-     * @param role                  user role
-     * @param enabled               user is enabled
-     * @param accountNonExpired     account isn't expired
-     * @param credentialsNonExpired credentials aren't expired
-     * @param accountNonLocked      account isn't locked
-     * @param authorities           authorities to be granted to the user (mostly USER_ROLE)
-     * @param termsAccepted         shows if user accepts the terms
-     * @param conditionsAccepted    shows if user accepts the conditions
-     * @param usernamePermission    shows if user gives permission for using their username for analytical and marketing purposes
-     * @param emailPermission       shows if user gives permission for using their email for analytical and marketing purposes
-     * @param publicKeysPermission  shows if user gives permission for using their public key for analytical and marketing purposes
-     * @param jwtPermission         shows if user gives permission for using their jwt for analytical and marketing purposes
+     * @param username                      username
+     * @param password                      password
+     * @param recoveryMail                  use email
+     * @param role                          user role
+     * @param enabled                       user is enabled
+     * @param accountNonExpired             account isn't expired
+     * @param credentialsNonExpired         credentials aren't expired
+     * @param accountNonLocked              account isn't locked
+     * @param authorities                   authorities to be granted to the user (mostly USER_ROLE)
+     * @param termsAccepted                 shows if user accepts the terms
+     * @param conditionsAccepted            shows if user accepts the conditions
+     * @param analyticsAndResearchConsent   shows if user accepts to provide their data for analytics and research
      */
     @PersistenceConstructor
     @JsonCreator
@@ -108,31 +95,15 @@ public class CoreUser extends User {
                     @JsonProperty("role") UserRole role,
                     @JsonProperty("termsAccepted") boolean termsAccepted,
                     @JsonProperty("conditionsAccepted") boolean conditionsAccepted,
-                    @JsonProperty("usernamePermission") boolean usernamePermission,
-                    @JsonProperty("emailPermission") boolean emailPermission,
-                    @JsonProperty("publicKeysPermission") boolean publicKeysPermission,
-                    @JsonProperty("jwtPermission") boolean jwtPermission) {
+                    @JsonProperty("analyticsAndResearchConsent") boolean analyticsAndResearchConsent) {
         super(username, password, enabled, accountNonExpired, credentialsNonExpired, accountNonLocked, authorities);
         this.validUsername = username;
         this.recoveryMail = recoveryMail;
         this.role = role;
         this.termsAccepted = termsAccepted;
         this.conditionsAccepted = conditionsAccepted;
-        this.usernamePermission = usernamePermission;
-        this.emailPermission = emailPermission;
-        this.publicKeysPermission = publicKeysPermission;
-        this.jwtPermission = jwtPermission;
+        this.analyticsAndResearchConsent = analyticsAndResearchConsent;
     }
-
-//    public CoreUser(String username, String password, UserRole role, boolean enabled,
-//            boolean accountNonExpired, boolean credentialsNonExpired, boolean accountNonLocked, Collection authorities) {
-//
-//        super(username, password, enabled, accountNonExpired,
-//        credentialsNonExpired, accountNonLocked, authorities);
-//
-//        setRole(role);
-//    }
-    
 
     /* -------- Getters & Setters -------- */
 
@@ -166,17 +137,9 @@ public class CoreUser extends User {
     public boolean isConditionsAccepted() { return conditionsAccepted; }
     public void setConditionsAccepted(boolean conditionsAccepted) { this.conditionsAccepted = conditionsAccepted; }
 
-    public boolean isUsernamePermission() { return usernamePermission; }
-    public void setUsernamePermission(boolean usernamePermission) { this.usernamePermission = usernamePermission; }
+    public boolean isAnalyticsAndResearchConsent() { return analyticsAndResearchConsent; }
+    public void setAnalyticsAndResearchConsent(boolean analyticsAndResearchConsent) { this.analyticsAndResearchConsent = analyticsAndResearchConsent; }
 
-    public boolean isEmailPermission() { return emailPermission; }
-    public void setEmailPermission(boolean emailPermission) { this.emailPermission = emailPermission; }
-
-    public boolean isPublicKeysPermission() { return publicKeysPermission; }
-    public void setPublicKeysPermission(boolean publicKeysPermission) { this.publicKeysPermission = publicKeysPermission; }
-
-    public boolean isJwtPermission() { return jwtPermission; }
-    public void setJwtPermission(boolean jwtPermission) { this.jwtPermission = jwtPermission; }
 
     /* -------- Helper Methods -------- */
 

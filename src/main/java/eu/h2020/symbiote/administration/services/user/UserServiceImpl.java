@@ -104,8 +104,10 @@ public class UserServiceImpl implements UserService {
         Long currentDate = convertDateToHours(new Date());
         Long tokenExpirationDate = convertDateToHours(verificationToken.getExpirationDate());
 
-        if (currentDate > tokenExpirationDate)
+        if (currentDate > tokenExpirationDate) {
+            tokenRepository.delete(verificationToken);
             throw new VerificationTokenExpired(token);
+        }
 
         return verificationToken;
     }
@@ -156,8 +158,8 @@ public class UserServiceImpl implements UserService {
                         emailVerificationEnabled ? AccountStatus.NEW : AccountStatus.ACTIVE,
                         new HashMap<>(),
                         new HashMap<>(),
-                        true,
-                        false
+                        coreUser.isConditionsAccepted(),
+                        coreUser.isAnalyticsAndResearchConsent()
                 ),
                 OperationType.CREATE
         );
@@ -187,7 +189,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void activateUserAccount(VerificationToken verificationToken) throws CommunicationException, GenericBadRequestException {
+    public void activateUserAccount(VerificationToken verificationToken)
+            throws CommunicationException, GenericBadRequestException, EntityUnreachable {
         CoreUser coreUser = verificationToken.getUser();
 
         // Todo: change the consents below to read them from token
@@ -202,8 +205,8 @@ public class UserServiceImpl implements UserService {
                         AccountStatus.ACTIVE,
                         new HashMap<>(),
                         new HashMap<>(),
-                        true,
-                        false
+                        coreUser.isConditionsAccepted(),
+                        coreUser.isAnalyticsAndResearchConsent()
                 ),
                 OperationType.FORCE_UPDATE
         );

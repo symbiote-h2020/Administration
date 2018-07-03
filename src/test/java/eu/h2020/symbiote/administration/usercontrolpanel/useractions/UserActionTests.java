@@ -303,7 +303,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(
-                        new ChangePermissions(false, false, true, true))))
+                        new ChangePermissions(false))))
                 .andExpect(status().isOk());
     }
 

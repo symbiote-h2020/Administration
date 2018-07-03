@@ -7,6 +7,7 @@ import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.Date;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -61,7 +63,12 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
             .build();
 
         MockitoAnnotations.initMocks(this);
+        tokenRepository.deleteAll();
+    }
 
+    @After
+    public void tearDown() {
+        tokenRepository.deleteAll();
     }
 
     @Test
@@ -237,6 +244,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("The token " + verificationToken.getToken() + " has been expired"));
+
+        assertEquals(0, tokenRepository.findAll().size());
     }
 
     @Test
@@ -249,6 +258,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorMessage").value("The component AAM is unreachable"));
+
+        assertEquals(1, tokenRepository.findAll().size());
     }
 
     @Test
@@ -261,6 +272,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("An error occurred : ERROR"));
+
+        assertEquals(1, tokenRepository.findAll().size());
     }
 
     @Test
@@ -273,6 +286,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("ERROR"));
+
+        assertEquals(1, tokenRepository.findAll().size());
     }
 
     @Test
@@ -285,6 +300,8 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(RegisterControllerImpl.USER_ACCOUNT_ACTIVATED_MESSAGE));
+
+        assertEquals(0, tokenRepository.findAll().size());
     }
 
     private VerificationToken createAndStoreVerificationToken(TokenStatus tokenStatus) {

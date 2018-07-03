@@ -8,30 +8,12 @@ import javax.validation.constraints.NotNull;
 public class ChangePermissions {
 
     @NotNull
-    private boolean usernamePermission;
-
-    @NotNull
-    private boolean emailPermission;
-
-    @NotNull
-    private boolean publicKeysPermission;
-
-    @NotNull
-    private boolean jwtPermission;
+    private final boolean analyticsAndResearchConsent;
 
     @JsonCreator
-    public ChangePermissions(@JsonProperty("usernamePermission") boolean usernamePermission,
-                             @JsonProperty("emailPermission") boolean emailPermission,
-                             @JsonProperty("publicKeysPermission") boolean publicKeysPermission,
-                             @JsonProperty("jwtPermission") boolean jwtPermission) {
-        this.usernamePermission = usernamePermission;
-        this.emailPermission = emailPermission;
-        this.publicKeysPermission = publicKeysPermission;
-        this.jwtPermission = jwtPermission;
+    public ChangePermissions(@JsonProperty("analyticsAndResearchConsent") boolean analyticsAndResearchConsent) {
+        this.analyticsAndResearchConsent = analyticsAndResearchConsent;
     }
 
-    public boolean isUsernamePermission() { return usernamePermission; }
-    public boolean isEmailPermission() { return emailPermission; }
-    public boolean isPublicKeysPermission() { return publicKeysPermission; }
-    public boolean isJwtPermission() { return jwtPermission; }
+    public boolean isAnalyticsAndResearchConsent() { return analyticsAndResearchConsent; }
 }

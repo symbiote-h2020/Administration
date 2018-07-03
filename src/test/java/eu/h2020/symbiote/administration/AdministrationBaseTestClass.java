@@ -173,18 +173,16 @@ public abstract class AdministrationBaseTestClass {
         return grantedAuths;
     }
 
-    protected CoreUser sampleCoreUser(UserRole role) {
+    CoreUser sampleCoreUser(UserRole role) {
         return new CoreUser(username, password, true, true,
                 true, true, sampleUserAuthorities(), mail, role,
-                true, true, true, true,
-                true, true);
+                true, true, true);
     }
 
     private CoreUser sampleAdminUser(UserRole role) {
         return new CoreUser(username, password, true, true,
                 true, true, sampleUserAuthorities(), mail, role,
-                true, true, true, true,
-                true, true);
+                true, true, true);
     }
 
     public Authentication sampleUserAuth(UserRole role) {
