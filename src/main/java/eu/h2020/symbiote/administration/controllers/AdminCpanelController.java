@@ -4,8 +4,8 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.InvitationRequest;
-import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;
 import eu.h2020.symbiote.administration.services.federation.FederationService;
+import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.ClearDataRequest;
@@ -35,6 +35,7 @@ import java.util.List;
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
 @Controller
+@RequestMapping("/administration/admin")
 @CrossOrigin
 public class AdminCpanelController {
     private static Log log = LogFactory.getLog(AdminCpanelController.class);
@@ -62,10 +63,10 @@ public class AdminCpanelController {
      * Gets the default view. If the user is a platform owner, tries to fetch their details.
      * Registry is first polled and, if the platform isn't activated there, AAM is polled for them.
      */
-    @GetMapping("/administration/admin/cpanel")
+    @GetMapping("/cpanel")
     public String userCPanel(Model model, Principal principal) {
 
-        log.debug("GET request on /administration/admin/cpanel");
+        log.debug("GET request on /cpanel");
 
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -77,10 +78,10 @@ public class AdminCpanelController {
         return "index";
     }
 
-    @PostMapping("/administration/admin/cpanel/delete_platform_resources")
+    @PostMapping("/cpanel/delete_platform_resources")
     public ResponseEntity<?> deletePlatformResources(@RequestParam String platformId) {
 
-        log.debug("POST request on /administration/admin/cpanel/delete_platform_resources for info model with id = " + platformId);
+        log.debug("POST request on /cpanel/delete_platform_resources for info model with id = " + platformId);
 
         // Ask Registry
         try {
@@ -105,10 +106,10 @@ public class AdminCpanelController {
         return new ResponseEntity<>(new HttpHeaders(), HttpStatus.OK);
     }
 
-    @PostMapping("/administration/admin/cpanel/delete_information_model")
+    @PostMapping("/cpanel/delete_information_model")
     public ResponseEntity<?> deleteInformationModel(@RequestParam String infoModelIdToDelete) {
 
-        log.debug("POST request on /administration/admin/cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
+        log.debug("POST request on /cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
 
         // Get InformationModelList from Registry
         ResponseEntity<?> responseEntity = informationModelService.getInformationModels();
@@ -153,14 +154,14 @@ public class AdminCpanelController {
 
     }
 
-    @PostMapping("/administration/admin/cpanel/delete_federation")
+    @PostMapping("/cpanel/delete_federation")
     public ResponseEntity<?> deleteFederation(@RequestParam String federationIdToDelete, Principal principal) {
 
-        log.debug("POST request on /administration/admin/cpanel/delete_federation for federation with id = " + federationIdToDelete);
+        log.debug("POST request on /cpanel/delete_federation for federation with id = " + federationIdToDelete);
         return federationService.deleteFederation(federationIdToDelete, true, principal);
     }
 
-    @PostMapping("/administration/admin/cpanel/leave_federation")
+    @PostMapping("/cpanel/leave_federation")
     public ResponseEntity<?> leaveFederation(@RequestParam String federationId, @RequestParam String platformId,
                                               Principal principal) {
 
@@ -169,7 +170,7 @@ public class AdminCpanelController {
         return federationService.leaveFederation(federationId, platformId, principal, true);
     }
 
-    @PostMapping("/administration/admin/cpanel/federation_invite")
+    @PostMapping("/cpanel/federation_invite")
     public ResponseEntity<?> inviteToFederation(@Valid @RequestBody InvitationRequest invitationRequest, Principal principal) {
 
         log.debug("POST request on /administration/user/cpanel/federation_invite :" + invitationRequest);

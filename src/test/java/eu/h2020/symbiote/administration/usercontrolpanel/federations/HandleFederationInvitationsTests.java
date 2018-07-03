@@ -1,6 +1,6 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.federations;
 
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.FederationInvitation;
 import eu.h2020.symbiote.administration.model.FederationWithInvitations;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static eu.h2020.symbiote.administration.services.FederationNotificationService.FEDERATION_MANAGER_URL;
+import static eu.h2020.symbiote.administration.services.federation.FederationNotificationService.FEDERATION_MANAGER_URL;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;

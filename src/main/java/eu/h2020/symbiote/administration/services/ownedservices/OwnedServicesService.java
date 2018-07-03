@@ -145,8 +145,11 @@ public class OwnedServicesService {
                         new Credentials(user.getUsername(), ""),
                         "",
                         UserRole.NULL,
+                        AccountStatus.ACTIVE,
                         new HashMap<>(),
-                        new HashMap<>()
+                        new HashMap<>(),
+                        true,
+                        false
                 ),
                 OperationType.CREATE
         );

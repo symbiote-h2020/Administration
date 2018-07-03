@@ -2,14 +2,11 @@ package eu.h2020.symbiote.administration.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.h2020.symbiote.model.mim.SmartSpace;
-import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
 import java.util.List;
 
 public class SSPDetails {

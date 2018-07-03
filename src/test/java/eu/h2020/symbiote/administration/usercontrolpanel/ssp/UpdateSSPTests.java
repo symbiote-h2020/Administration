@@ -1,6 +1,6 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.ssp;
 
-import eu.h2020.symbiote.administration.communication.rabbit.exceptions.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.SSPDetails;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;

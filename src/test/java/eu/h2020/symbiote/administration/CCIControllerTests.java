@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Test class for use in testing MVC and form validation.
  */
 @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class ComponentControllerTests extends AdministrationBaseTestClass {
+public class CCIControllerTests extends AdministrationBaseTestClass {
 
     @Autowired
     private WebApplicationContext wac;

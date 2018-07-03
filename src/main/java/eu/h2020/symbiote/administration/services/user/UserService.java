@@ -15,15 +15,15 @@ import java.security.Principal;
 
 public interface UserService {
 
+    // Token actions
     void createVerificationToken(CoreUser user, String token);
-
-    void saveUser(CoreUser user);
 
     VerificationToken verifyToken(String token)
             throws VerificationTokenNotFoundException, VerificationTokenExpired;
 
     void deleteVerificationToken(VerificationToken verificationToken);
 
+    // Registration actions
     void validateUserRegistrationForm(CoreUser coreUser, BindingResult bindingResult) throws ServiceValidationException;
 
     void createUserAccount(CoreUser coreUser, WebRequest webRequest)
@@ -32,9 +32,11 @@ public interface UserService {
     void activateUserAccount(VerificationToken verificationToken)
             throws CommunicationException, GenericBadRequestException;
 
+    // Getting user info
     UserDetailsDTO getUserInformation(Principal principal)
             throws CommunicationException, GenericHttpErrorException;
 
+    // User update actions
     void changeEmail(ChangeEmailRequest message, BindingResult bindingResult, Principal principal)
             throws GenericHttpErrorException;
 

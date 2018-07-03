@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,11 +25,12 @@ import java.util.Map;
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
 @Controller
+@RequestMapping("/administration")
 @CrossOrigin
 public class LoginController {
     private static Log log = LogFactory.getLog(LoginController.class);
 
-	@GetMapping("/administration/user/login")
+	@GetMapping("/user/login")
 	public String userLogin() {
 
 	    log.debug("GET on /administration/user/login");
@@ -53,7 +55,7 @@ public class LoginController {
 		}
 	}
 
-	@GetMapping("/administration/admin/login")
+	@GetMapping("/admin/login")
 	public String adminLogin() {
 
         log.debug("GET on /administration/admin/login");
@@ -69,7 +71,7 @@ public class LoginController {
 		}
 	}
 
-    @GetMapping("/administration/isAuthenticated")
+    @GetMapping("/isAuthenticated")
     public ResponseEntity<?> isAuthenticated() {
 
         log.debug("GET on /administration/isAuthenticated");

@@ -1,6 +1,6 @@
 package eu.h2020.symbiote.administration.helpers;
 
-import eu.h2020.symbiote.administration.services.AuthorizationService;
+import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
 import eu.h2020.symbiote.security.commons.SecurityConstants;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

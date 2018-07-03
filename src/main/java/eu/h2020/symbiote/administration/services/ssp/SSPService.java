@@ -5,6 +5,7 @@ import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.Description;
 import eu.h2020.symbiote.administration.model.SSPDetails;
+import eu.h2020.symbiote.administration.services.infomodel.InformationModelService;
 import eu.h2020.symbiote.administration.services.ownedservices.CheckServiceOwnershipService;
 import eu.h2020.symbiote.administration.services.validation.ValidationService;
 import eu.h2020.symbiote.core.cci.SspRegistryResponse;
@@ -441,7 +442,7 @@ public class SSPService {
         }
     }
 
-    ResponseEntity getSSPDetailsFromRegistry(String sspId) {
+    public ResponseEntity getSSPDetailsFromRegistry(String sspId) {
 
         try {
             SspRegistryResponse registryResponse = rabbitManager.sendGetSSPDetailsMessage(sspId);

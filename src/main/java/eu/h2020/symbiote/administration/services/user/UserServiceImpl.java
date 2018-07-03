@@ -12,7 +12,6 @@ import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachable;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
 import eu.h2020.symbiote.administration.model.*;
-import eu.h2020.symbiote.administration.repository.UserRepository;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.AccountStatus;
@@ -46,7 +45,6 @@ public class UserServiceImpl implements UserService {
 
     private RabbitManager rabbitManager;
     private VerificationTokenRepository tokenRepository;
-    private UserRepository userRepository;
     private ApplicationEventPublisher eventPublisher;
 
     private String aaMOwnerUsername;
@@ -57,7 +55,6 @@ public class UserServiceImpl implements UserService {
     @Autowired
     public UserServiceImpl(RabbitManager rabbitManager,
                            VerificationTokenRepository tokenRepository,
-                           UserRepository userRepository,
                            ApplicationEventPublisher eventPublisher,
                            @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                            @Value("${aam.deployment.owner.password}") String aaMOwnerPassword,
@@ -65,7 +62,6 @@ public class UserServiceImpl implements UserService {
                            @Value("${symbiote.core.administration.email.verification}") Boolean emailVerificationEnabled) {
         this.rabbitManager = rabbitManager;
         this.tokenRepository = tokenRepository;
-        this.userRepository = userRepository;
         this.eventPublisher = eventPublisher;
 
         Assert.notNull(tokenExpirationTimeInHours,"tokenExpirationTimeInHours can not be null!");
@@ -88,10 +84,6 @@ public class UserServiceImpl implements UserService {
         tokenRepository.save(token);
     }
 
-    @Override
-    public void saveUser(CoreUser user) {
-        userRepository.save(user);
-    }
 
     @Override
     public VerificationToken verifyToken(String token)
@@ -181,9 +173,6 @@ public class UserServiceImpl implements UserService {
                     throw new GenericInternalServerErrorException("Could not send verification email");
                 }
             }
-
-            coreUser.clearSensitiveData();
-            saveUser(coreUser);
         } else if (managementStatus == ManagementStatus.USERNAME_EXISTS) {
             throw new GenericBadRequestException("Username exists!");
         } else

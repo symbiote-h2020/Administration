@@ -24,23 +24,24 @@ import java.util.Map;
  *
  * @author Tilemachos Pechlivanoglou (ICOM)
  */
+@RequestMapping("/administration")
 public interface RegisterController {
 
-	@GetMapping("/administration/register")
+	@GetMapping("/register")
 	String coreUserRegisterForm(Model model);
 
-    @GetMapping("/administration/register/roles")
+    @GetMapping("/register/roles")
     ResponseEntity<List<UserRoleValueTextMapping>> getUserRoles();
 
-    @PostMapping("/administration/register")
+    @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody
     Map<String, Object> coreUserRegister(@Valid CoreUser coreUser,
-                                                         BindingResult bindingResult,
-                                                         WebRequest webRequest)
+                                         BindingResult bindingResult,
+                                         WebRequest webRequest)
             throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException, ServiceValidationException;
 
-    @GetMapping("/administration/registrationConfirm")
+    @GetMapping("/registrationConfirm")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     String confirmRegistration(@RequestParam("token") String token) throws CommunicationException, GenericBadRequestException;
