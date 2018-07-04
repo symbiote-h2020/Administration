@@ -3,9 +3,11 @@ package eu.h2020.symbiote.administration.controllers.implementations;
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
 import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
 import eu.h2020.symbiote.administration.services.user.UserService;
@@ -22,7 +24,9 @@ import org.springframework.ui.Model;
 import org.springframework.util.Assert;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
 import java.util.HashMap;
@@ -43,6 +47,7 @@ public class RegisterControllerImpl implements RegisterController {
     public static final String SUCCESSFUL_REGISTRATION_MESSAGE = "Please, login with your new credentials";
     public static final String VERIFY_EMAIL = "We have sent you an email. Please, click on the link to verify your " +
             "account and then login with your new credentials";
+    public static final String PASSWORD_RESET = "Your new password has been sent via email to ";
 
     @Value("${aam.deployment.owner.username}")
     private String aaMOwnerUsername;
@@ -120,5 +125,20 @@ public class RegisterControllerImpl implements RegisterController {
         userService.deleteVerificationToken(verificationToken);
 
         return "email_verification_success";
+    }
+
+    @Override
+    public Map<String, Object> forgotPassword(@Valid @RequestBody ResetPasswordRequest request,
+                                       BindingResult bindingResult,
+                                       WebRequest webRequest)
+            throws GenericHttpErrorException {
+        log.debug("POST request on /administration/generic/forgot_password for username = "
+                + request.getUsername() + " and email = " + request.getEmail());
+        userService.resetPassword(request, bindingResult, webRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("successMessage", String.format("The new password has been sent to %s." +
+                " Please, change it in the User Control Panel as soon as possible.", request.getEmail()));
+        return response;
     }
 }

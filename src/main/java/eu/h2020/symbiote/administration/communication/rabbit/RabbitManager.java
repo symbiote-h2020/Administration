@@ -892,6 +892,29 @@ public class RabbitManager {
     public UserDetailsResponse sendLoginRequest(Credentials userCredentials) throws CommunicationException {
 
         log.debug("sendLoginRequest to AAM: " + ReflectionToStringBuilder.toString(userCredentials));
+        return sendUserDetailsRequest(userCredentials, OperationType.READ);
+    }
+
+    /**
+     * Method used to send RPC request to login user.
+     *
+     * @param username  the username
+     */
+    public UserDetailsResponse sendForceReadRequest(String username) throws CommunicationException {
+
+        log.debug("sendForceReadRequest to AAM: " + username);
+        return sendUserDetailsRequest(new Credentials(username, ""), OperationType.FORCE_READ);
+    }
+
+    /**
+     * Method used to send RPC request to login user.
+     *
+     * @param userCredentials   the credentials of the user trying to login
+     * @param type              the operation type
+     */
+    private UserDetailsResponse sendUserDetailsRequest(Credentials userCredentials, OperationType type) throws CommunicationException {
+
+        log.debug("sendUserDetailsRequest to AAM: " + ReflectionToStringBuilder.toString(userCredentials));
 
         try {
             // Todo: change the Operation type to READ
@@ -908,7 +931,7 @@ public class RabbitManager {
                             true,
                             true
                     ),
-                    OperationType.CREATE
+                    type
             );
             String message = mapper.writeValueAsString(request);
 

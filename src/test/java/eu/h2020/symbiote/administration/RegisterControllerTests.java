@@ -3,6 +3,7 @@ package eu.h2020.symbiote.administration;
 import eu.h2020.symbiote.administration.controllers.implementations.RegisterControllerImpl;
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
+import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
@@ -13,6 +14,8 @@ import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -105,7 +108,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", "val")
                 .param("validPassword", "val")
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.validUsername")
@@ -121,7 +124,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
                 .param("validPassword", String.join("", String.join("", Collections.nCopies(11, "val")), "1"))
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.validUsername").value("Length must be between 0 and 30 characters"))
@@ -134,7 +137,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "PLATFORM"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.role").value(containsString("Failed to convert property value of type")));
@@ -146,7 +149,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "NULL"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.validationErrors.role").value("Invalid User Role"));
@@ -160,7 +163,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.errorMessage").value("The component AAM is unreachable"));
@@ -175,7 +178,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
@@ -197,7 +200,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
@@ -215,7 +218,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("An error occurred : Username exists!"));
@@ -230,7 +233,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("An error occurred : ERROR"));
@@ -245,7 +248,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
-                .param("recoveryMail", mail)
+                .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage").value("SAMPLE_ERROR"));
@@ -331,6 +334,112 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
         assertEquals(0, tokenRepository.findAll().size());
     }
 
+    @Test
+    public void resetPasswordGetUserDetailsAAMUnreachable() throws Exception {
+        doReturn(null).when(rabbitManager).sendForceReadRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("Authorization Manager is unreachable!"));
+
+    }
+
+    @Test
+    public void resetPasswordGetUserDetailsCommunicationException() throws Exception {
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendForceReadRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("SAMPLE_ERROR"));
+    }
+
+    @Test
+    public void resetPasswordGetUserDetailsError() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendForceReadRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("The Authorization Manager responded with: " + HttpStatus.BAD_REQUEST.getReasonPhrase()));
+
+    }
+
+    @Test
+    public void resetPasswordWrongCredentials() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        ResetPasswordRequest request = new ResetPasswordRequest(username, "dummyEmail");
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("No user with such credentials"));
+    }
+
+    @Test
+    public void resetPasswordForceUpdateAAMUnreachable() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("Authorization Manager is unreachable!"));
+
+    }
+
+    @Test
+    public void resetPasswordForceUpdateCommunicationException() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("SAMPLE_ERROR"));
+    }
+
+    @Test
+    public void resetPasswordForceUpdateError() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("The Authorization Manager responded with " + ManagementStatus.ERROR));
+
+    }
+
+    @Test
+    public void resetPasswordSuccess() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.successMessage").value(String.format("The new password has been sent to %s." +
+                        " Please, change it in the User Control Panel as soon as possible.", email)));
+
+    }
+
     private VerificationToken createAndStoreVerificationToken(TokenStatus tokenStatus) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Timestamp(cal.getTime().getTime()));
@@ -357,6 +466,10 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
         }
 
         return tokenRepository.save(verificationToken);
+    }
+
+    private ResetPasswordRequest sampleResetPasswordRequest() {
+        return new ResetPasswordRequest(username, email);
     }
 
     private enum TokenStatus {

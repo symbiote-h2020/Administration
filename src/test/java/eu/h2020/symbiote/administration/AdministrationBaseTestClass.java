@@ -105,7 +105,7 @@ public abstract class AdministrationBaseTestClass {
 
     protected String username = "Test1";
     protected String password = "Test1$";
-    String mail = "test@mail.com";
+    protected String email = "test@email.com";
     protected String clientId1 = "clientId1";
 
     protected String platform1Id = "test1Plat";
@@ -175,13 +175,13 @@ public abstract class AdministrationBaseTestClass {
 
     CoreUser sampleCoreUser(UserRole role) {
         return new CoreUser(username, password, true, true,
-                true, true, sampleUserAuthorities(), mail, role,
+                true, true, sampleUserAuthorities(), email, role,
                 true, true, true);
     }
 
     private CoreUser sampleAdminUser(UserRole role) {
         return new CoreUser(username, password, true, true,
-                true, true, sampleUserAuthorities(), mail, role,
+                true, true, sampleUserAuthorities(), email, role,
                 true, true, true);
     }
 
@@ -425,7 +425,7 @@ public abstract class AdministrationBaseTestClass {
                 new Credentials(username, password),
                 new UserDetails(
                     new Credentials(username, password),
-                        mail,
+                        email,
                         role,
                         AccountStatus.ACTIVE,
                         new HashMap<>(),
@@ -448,7 +448,7 @@ public abstract class AdministrationBaseTestClass {
 
         return new UserDetailsResponse(status, new UserDetails(
                 new Credentials(username, password),
-                mail,
+                email,
                 UserRole.SERVICE_OWNER,
                 AccountStatus.ACTIVE,
                 new HashMap<>(),

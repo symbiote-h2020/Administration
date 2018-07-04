@@ -26,7 +26,9 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
     private String administrationUrl;
 
     @Autowired
-    public RegistrationListener(UserService userService, MessageSource messages, GmailService gmailService,
+    public RegistrationListener(UserService userService,
+                                MessageSource messages,
+                                GmailService gmailService,
                                 @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress) {
         this.userService = userService;
         this.messages = messages;

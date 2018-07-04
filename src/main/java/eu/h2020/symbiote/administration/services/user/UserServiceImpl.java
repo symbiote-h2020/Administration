@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.administration.services.user;
 
+import eu.h2020.symbiote.administration.application.events.OnPasswordResetEvent;
 import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.application.listeners.RegistrationListener;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
@@ -19,6 +20,7 @@ import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.*;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -167,7 +169,8 @@ public class UserServiceImpl implements UserService {
                     String appUrl = webRequest.getContextPath();
                     eventPublisher.publishEvent(new OnRegistrationCompleteEvent
                             (coreUser, webRequest.getLocale(), appUrl, coreUser.getRecoveryMail()));
-                } catch (Exception me) {
+                } catch (Exception e) {
+                    log.warn("Exception during sending verification email", e);
                     throw new GenericInternalServerErrorException("Could not send verification email");
                 }
             }
@@ -399,6 +402,67 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void resetPassword(ResetPasswordRequest request, BindingResult bindingResult, WebRequest webRequest)
+            throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+        String errorName = "resetPasswordError";
+
+        if (bindingResult.hasErrors()) {
+
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + fieldError.getDefaultMessage());
+                errorsResponse.put(errorField, fieldError.getDefaultMessage());
+            }
+        }
+
+        if (errorsResponse.size() > 0) {
+            errorsResponse.put(errorName, "Invalid Arguments");
+            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
+        }
+
+        UserDetailsResponse userDetailsResponse = handleForceReadRequest(request.getUsername(), errorName);
+        if (!request.getUsername().equals(userDetailsResponse.getUserDetails().getCredentials().getUsername()) ||
+                !request.getEmail().equals(userDetailsResponse.getUserDetails().getRecoveryMail())) {
+            errorsResponse.put(errorName, "No user with such credentials");
+            throw new GenericBadRequestException("Error in fetching user details", errorsResponse);
+        }
+
+        // Generate new password
+        String newPassword = RandomStringUtils.randomAlphanumeric(12);
+        UserDetails userDetails = userDetailsResponse.getUserDetails();
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(request.getUsername(), newPassword),
+                new UserDetails(
+                        new Credentials(request.getUsername(), newPassword),
+                        userDetails.getRecoveryMail(),
+                        userDetails.getRole(),
+                        userDetails.getStatus(),
+                        userDetails.getAttributes(),
+                        userDetails.getClients(),
+                        userDetails.hasGrantedServiceConsent(),
+                        userDetails.hasGrantedAnalyticsAndResearchConsent()
+                ),
+                OperationType.FORCE_UPDATE
+        );
+
+        handleUserManagementRequest(userUpdateRequest, errorName);
+
+        try {
+            eventPublisher.publishEvent(new OnPasswordResetEvent(
+                    request.getUsername(), webRequest.getLocale(), request.getEmail(), newPassword));
+        } catch (Exception e) {
+            log.warn("Exception during sending password reset email", e);
+            throw new GenericInternalServerErrorException("Could not send password reset email");
+        }
+    }
+
+    @Override
     public void deleteUser(Principal principal) throws GenericHttpErrorException {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
@@ -440,6 +504,28 @@ public class UserServiceImpl implements UserService {
 
         handleRevocationRequest(revocationRequest, errorName);
 
+    }
+
+    private UserDetailsResponse handleForceReadRequest(String username, String errorName)
+            throws GenericHttpErrorException {
+        Map<String, String> errorsResponse = new HashMap<>();
+        UserDetailsResponse response;
+
+        try {
+            response = rabbitManager.sendForceReadRequest(username);
+
+            if (response == null) {
+                errorsResponse.put(errorName, "Authorization Manager is unreachable!");
+                throw new GenericHttpErrorException("Authorization Manager is unreachable!", errorsResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+            } else if (!response.getHttpStatus().is2xxSuccessful()) {
+                errorsResponse.put(errorName, "The Authorization Manager responded with: " + response.getHttpStatus().getReasonPhrase());
+                throw new GenericHttpErrorException("The Authorization Manager responded with ERROR", errorsResponse, HttpStatus.BAD_REQUEST);
+            }
+        } catch (CommunicationException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericBadRequestException("Error", errorsResponse);
+        }
+        return response;
     }
 
     private void handleUserManagementRequest(UserManagementRequest userManagementRequest, String errorName)

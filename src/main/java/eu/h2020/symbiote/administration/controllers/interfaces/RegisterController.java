@@ -3,9 +3,11 @@ package eu.h2020.symbiote.administration.controllers.interfaces;
 
 import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +29,8 @@ import java.util.Map;
 @RequestMapping("/administration")
 public interface RegisterController {
 
-	@GetMapping("/register")
-	String coreUserRegisterForm(Model model);
+    @GetMapping("/register")
+    String coreUserRegisterForm(Model model);
 
     @GetMapping("/register/roles")
     ResponseEntity<List<UserRoleValueTextMapping>> getUserRoles();
@@ -44,4 +46,13 @@ public interface RegisterController {
     @GetMapping("/registrationConfirm")
     @ResponseStatus(HttpStatus.OK)
     String confirmRegistration(@RequestParam("token") String token) throws CommunicationException, GenericBadRequestException;
+
+    @PostMapping("/forgot_password")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    Map<String, Object> forgotPassword(@Valid @RequestBody ResetPasswordRequest request,
+                                BindingResult bindingResult,
+                                WebRequest webRequest)
+            throws GenericHttpErrorException;
+
 }

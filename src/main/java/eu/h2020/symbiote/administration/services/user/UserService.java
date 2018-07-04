@@ -46,6 +46,9 @@ public interface UserService {
     void changePassword(ChangePasswordRequest message, BindingResult bindingResult, Principal principal)
             throws GenericHttpErrorException;
 
+    void resetPassword(ResetPasswordRequest request, BindingResult bindingResult, WebRequest webRequest)
+            throws GenericHttpErrorException;
+
     void deleteUser(Principal principal) throws GenericHttpErrorException;
 
     void deleteClient(String clientId, Principal principal) throws GenericHttpErrorException;
