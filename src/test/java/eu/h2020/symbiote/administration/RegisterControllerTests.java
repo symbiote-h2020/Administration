@@ -8,8 +8,12 @@ import eu.h2020.symbiote.administration.model.ResendVerificationEmailRequest;
 import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.Credentials;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
+import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -475,8 +479,33 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     }
 
     @Test
-    public void resendVerificationEmailSuccess() throws Exception {
+    public void resendVerificationEmailAccountAlreadyActive() throws Exception {
         doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resendVerificationEmailError")
+                        .value("Account already Active"));
+    }
+
+    @Test
+    public void resendVerificationEmailSuccess() throws Exception {
+        UserDetailsResponse inActive = new UserDetailsResponse(HttpStatus.OK,
+                new UserDetails(
+                        new Credentials(username, password),
+                        email,
+                        UserRole.SERVICE_OWNER,
+                        AccountStatus.NEW,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        true,
+                        true
+                ));
+
+        doReturn(inActive).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/resend_verification_email")
                 .header("Accept-Language", Locale.US.toString())

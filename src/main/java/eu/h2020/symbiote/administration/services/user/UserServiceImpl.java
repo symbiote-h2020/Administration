@@ -236,6 +236,11 @@ public class UserServiceImpl implements UserService {
             throw new GenericInternalServerErrorException("Error getting user details", errorsResponse);
         }
 
+        if (userDetailsDTO.getAccountStatus() == AccountStatus.ACTIVE) {
+            errorsResponse.put(errorName, "Account already Active");
+            throw new GenericBadRequestException("Account already Active", errorsResponse);
+        }
+
         if (emailVerificationEnabled) {
             CoreUser coreUser = new CoreUser(
                     userDetailsDTO.getUsername(), "", true, true,
@@ -266,6 +271,7 @@ public class UserServiceImpl implements UserService {
 
         String recoveryMail = userDetailsResponse.getUserDetails().getRecoveryMail();
         UserRole role = userDetailsResponse.getUserDetails().getRole();
+        AccountStatus accountStatus = userDetailsResponse.getUserDetails().getStatus();
         boolean serviceConsent = userDetailsResponse.getUserDetails().hasGrantedServiceConsent();
         boolean analyticsAndResearchConsent = userDetailsResponse.getUserDetails().hasGrantedAnalyticsAndResearchConsent();
         Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
@@ -274,6 +280,7 @@ public class UserServiceImpl implements UserService {
                 username,
                 recoveryMail,
                 role,
+                accountStatus,
                 serviceConsent,
                 serviceConsent,
                 analyticsAndResearchConsent,
