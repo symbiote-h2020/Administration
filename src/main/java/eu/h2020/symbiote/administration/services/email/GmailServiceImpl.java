@@ -39,7 +39,7 @@ public final class GmailServiceImpl implements GmailService {
 
     @Autowired
     public GmailServiceImpl(GmailCredentials gmailCredentials,
-                            @Value("${symbiote.core.administration.gmail.applicationName}") String applicationName)
+                            @Value("${symbiote.core.administration.email.applicationName}") String applicationName)
             throws GeneralSecurityException, IOException {
         this.httpTransport = GoogleNetHttpTransport.newTrustedTransport();
         this.gmailCredentials = gmailCredentials;

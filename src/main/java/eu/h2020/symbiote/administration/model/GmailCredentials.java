@@ -12,11 +12,11 @@ public class GmailCredentials {
     private final String accessToken;
     private final String refreshToken;
 
-    public GmailCredentials(@Value("${symbiote.core.administration.gmail.userEmail}") String userEmail,
-                            @Value("${symbiote.core.administration.gmail.clientId}") String clientId,
-                            @Value("${symbiote.core.administration.gmail.clientSecret}") String clientSecret,
-                            @Value("${symbiote.core.administration.gmail.accessToken}") String accessToken,
-                            @Value("${symbiote.core.administration.gmail.refreshToken}") String refreshToken) {
+    public GmailCredentials(@Value("${symbiote.core.administration.email.userEmail}") String userEmail,
+                            @Value("${symbiote.core.administration.email.clientId}") String clientId,
+                            @Value("${symbiote.core.administration.email.clientSecret}") String clientSecret,
+                            @Value("${symbiote.core.administration.email.accessToken}") String accessToken,
+                            @Value("${symbiote.core.administration.email.refreshToken}") String refreshToken) {
         this.userEmail = userEmail;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
