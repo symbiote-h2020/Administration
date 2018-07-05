@@ -7,6 +7,7 @@ import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorExcep
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.ResendVerificationEmailRequest;
 import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,7 @@ public interface RegisterController {
     Map<String, Object> coreUserRegister(@Valid CoreUser coreUser,
                                          BindingResult bindingResult,
                                          WebRequest webRequest)
-            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException, ServiceValidationException;
+            throws CommunicationException, GenericHttpErrorException, ServiceValidationException;
 
     @GetMapping("/registrationConfirm")
     @ResponseStatus(HttpStatus.OK)
@@ -54,5 +55,13 @@ public interface RegisterController {
                                 BindingResult bindingResult,
                                 WebRequest webRequest)
             throws GenericHttpErrorException;
+
+    @PostMapping("/resend_verification_email")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    Map<String, Object> resendVerificationEmail(@Valid @RequestBody ResendVerificationEmailRequest request,
+                                                BindingResult bindingResult,
+                                                WebRequest webRequest)
+            throws CommunicationException, GenericHttpErrorException;
 
 }

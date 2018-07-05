@@ -3,19 +3,17 @@ package eu.h2020.symbiote.administration.controllers;
 import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
-import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachable;
+import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -58,7 +56,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return modelAndView;
     }
 
-    @ExceptionHandler(value = {EntityUnreachable.class})
+    @ExceptionHandler(value = {EntityUnreachableException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     protected Map<String, Object> handleEntityUnreachable(Exception e) {

@@ -1,8 +1,10 @@
 package eu.h2020.symbiote.administration;
 
-import eu.h2020.symbiote.administration.controllers.implementations.RegisterControllerImpl;
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
+import eu.h2020.symbiote.administration.model.ResendVerificationEmailRequest;
 import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
@@ -14,6 +16,7 @@ import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,10 +25,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import javax.servlet.Filter;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -56,6 +56,9 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Autowired
     private VerificationTokenRepository tokenRepository;
+
+    @Autowired
+    private MessageSource messages;
 
     private MockMvc mockMvc;
 
@@ -175,13 +178,15 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/register")
+                .header("Accept-Language", Locale.US.toString())
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
+                .andExpect(jsonPath("$.successMessage")
+                        .value(messages.getMessage("message.verifyEmail", null, Locale.US)));
 
         TimeUnit.MILLISECONDS.sleep(200);
 
@@ -197,13 +202,15 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
         createAndStoreVerificationToken(TokenStatus.VALID);
 
         mockMvc.perform(post("/administration/register")
+                .header("Accept-Language", Locale.US.toString())
                 .with(csrf().asHeader())
                 .param("validUsername", username)
                 .param("validPassword", password)
                 .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.successMessage").value(RegisterControllerImpl.VERIFY_EMAIL));
+                .andExpect(jsonPath("$.successMessage")
+                        .value(messages.getMessage("message.verifyEmail", null, Locale.US)));
 
         TimeUnit.MILLISECONDS.sleep(200);
         assertEquals(1, tokenRepository.findAll().size());
@@ -440,6 +447,46 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     }
 
+    @Test
+    public void resendVerificationEmailEntityUnreachableException() throws Exception {
+        EntityUnreachableException entityUnreachableException = new EntityUnreachableException("AAM");
+        doThrow(entityUnreachableException).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.resendVerificationEmailError")
+                        .value(entityUnreachableException.getMessage()));
+    }
+
+    @Test
+    public void resendVerificationEmailCommunicationException() throws Exception {
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resendVerificationEmailError")
+                        .value(sampleCommunicationException().getMessage()));
+    }
+
+    @Test
+    public void resendVerificationEmailSuccess() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.successMessage")
+                        .value(messages.getMessage("message.verifyEmail", null, Locale.US)));
+    }
+
     private VerificationToken createAndStoreVerificationToken(TokenStatus tokenStatus) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Timestamp(cal.getTime().getTime()));
@@ -470,6 +517,9 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     private ResetPasswordRequest sampleResetPasswordRequest() {
         return new ResetPasswordRequest(username, email);
+    }
+    private ResendVerificationEmailRequest sampleResendVerificationEmailRequest() {
+        return new ResendVerificationEmailRequest(username, password);
     }
 
     private enum TokenStatus {

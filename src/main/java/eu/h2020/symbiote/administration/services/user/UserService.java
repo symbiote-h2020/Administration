@@ -3,8 +3,8 @@ package eu.h2020.symbiote.administration.services.user;
 import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
-import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
 import eu.h2020.symbiote.administration.model.*;
@@ -27,14 +27,20 @@ public interface UserService {
     void validateUserRegistrationForm(CoreUser coreUser, BindingResult bindingResult) throws ServiceValidationException;
 
     void createUserAccount(CoreUser coreUser, WebRequest webRequest)
-            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException;
+            throws CommunicationException, GenericHttpErrorException;
 
     void activateUserAccount(VerificationToken verificationToken)
             throws CommunicationException, GenericBadRequestException;
 
-    // Getting user info
-    UserDetailsDTO getUserInformation(Principal principal)
+    void resendVerificationEmail(ResendVerificationEmailRequest request, BindingResult bindingResult, WebRequest webRequest)
             throws CommunicationException, GenericHttpErrorException;
+
+    // Getting user info
+    UserDetailsDTO getUserInformation(String username, String password)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException;
+
+    UserDetailsDTO getUserInformation(Principal principal)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException;
 
     // User update actions
     void changeEmail(ChangeEmailRequest message, BindingResult bindingResult, Principal principal)

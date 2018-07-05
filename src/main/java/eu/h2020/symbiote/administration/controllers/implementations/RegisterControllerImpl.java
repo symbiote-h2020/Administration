@@ -7,6 +7,7 @@ import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorExcep
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.administration.model.ResendVerificationEmailRequest;
 import eu.h2020.symbiote.administration.model.ResetPasswordRequest;
 import eu.h2020.symbiote.administration.model.VerificationToken;
 import eu.h2020.symbiote.administration.model.mappers.UserRoleValueTextMapping;
@@ -16,6 +17,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,10 +46,6 @@ import java.util.Map;
 public class RegisterControllerImpl implements RegisterController {
 
     private static Log log = LogFactory.getLog(RegisterControllerImpl.class);
-    public static final String SUCCESSFUL_REGISTRATION_MESSAGE = "Please, login with your new credentials";
-    public static final String VERIFY_EMAIL = "We have sent you an email. Please, click on the link to verify your " +
-            "account and then login with your new credentials";
-    public static final String PASSWORD_RESET = "Your new password has been sent via email to ";
 
     @Value("${aam.deployment.owner.username}")
     private String aaMOwnerUsername;
@@ -59,15 +57,20 @@ public class RegisterControllerImpl implements RegisterController {
     private Boolean emailVerificationEnabled;
 
     private UserService userService;
+    private MessageSource messages;
 
     @Autowired
     public RegisterControllerImpl(UserService userService,
+                                  MessageSource messages,
                                   @Value("${aam.deployment.owner.username}") String aaMOwnerUsername,
                                   @Value("${aam.deployment.owner.password}") String aaMOwnerPassword,
                                   @Value("${symbiote.core.administration.email.verification}") Boolean emailVerificationEnabled) {
 
         Assert.notNull(userService,"UserService can not be null!");
         this.userService = userService;
+
+        Assert.notNull(messages,"MessageSource can not be null!");
+        this.messages = messages;
 
         Assert.notNull(aaMOwnerUsername,"aaMOwnerUsername can not be null!");
         this.aaMOwnerUsername = aaMOwnerUsername;
@@ -99,7 +102,7 @@ public class RegisterControllerImpl implements RegisterController {
     public Map<String, Object> coreUserRegister(@Valid CoreUser coreUser,
                                                 BindingResult bindingResult,
                                                 WebRequest webRequest)
-            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException, ServiceValidationException {
+            throws CommunicationException, GenericHttpErrorException, ServiceValidationException {
 
         log.debug("POST request on /administration/register");
         log.debug("CoreUser = " + ReflectionToStringBuilder.toString(coreUser));
@@ -110,7 +113,9 @@ public class RegisterControllerImpl implements RegisterController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("validationErrors", new HashMap<>());
-        response.put("successMessage", emailVerificationEnabled ? VERIFY_EMAIL : SUCCESSFUL_REGISTRATION_MESSAGE);
+        response.put("successMessage", emailVerificationEnabled ?
+                messages.getMessage("message.verifyEmail", null, webRequest.getLocale()) :
+                messages.getMessage("message.successfulRegistrationNoEmail", null, webRequest.getLocale()));
         return response;
     }
 
@@ -129,8 +134,8 @@ public class RegisterControllerImpl implements RegisterController {
 
     @Override
     public Map<String, Object> forgotPassword(@Valid @RequestBody ResetPasswordRequest request,
-                                       BindingResult bindingResult,
-                                       WebRequest webRequest)
+                                              BindingResult bindingResult,
+                                              WebRequest webRequest)
             throws GenericHttpErrorException {
         log.debug("POST request on /administration/generic/forgot_password for username = "
                 + request.getUsername() + " and email = " + request.getEmail());
@@ -139,6 +144,20 @@ public class RegisterControllerImpl implements RegisterController {
         Map<String, Object> response = new HashMap<>();
         response.put("successMessage", String.format("The new password has been sent to %s." +
                 " Please, change it in the User Control Panel as soon as possible.", request.getEmail()));
+        return response;
+    }
+
+    @Override
+    public Map<String, Object> resendVerificationEmail(@Valid @RequestBody ResendVerificationEmailRequest request,
+                                                       BindingResult bindingResult,
+                                                       WebRequest webRequest)
+            throws CommunicationException, GenericHttpErrorException {
+        log.debug("POST request on /administration/resend_verification_email for username = "
+                + request.getUsername());
+        userService.resendVerificationEmail(request, bindingResult, webRequest);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("successMessage", messages.getMessage("message.verifyEmail", null, webRequest.getLocale()));
         return response;
     }
 }

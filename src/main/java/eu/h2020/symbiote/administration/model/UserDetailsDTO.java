@@ -3,6 +3,7 @@ package eu.h2020.symbiote.administration.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.h2020.symbiote.security.commons.Certificate;
+import eu.h2020.symbiote.security.commons.enums.UserRole;
 
 import java.util.Map;
 
@@ -10,7 +11,7 @@ public class UserDetailsDTO {
 
     private final String username;
     private final String email;
-    private final String role;
+    private final UserRole role;
     private final boolean termsAccepted;
     private final boolean conditionsAccepted;
     private final boolean analyticsAndResearchConsent;
@@ -20,7 +21,7 @@ public class UserDetailsDTO {
     @JsonCreator
     public UserDetailsDTO(@JsonProperty("username") String username,
                           @JsonProperty("email") String email,
-                          @JsonProperty("role") String role,
+                          @JsonProperty("role") UserRole role,
                           @JsonProperty("termsAccepted") boolean termsAccepted,
                           @JsonProperty("conditionsAccepted") boolean conditionsAccepted,
                           @JsonProperty("analyticsAndResearchConsent") boolean analyticsAndResearchConsent,
@@ -36,7 +37,7 @@ public class UserDetailsDTO {
 
     public String getUsername() { return username; }
     public String getEmail() { return email; }
-    public String getRole() { return role; }
+    public UserRole getRole() { return role; }
     public boolean isTermsAccepted() { return termsAccepted; }
     public boolean isConditionsAccepted() { return conditionsAccepted; }
     public boolean isAnalyticsAndResearchConsent() { return analyticsAndResearchConsent; }

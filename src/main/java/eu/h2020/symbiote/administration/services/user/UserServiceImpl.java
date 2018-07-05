@@ -9,7 +9,7 @@ import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestExce
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
-import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachable;
+import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
 import eu.h2020.symbiote.administration.model.*;
@@ -139,7 +139,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void createUserAccount(CoreUser coreUser, WebRequest webRequest)
-            throws CommunicationException, GenericBadRequestException, GenericInternalServerErrorException {
+            throws CommunicationException, GenericHttpErrorException {
 
         // Construct the UserManagementRequest
         UserManagementRequest userRegistrationRequest = new UserManagementRequest(
@@ -161,7 +161,7 @@ public class UserServiceImpl implements UserService {
         ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userRegistrationRequest);
 
         if (managementStatus == null) {
-            throw new EntityUnreachable("AAM");
+            throw new EntityUnreachableException("AAM");
 
         } else if(managementStatus == ManagementStatus.OK ) {
             if (emailVerificationEnabled) {
@@ -182,7 +182,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void activateUserAccount(VerificationToken verificationToken)
-            throws CommunicationException, GenericBadRequestException, EntityUnreachable {
+            throws CommunicationException, GenericBadRequestException, EntityUnreachableException {
         CoreUser coreUser = verificationToken.getUser();
 
         // Todo: change the consents below to read them from token
@@ -206,39 +206,87 @@ public class UserServiceImpl implements UserService {
         ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userRegistrationRequest);
 
         if (managementStatus == null)
-            throw new EntityUnreachable("AAM");
+            throw new EntityUnreachableException("AAM");
         else if (managementStatus != ManagementStatus.OK)
             throw new GenericBadRequestException(managementStatus.toString());
     }
 
     @Override
-    public UserDetailsDTO getUserInformation(Principal principal)
-            throws CommunicationException, GenericHttpErrorException, EntityUnreachable {
-        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
-        CoreUser user = (CoreUser) token.getPrincipal();
-        String password = (String) token.getCredentials();
+    public void resendVerificationEmail(ResendVerificationEmailRequest request,
+                                        BindingResult bindingResult,
+                                        WebRequest webRequest)
+            throws GenericHttpErrorException {
 
-        UserDetailsResponse userDetailsResponse = rabbitManager.sendLoginRequest(new Credentials(user.getUsername(), password));
+        String errorName = "resendVerificationEmailError";
+        Map<String, String> errorsResponse = new HashMap<>();
+
+        handleValidationErrors(bindingResult, errorsResponse, errorName);
+
+        UserDetailsDTO userDetailsDTO;
+        try {
+            userDetailsDTO = getUserInformation(request.getUsername(), request.getPassword());
+        } catch (GenericHttpErrorException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericHttpErrorException("Error getting user details", errorsResponse, e.getHttpStatus());
+        } catch (CommunicationException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericBadRequestException("Error getting user details", errorsResponse);
+        } catch (EntityUnreachableException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericInternalServerErrorException("Error getting user details", errorsResponse);
+        }
+
+        if (emailVerificationEnabled) {
+            CoreUser coreUser = new CoreUser(
+                    userDetailsDTO.getUsername(), "", true, true,
+                    true, true, new ArrayList<>(), userDetailsDTO.getEmail(),
+                    userDetailsDTO.getRole(), userDetailsDTO.isTermsAccepted(), userDetailsDTO.isConditionsAccepted(),
+                    userDetailsDTO.isAnalyticsAndResearchConsent());
+
+            try {
+                String appUrl = webRequest.getContextPath();
+                eventPublisher.publishEvent(new OnRegistrationCompleteEvent
+                        (coreUser, webRequest.getLocale(), appUrl, coreUser.getRecoveryMail()));
+            } catch (Exception e) {
+                log.warn("Exception during resending verification email", e);
+                throw new GenericInternalServerErrorException("Could not resend verification email");
+            }
+        }
+    }
+
+    @Override
+    public UserDetailsDTO getUserInformation(String username, String password)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException {
+        UserDetailsResponse userDetailsResponse = rabbitManager.sendLoginRequest(new Credentials(username, password));
 
         if (userDetailsResponse == null)
-            throw new EntityUnreachable("AAM");
+            throw new EntityUnreachableException("AAM");
         if (userDetailsResponse.getHttpStatus() != HttpStatus.OK)
             throw new GenericHttpErrorException("Could not get the userDetails", userDetailsResponse.getHttpStatus());
 
         String recoveryMail = userDetailsResponse.getUserDetails().getRecoveryMail();
-        String role = userDetailsResponse.getUserDetails().getRole().toString();
+        UserRole role = userDetailsResponse.getUserDetails().getRole();
         boolean serviceConsent = userDetailsResponse.getUserDetails().hasGrantedServiceConsent();
         boolean analyticsAndResearchConsent = userDetailsResponse.getUserDetails().hasGrantedAnalyticsAndResearchConsent();
         Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
 
         return new UserDetailsDTO(
-                user.getUsername(),
+                username,
                 recoveryMail,
                 role,
                 serviceConsent,
                 serviceConsent,
                 analyticsAndResearchConsent,
                 clients);
+    }
+
+    @Override
+    public UserDetailsDTO getUserInformation(Principal principal)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        return getUserInformation(user.getUsername(), password);
     }
 
     @Override
@@ -306,18 +354,7 @@ public class UserServiceImpl implements UserService {
         String password = (String) token.getCredentials();
         String errorName = "changePermissionsError";
 
-        if (bindingResult.hasErrors()) {
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : errors) {
-                String errorMessage = fieldError.getDefaultMessage();
-                String errorField = "error_" + fieldError.getField();
-                log.debug(errorField + ": " + errorMessage);
-                errorsResponse.put(errorField, errorMessage);
-            }
-
-            errorsResponse.put(errorName, "Invalid values");
-            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
-        }
+        handleValidationErrors(bindingResult, errorsResponse, errorName);
 
         // Todo: fill in the attributes
         // Construct the UserManagementRequest
@@ -407,20 +444,7 @@ public class UserServiceImpl implements UserService {
         Map<String, String> errorsResponse = new HashMap<>();
         String errorName = "resetPasswordError";
 
-        if (bindingResult.hasErrors()) {
-
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError fieldError : errors) {
-                String errorField = "error_" + fieldError.getField();
-                log.debug(errorField + ": " + fieldError.getDefaultMessage());
-                errorsResponse.put(errorField, fieldError.getDefaultMessage());
-            }
-        }
-
-        if (errorsResponse.size() > 0) {
-            errorsResponse.put(errorName, "Invalid Arguments");
-            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
-        }
+        handleValidationErrors(bindingResult, errorsResponse, errorName);
 
         UserDetailsResponse userDetailsResponse = handleForceReadRequest(request.getUsername(), errorName);
         if (!request.getUsername().equals(userDetailsResponse.getUserDetails().getCredentials().getUsername()) ||
@@ -565,6 +589,22 @@ public class UserServiceImpl implements UserService {
         } catch (CommunicationException e) {
             errorsResponse.put(errorName, e.getMessage());
             throw new GenericBadRequestException("Error", errorsResponse);
+        }
+    }
+
+    private void handleValidationErrors(BindingResult bindingResult, Map<String, String> errorsResponse, String errorName)
+            throws GenericBadRequestException {
+        if (bindingResult.hasErrors()) {
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError fieldError : errors) {
+                String errorMessage = fieldError.getDefaultMessage();
+                String errorField = "error_" + fieldError.getField();
+                log.debug(errorField + ": " + errorMessage);
+                errorsResponse.put(errorField, errorMessage);
+            }
+
+            errorsResponse.put(errorName, "Invalid values");
+            throw new GenericBadRequestException("Invalid Arguments", errorsResponse);
         }
     }
 
