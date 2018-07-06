@@ -254,7 +254,7 @@ public class UserServiceImpl implements UserService {
 
         if (emailVerificationEnabled) {
             CoreUser coreUser = new CoreUser(
-                    userDetails.getCredentials().getUsername(), "", true, true,
+                    request.getUsername(), "", true, true,
                     true, true, new ArrayList<>(), userDetails.getRecoveryMail(),
                     userDetails.getRole(), userDetails.hasGrantedServiceConsent(), userDetails.hasGrantedServiceConsent(),
                     userDetails.hasGrantedAnalyticsAndResearchConsent());
