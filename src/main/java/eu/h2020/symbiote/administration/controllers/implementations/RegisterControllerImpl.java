@@ -107,7 +107,6 @@ public class RegisterControllerImpl implements RegisterController {
         log.debug("POST request on /administration/register");
         log.debug("CoreUser = " + ReflectionToStringBuilder.toString(coreUser));
 
-        coreUser.clearSensitiveData();
         userService.validateUserRegistrationForm(coreUser, bindingResult);
         userService.createUserAccount(coreUser, webRequest);
 

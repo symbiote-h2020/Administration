@@ -159,6 +159,7 @@ public class UserServiceImpl implements UserService {
         );
 
         ManagementStatus managementStatus = rabbitManager.sendUserManagementRequest(userRegistrationRequest);
+        coreUser.clearSensitiveData();
 
         if (managementStatus == null) {
             throw new EntityUnreachableException("AAM");
