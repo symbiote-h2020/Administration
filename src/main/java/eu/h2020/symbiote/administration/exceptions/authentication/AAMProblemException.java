@@ -9,5 +9,5 @@ public class AAMProblemException extends AuthenticationException implements Cust
     public AAMProblemException() { super("Problem in the communication with AAM!"); }
 
     @Override
-    public int getStatus() { return HttpServletResponse.SC_INTERNAL_SERVER_ERROR; }
+    public int getHttpStatus() { return HttpServletResponse.SC_INTERNAL_SERVER_ERROR; }
 }

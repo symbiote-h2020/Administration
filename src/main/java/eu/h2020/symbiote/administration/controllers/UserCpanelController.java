@@ -91,7 +91,7 @@ public class UserCpanelController {
             throws GenericHttpErrorException, CommunicationException {
         log.debug("GET request on /information");
 
-        return userService.getUserInformation(principal);
+        return new UserDetailsDTO(userService.getUserInformationWithLogin(principal));
     }
 
     @PostMapping("/change_email")

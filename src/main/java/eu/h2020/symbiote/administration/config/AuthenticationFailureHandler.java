@@ -23,7 +23,7 @@ public class AuthenticationFailureHandler extends SimpleUrlAuthenticationFailure
                                         AuthenticationException e) throws IOException, ServletException {
 
         log.debug("Authentication failure", e);
-        response.setStatus(((CustomAuthenticationException)e).getStatus());
+        response.setStatus(((CustomAuthenticationException)e).getHttpStatus());
 
         PrintWriter writer = response.getWriter();
         writer.write(e.getMessage());

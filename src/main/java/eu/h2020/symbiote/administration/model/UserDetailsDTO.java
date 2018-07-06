@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 
 import java.util.Map;
 
@@ -37,6 +38,17 @@ public class UserDetailsDTO {
         this.conditionsAccepted = conditionsAccepted;
         this.analyticsAndResearchConsent = analyticsAndResearchConsent;
         this.clients = clients;
+    }
+
+    public UserDetailsDTO(UserDetails userDetails) {
+        this.username = userDetails.getCredentials().getUsername();
+        this.email = userDetails.getRecoveryMail();
+        this.role = userDetails.getRole();
+        this.accountStatus = userDetails.getStatus();
+        this.termsAccepted = userDetails.hasGrantedServiceConsent();
+        this.conditionsAccepted = userDetails.hasGrantedServiceConsent();
+        this.analyticsAndResearchConsent = userDetails.hasGrantedAnalyticsAndResearchConsent();
+        this.clients = userDetails.getClients();
     }
 
     public String getUsername() { return username; }

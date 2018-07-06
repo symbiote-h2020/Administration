@@ -1,13 +1,14 @@
 package eu.h2020.symbiote.administration.services.user;
 
-import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
+import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.model.*;
+import eu.h2020.symbiote.security.communication.payloads.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.WebRequest;
 
@@ -36,10 +37,17 @@ public interface UserService {
             throws CommunicationException, GenericHttpErrorException;
 
     // Getting user info
-    UserDetailsDTO getUserInformation(String username, String password)
+    UserDetails getUserInformationWithLogin(String username, String password)
             throws CommunicationException, GenericHttpErrorException, EntityUnreachableException;
 
-    UserDetailsDTO getUserInformation(Principal principal)
+    UserDetails getUserInformationWithLogin(Principal principal)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException;
+
+
+    UserDetails getUserInformationWithForce(String username)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException;
+
+    UserDetails getUserInformationWithForce(Principal principal)
             throws CommunicationException, GenericHttpErrorException, EntityUnreachableException;
 
     // User update actions

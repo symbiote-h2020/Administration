@@ -1,11 +1,15 @@
 package eu.h2020.symbiote.administration.controllers;
 
-import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
+import eu.h2020.symbiote.administration.exceptions.authentication.CustomAuthenticationException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
+import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
@@ -87,5 +91,12 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         Map<String, Object> response = new HashMap<>();
         response.put("validationErrors", e.getValidationErrors());
         return response;
+    }
+
+    @ExceptionHandler(value = {WrongUserNameException.class, WrongUserPasswordException.class, WrongAdminPasswordException.class})
+    protected ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
+        log.warn("In handleGenericHttpErrorException", (Throwable) e);
+
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.valueOf(e.getHttpStatus()));
     }
 }

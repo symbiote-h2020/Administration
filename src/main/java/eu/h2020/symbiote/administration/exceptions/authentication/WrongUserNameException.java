@@ -9,6 +9,6 @@ public class WrongUserNameException extends AuthenticationException implements C
     public WrongUserNameException() { super("Username does not exist!"); }
 
     @Override
-    public int getStatus() { return HttpServletResponse.SC_BAD_REQUEST; }
+    public int getHttpStatus() { return HttpServletResponse.SC_BAD_REQUEST; }
 
 }

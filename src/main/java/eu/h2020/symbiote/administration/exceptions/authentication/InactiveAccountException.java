@@ -9,5 +9,5 @@ public class InactiveAccountException extends AuthenticationException implements
     public InactiveAccountException() { super("The account is inactive!"); }
 
     @Override
-    public int getStatus() { return HttpServletResponse.SC_FORBIDDEN; }
+    public int getHttpStatus() { return HttpServletResponse.SC_FORBIDDEN; }
 }

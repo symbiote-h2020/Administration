@@ -4,7 +4,9 @@ import eu.h2020.symbiote.administration.application.events.OnPasswordResetEvent;
 import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.application.listeners.RegistrationListener;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
@@ -12,9 +14,9 @@ import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenExpired;
 import eu.h2020.symbiote.administration.exceptions.token.VerificationTokenNotFoundException;
+import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.VerificationTokenRepository;
-import eu.h2020.symbiote.security.commons.Certificate;
 import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.OperationType;
@@ -186,7 +188,7 @@ public class UserServiceImpl implements UserService {
             throws CommunicationException, GenericBadRequestException, EntityUnreachableException {
         CoreUser coreUser = verificationToken.getUser();
 
-        // Todo: change the consents below to read them from token
+        // Todo: read contents from AAM instead
         // Construct the UserManagementRequest
         UserManagementRequest userRegistrationRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
@@ -223,9 +225,12 @@ public class UserServiceImpl implements UserService {
 
         handleValidationErrors(bindingResult, errorsResponse, errorName);
 
-        UserDetailsDTO userDetailsDTO;
+        UserDetails userDetails = null;
         try {
-            userDetailsDTO = getUserInformation(request.getUsername(), request.getPassword());
+            userDetails = getUserInformationWithLogin(request.getUsername(), request.getPassword());
+        } catch (WrongUserNameException | WrongUserPasswordException | WrongAdminPasswordException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericHttpErrorException("Error getting user details", errorsResponse, HttpStatus.valueOf(e.getHttpStatus()));
         } catch (GenericHttpErrorException e) {
             errorsResponse.put(errorName, e.getMessage());
             throw new GenericHttpErrorException("Error getting user details", errorsResponse, e.getHttpStatus());
@@ -237,17 +242,22 @@ public class UserServiceImpl implements UserService {
             throw new GenericInternalServerErrorException("Error getting user details", errorsResponse);
         }
 
-        if (userDetailsDTO.getAccountStatus() == AccountStatus.ACTIVE) {
+        if (userDetails == null) {
+            errorsResponse.put(errorName, "Error getting user details");
+            throw new GenericInternalServerErrorException("Error getting user details", errorsResponse);
+        }
+
+        if (userDetails.getStatus() == AccountStatus.ACTIVE) {
             errorsResponse.put(errorName, "Account already Active");
             throw new GenericBadRequestException("Account already Active", errorsResponse);
         }
 
         if (emailVerificationEnabled) {
             CoreUser coreUser = new CoreUser(
-                    userDetailsDTO.getUsername(), "", true, true,
-                    true, true, new ArrayList<>(), userDetailsDTO.getEmail(),
-                    userDetailsDTO.getRole(), userDetailsDTO.isTermsAccepted(), userDetailsDTO.isConditionsAccepted(),
-                    userDetailsDTO.isAnalyticsAndResearchConsent());
+                    userDetails.getCredentials().getUsername(), "", true, true,
+                    true, true, new ArrayList<>(), userDetails.getRecoveryMail(),
+                    userDetails.getRole(), userDetails.hasGrantedServiceConsent(), userDetails.hasGrantedServiceConsent(),
+                    userDetails.hasGrantedAnalyticsAndResearchConsent());
 
             try {
                 String appUrl = webRequest.getContextPath();
@@ -261,40 +271,32 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDetailsDTO getUserInformation(String username, String password)
+    public UserDetails getUserInformationWithLogin(String username, String password)
             throws CommunicationException, GenericHttpErrorException, EntityUnreachableException {
-        UserDetailsResponse userDetailsResponse = rabbitManager.sendLoginRequest(new Credentials(username, password));
-
-        if (userDetailsResponse == null)
-            throw new EntityUnreachableException("AAM");
-        if (userDetailsResponse.getHttpStatus() != HttpStatus.OK)
-            throw new GenericHttpErrorException("Could not get the userDetails", userDetailsResponse.getHttpStatus());
-
-        String recoveryMail = userDetailsResponse.getUserDetails().getRecoveryMail();
-        UserRole role = userDetailsResponse.getUserDetails().getRole();
-        AccountStatus accountStatus = userDetailsResponse.getUserDetails().getStatus();
-        boolean serviceConsent = userDetailsResponse.getUserDetails().hasGrantedServiceConsent();
-        boolean analyticsAndResearchConsent = userDetailsResponse.getUserDetails().hasGrantedAnalyticsAndResearchConsent();
-        Map<String, Certificate> clients = userDetailsResponse.getUserDetails().getClients();
-
-        return new UserDetailsDTO(
-                username,
-                recoveryMail,
-                role,
-                accountStatus,
-                serviceConsent,
-                serviceConsent,
-                analyticsAndResearchConsent,
-                clients);
+        return getUserInformation(username, password, false);
     }
 
     @Override
-    public UserDetailsDTO getUserInformation(Principal principal)
+    public UserDetails getUserInformationWithLogin(Principal principal)
             throws CommunicationException, GenericHttpErrorException, EntityUnreachableException {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();
         String password = (String) token.getCredentials();
-        return getUserInformation(user.getUsername(), password);
+        return getUserInformationWithLogin(user.getUsername(), password);
+    }
+
+    @Override
+    public UserDetails getUserInformationWithForce(String username)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException {
+        return getUserInformation(username, "", true);
+    }
+
+    @Override
+    public UserDetails getUserInformationWithForce(Principal principal)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        return getUserInformationWithForce(user.getUsername());
     }
 
     @Override
@@ -454,16 +456,31 @@ public class UserServiceImpl implements UserService {
 
         handleValidationErrors(bindingResult, errorsResponse, errorName);
 
-        UserDetailsResponse userDetailsResponse = handleForceReadRequest(request.getUsername(), errorName);
-        if (!request.getUsername().equals(userDetailsResponse.getUserDetails().getCredentials().getUsername()) ||
-                !request.getEmail().equals(userDetailsResponse.getUserDetails().getRecoveryMail())) {
+        UserDetails userDetails = null;
+        try {
+            userDetails = getUserInformationWithForce(request.getUsername());
+        } catch (WrongUserNameException | WrongUserPasswordException | WrongAdminPasswordException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericHttpErrorException("Error getting user details", errorsResponse, HttpStatus.valueOf(e.getHttpStatus()));
+        } catch (GenericHttpErrorException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericHttpErrorException("Error getting user details", errorsResponse, e.getHttpStatus());
+        } catch (CommunicationException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericBadRequestException("Error getting user details", errorsResponse);
+        } catch (EntityUnreachableException e) {
+            errorsResponse.put(errorName, e.getMessage());
+            throw new GenericInternalServerErrorException("Error getting user details", errorsResponse);
+        }
+
+        if (!request.getUsername().equals(userDetails.getCredentials().getUsername()) ||
+                !request.getEmail().equals(userDetails.getRecoveryMail())) {
             errorsResponse.put(errorName, "No user with such credentials");
             throw new GenericBadRequestException("Error in fetching user details", errorsResponse);
         }
 
         // Generate new password
         String newPassword = RandomStringUtils.randomAlphanumeric(12);
-        UserDetails userDetails = userDetailsResponse.getUserDetails();
 
         // Todo: fill in the attributes
         // Construct the UserManagementRequest
@@ -536,6 +553,43 @@ public class UserServiceImpl implements UserService {
 
         handleRevocationRequest(revocationRequest, errorName);
 
+    }
+
+    private UserDetails getUserInformation(String username, String password, boolean force)
+            throws CommunicationException, GenericHttpErrorException, EntityUnreachableException,
+            WrongUserNameException, WrongUserPasswordException, WrongAdminPasswordException {
+
+        UserDetailsResponse userDetailsResponse;
+
+        if (!force)
+            userDetailsResponse = rabbitManager.sendLoginRequest(new Credentials(username, password));
+        else
+            userDetailsResponse = rabbitManager.sendForceReadRequest(username);
+
+        if (userDetailsResponse == null)
+            throw new EntityUnreachableException("AAM");
+
+        switch (userDetailsResponse.getHttpStatus()) {
+            case OK:
+                break;
+            case BAD_REQUEST:
+                log.warn("Username does not exist");
+                throw new WrongUserNameException();
+            case UNAUTHORIZED:
+                log.warn("Wrong user password");
+                throw new WrongUserPasswordException();
+            case FORBIDDEN:
+                if (userDetailsResponse.getUserDetails() == null) {
+                    log.warn("Wrong admin password");
+                    throw new WrongAdminPasswordException();
+                } else {
+                    break;
+                }
+            default:
+                throw new GenericHttpErrorException("Could not get the userDetails", userDetailsResponse.getHttpStatus());
+        }
+
+        return userDetailsResponse.getUserDetails();
     }
 
     private UserDetailsResponse handleForceReadRequest(String username, String errorName)

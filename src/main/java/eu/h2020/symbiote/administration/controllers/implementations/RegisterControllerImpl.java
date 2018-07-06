@@ -1,10 +1,10 @@
 package eu.h2020.symbiote.administration.controllers.implementations;
 
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
-import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
+import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.ResendVerificationEmailRequest;
 import eu.h2020.symbiote.administration.model.ResetPasswordRequest;

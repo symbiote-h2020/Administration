@@ -9,5 +9,5 @@ public class WrongAdminPasswordException extends AuthenticationException impleme
     public WrongAdminPasswordException() { super("Wrong admin password!"); }
 
     @Override
-    public int getStatus() { return HttpServletResponse.SC_FORBIDDEN; }
+    public int getHttpStatus() { return HttpServletResponse.SC_FORBIDDEN; }
 }

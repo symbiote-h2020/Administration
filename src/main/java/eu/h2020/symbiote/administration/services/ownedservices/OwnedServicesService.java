@@ -102,7 +102,7 @@ public class OwnedServicesService {
                 // Get Platform details from Registry
                 getPlatformDetails(ownedPlatformDetailsSet, unavailablePlatforms, availablePlatforms);
 
-                // Todo: Get Platform details from Registry
+                // Get SSP details from Registry
                 getSSPDetails(ownedSSPDetailsSet, unavailableSSPs, availableSSPs);
 
                 if (unavailablePlatforms.size() == 0 && unavailableSSPs.size() == 0) {

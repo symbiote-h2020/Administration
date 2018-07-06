@@ -7,6 +7,7 @@ import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTes
 import eu.h2020.symbiote.security.commons.enums.ManagementStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.RevocationResponse;
+import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -59,12 +60,44 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
     }
 
     @Test
-    public void getUserInformationError() throws Exception {
+    public void getUserInformationNoSuchUserError() throws Exception {
         doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Username does not exist!"));
+    }
+
+    @Test
+    public void getUserInformationWrongUserPassword() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(get("/administration/user/information")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Wrong user password!"));
+    }
+
+    @Test
+    public void getUserInformationWrongAdminPassword() throws Exception {
+        UserDetailsResponse response = new UserDetailsResponse(HttpStatus.FORBIDDEN, null);
+        doReturn(response).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(get("/administration/user/information")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
+                .andExpect(status().isForbidden())
+                .andExpect(content().string("Wrong admin password!"));
+    }
+
+    // Todo: Rethink about this test
+    @Test
+    public void getUserInformationInactiveUser() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(get("/administration/user/information")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
+                .andExpect(status().isOk());
     }
 
     @Test

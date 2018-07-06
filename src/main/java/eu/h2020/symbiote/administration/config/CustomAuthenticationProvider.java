@@ -66,7 +66,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
             List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
-            // Todo: Are all the roles somewhere?
             grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
             CoreUser user = new CoreUser(name, password, true, true, true,
@@ -87,7 +86,6 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
                     List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
 
-                    // Todo: Are all the roles somewhere?
                     grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_USER"));
 
                     CoreUser user = new CoreUser(name, password, true, true, true,
@@ -97,16 +95,16 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
                     return new UsernamePasswordAuthenticationToken(user, password, grantedAuthorities);
                 } else if (response.getHttpStatus() == HttpStatus.BAD_REQUEST) {
-                    log.info("Username does not exist");
+                    log.warn("Username does not exist");
                     throw new WrongUserNameException();
                 } else if (response.getHttpStatus() == HttpStatus.UNAUTHORIZED) {
-                    log.info("Wrong user password");
+                    log.warn("Wrong user password");
                     throw new WrongUserPasswordException();
                 } else if (response.getHttpStatus() == HttpStatus.FORBIDDEN && response.getUserDetails() == null) {
-                    log.info("Wrong admin password");
+                    log.warn("Wrong admin password");
                     throw new WrongAdminPasswordException();
                 } else if (response.getHttpStatus() == HttpStatus.FORBIDDEN && response.getUserDetails() != null) {
-                    log.info("Inactive account");
+                    log.warn("Inactive account");
                     throw new InactiveAccountException();
                 }
             } else

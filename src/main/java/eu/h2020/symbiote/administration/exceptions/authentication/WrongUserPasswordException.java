@@ -9,5 +9,5 @@ public class WrongUserPasswordException extends AuthenticationException implemen
     public WrongUserPasswordException() { super("Wrong user password!"); }
 
     @Override
-    public int getStatus() { return HttpServletResponse.SC_UNAUTHORIZED; }
+    public int getHttpStatus() { return HttpServletResponse.SC_UNAUTHORIZED; }
 }

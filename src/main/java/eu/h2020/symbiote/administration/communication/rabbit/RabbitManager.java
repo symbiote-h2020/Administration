@@ -917,7 +917,6 @@ public class RabbitManager {
         log.debug("sendUserDetailsRequest to AAM: " + ReflectionToStringBuilder.toString(userCredentials));
 
         try {
-            // Todo: change the Operation type to READ
             UserManagementRequest request = new UserManagementRequest(
                     new Credentials(aaMOwnerUsername, aaMOwnerPassword),
                     new Credentials(userCredentials.getUsername(), userCredentials.getPassword()),

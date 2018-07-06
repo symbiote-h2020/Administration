@@ -496,7 +496,7 @@ public class SSPService {
 
             SmartSpaceManagementResponse aamResponse = rabbitManager.sendManageSSPRequest(aamRequest);
 
-            // Todo: Check what happens when platform deletion request is not successful at this stage
+            // Todo: Check what happens when ssp deletion request is not successful at this stage
             if (aamResponse != null) {
                 if (aamResponse.getManagementStatus() == ManagementStatus.OK) {
                     log.info("Changes in Platform" + aamRequest.getInstanceId() + " were reverted in AAM");

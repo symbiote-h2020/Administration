@@ -1,7 +1,6 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.controllers.interfaces.RegisterController;
-import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
 import eu.h2020.symbiote.administration.model.ResendVerificationEmailRequest;
@@ -354,7 +353,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.resetPasswordError")
-                        .value("Authorization Manager is unreachable!"));
+                        .value("The component AAM is unreachable"));
 
     }
 
@@ -371,7 +370,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     }
 
     @Test
-    public void resetPasswordGetUserDetailsError() throws Exception {
+    public void resetPasswordGetUserDetailsNoSuchUserError() throws Exception {
         doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendForceReadRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
@@ -379,7 +378,21 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.resetPasswordError")
-                        .value("The Authorization Manager responded with: " + HttpStatus.BAD_REQUEST.getReasonPhrase()));
+                        .value("Username does not exist!"));
+
+    }
+
+    @Test
+    public void resetPasswordGetUserDetailsWrongAdminPassword() throws Exception {
+        UserDetailsResponse response = new UserDetailsResponse(HttpStatus.FORBIDDEN, null);
+        doReturn(response).when(rabbitManager).sendForceReadRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.resetPasswordError")
+                        .value("Wrong admin password!"));
 
     }
 
@@ -438,6 +451,19 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     }
 
     @Test
+    public void resetPasswordGetUserDetailsInactiveUser() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendForceReadRequest(any());
+
+        mockMvc.perform(post("/administration/forgot_password")
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResetPasswordRequest())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.successMessage").value(String.format("The new password has been sent to %s." +
+                        " Please, change it in the User Control Panel as soon as possible.", email)));
+
+    }
+
+    @Test
     public void resetPasswordSuccess() throws Exception {
         doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
@@ -479,6 +505,46 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
     }
 
     @Test
+    public void resendVerificationEmailAccountNoSuchUser() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.resendVerificationEmailError")
+                        .value("Username does not exist!"));
+    }
+
+    @Test
+    public void resendVerificationEmailAccountWrongUserPassword() throws Exception {
+        doReturn(sampleUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.resendVerificationEmailError")
+                        .value("Wrong user password!"));
+    }
+
+    @Test
+    public void resendVerificationEmailAccountWrongAdminPassword() throws Exception {
+        UserDetailsResponse response = new UserDetailsResponse(HttpStatus.FORBIDDEN, null);
+        doReturn(response).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/resend_verification_email")
+                .header("Accept-Language", Locale.US.toString())
+                .with(csrf().asHeader())
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(sampleResendVerificationEmailRequest())))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.resendVerificationEmailError")
+                        .value("Wrong admin password!"));
+    }
+
+    @Test
     public void resendVerificationEmailAccountAlreadyActive() throws Exception {
         doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
 
@@ -493,7 +559,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resendVerificationEmailSuccess() throws Exception {
-        UserDetailsResponse inActive = new UserDetailsResponse(HttpStatus.OK,
+        UserDetailsResponse inActive = new UserDetailsResponse(HttpStatus.FORBIDDEN,
                 new UserDetails(
                         new Credentials(username, password),
                         email,
