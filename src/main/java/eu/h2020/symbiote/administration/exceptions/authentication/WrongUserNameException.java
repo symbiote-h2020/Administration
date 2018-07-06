@@ -2,10 +2,13 @@ package eu.h2020.symbiote.administration.exceptions.authentication;
 
 import org.springframework.security.core.AuthenticationException;
 
-public class WrongUserNameException extends AuthenticationException {
+import javax.servlet.http.HttpServletResponse;
 
-    public WrongUserNameException() {
-        super("Username does not exist!");
-    }
+public class WrongUserNameException extends AuthenticationException implements CustomAuthenticationException {
+
+    public WrongUserNameException() { super("Username does not exist!"); }
+
+    @Override
+    public int getStatus() { return HttpServletResponse.SC_BAD_REQUEST; }
 
 }

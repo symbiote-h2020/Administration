@@ -2,10 +2,12 @@ package eu.h2020.symbiote.administration.exceptions.authentication;
 
 import org.springframework.security.core.AuthenticationException;
 
-public class WrongUserPasswordException extends AuthenticationException {
+import javax.servlet.http.HttpServletResponse;
 
-    public WrongUserPasswordException() {
-        super("Wrong password!");
-    }
+public class WrongUserPasswordException extends AuthenticationException implements CustomAuthenticationException {
 
+    public WrongUserPasswordException() { super("Wrong user password!"); }
+
+    @Override
+    public int getStatus() { return HttpServletResponse.SC_UNAUTHORIZED; }
 }

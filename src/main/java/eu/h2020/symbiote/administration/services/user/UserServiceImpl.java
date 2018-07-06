@@ -4,7 +4,7 @@ import eu.h2020.symbiote.administration.application.events.OnPasswordResetEvent;
 import eu.h2020.symbiote.administration.application.events.OnRegistrationCompleteEvent;
 import eu.h2020.symbiote.administration.application.listeners.RegistrationListener;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
-import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
+import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;

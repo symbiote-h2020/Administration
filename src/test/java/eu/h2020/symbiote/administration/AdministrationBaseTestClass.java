@@ -2,6 +2,7 @@ package eu.h2020.symbiote.administration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.config.CustomAuthenticationProvider;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.FederationRepository;

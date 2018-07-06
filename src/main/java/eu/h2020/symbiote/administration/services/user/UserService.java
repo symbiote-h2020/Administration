@@ -1,6 +1,6 @@
 package eu.h2020.symbiote.administration.services.user;
 
-import eu.h2020.symbiote.administration.exceptions.ServiceValidationException;
+import eu.h2020.symbiote.administration.exceptions.validation.ServiceValidationException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;

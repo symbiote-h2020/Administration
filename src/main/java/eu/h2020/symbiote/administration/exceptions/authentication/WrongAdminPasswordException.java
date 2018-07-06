@@ -2,10 +2,12 @@ package eu.h2020.symbiote.administration.exceptions.authentication;
 
 import org.springframework.security.core.AuthenticationException;
 
-public class WrongAdminPasswordException extends AuthenticationException {
+import javax.servlet.http.HttpServletResponse;
 
-    public WrongAdminPasswordException() {
-        super("Wrong Admin password!");
-    }
+public class WrongAdminPasswordException extends AuthenticationException implements CustomAuthenticationException {
 
+    public WrongAdminPasswordException() { super("Wrong admin password!"); }
+
+    @Override
+    public int getStatus() { return HttpServletResponse.SC_FORBIDDEN; }
 }

@@ -1,7 +1,12 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
+import eu.h2020.symbiote.administration.exceptions.authentication.InactiveAccountException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
+import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
+import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
@@ -20,6 +25,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,6 +87,59 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
                 .param("password", password) )
             .andExpect(status().is3xxRedirection())
             .andExpect(redirectedUrl("/administration")); // React-router takes care of redirecting to "/administration/user/cpanel"
+    }
+
+    @Test
+    public void postLoginWrongUsername() throws Exception {
+
+        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/login")
+                .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(new WrongUserNameException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+    }
+
+    @Test
+    public void postLoginWrongUserPassword() throws Exception {
+
+        doReturn(sampleUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/login")
+                .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(new WrongUserPasswordException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+    }
+
+    @Test
+    public void postLoginWrongAdminPassword() throws Exception {
+
+        UserDetailsResponse response = new UserDetailsResponse(HttpStatus.FORBIDDEN, null);
+        doReturn(response).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/login")
+                .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(new WrongAdminPasswordException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+    }
+
+    @Test
+    public void postLoginInactiveUser() throws Exception {
+
+        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/login")
+                .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(new InactiveAccountException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
     }
 
     @Test
