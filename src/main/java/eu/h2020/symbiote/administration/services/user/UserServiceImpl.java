@@ -512,6 +512,35 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void acceptTerms(Principal principal)
+            throws GenericHttpErrorException {
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        String password = (String) token.getCredentials();
+        String errorName = "acceptTermsError";
+
+        // Todo: fill in the attributes
+        // Construct the UserManagementRequest
+        UserManagementRequest userUpdateRequest = new UserManagementRequest(
+                new Credentials(aaMOwnerUsername, aaMOwnerPassword),
+                new Credentials(user.getUsername(), password),
+                new UserDetails(
+                        new Credentials(user.getUsername(), ""),
+                        "",
+                        user.getRole(),
+                        AccountStatus.ACTIVE,
+                        new HashMap<>(),
+                        new HashMap<>(),
+                        true,
+                        user.isAnalyticsAndResearchConsent()
+                ),
+                OperationType.FORCE_UPDATE
+        );
+
+        handleUserManagementRequest(userUpdateRequest, errorName);
+    }
+
+    @Override
     public void deleteUser(Principal principal) throws GenericHttpErrorException {
         UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
         CoreUser user = (CoreUser) token.getPrincipal();

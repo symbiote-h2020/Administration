@@ -385,6 +385,53 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    public void acceptTermsTimeout() throws Exception {
+        doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/accept_terms")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.acceptTermsError")
+                        .value("Authorization Manager is unreachable!"));
+    }
+
+    @Test
+    public void acceptTermsException() throws Exception {
+        doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/accept_terms")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.acceptTermsError")
+                        .value(sampleCommunicationException().getMessage()));
+    }
+
+    @Test
+    public void acceptTermsError() throws Exception {
+        doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/accept_terms")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.acceptTermsError")
+                        .value("The Authorization Manager responded with ERROR"));
+
+    }
+
+    @Test
+    public void acceptTermsSuccess() throws Exception {
+        doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
+
+        mockMvc.perform(post("/administration/user/accept_terms")
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader()))
+                .andExpect(status().isOk());
+    }
+
 
     private  void deleteClientIdError(RevocationResponse response) throws Exception {
         doReturn(response).when(rabbitManager).sendRevocationRequest(any());

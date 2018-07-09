@@ -125,6 +125,15 @@ public class UserCpanelController {
         userService.changePassword(message, bindingResult, principal);
     }
 
+    @PostMapping("/accept_terms")
+    @ResponseStatus(HttpStatus.OK)
+    public void changePermissions(Principal principal)
+            throws GenericHttpErrorException {
+        log.debug("POST request on /accept_terms");
+
+        userService.acceptTerms(principal);
+    }
+
     @PostMapping("/delete_user")
     @ResponseStatus(HttpStatus.OK)
     public void deleteUser(Principal principal)
