@@ -64,7 +64,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
     protected Map<String, Object> handleEntityUnreachable(Exception e) {
-        log.warn("In handleInternalServerErrorExceptions", e);
+        log.warn("In handleEntityUnreachable", e);
 
         Map<String, Object> response = new HashMap<>();
         response.put("errorMessage", e.getMessage());
@@ -75,7 +75,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     protected Map<String, Object> handleCommunicationExceptions(Exception e) {
-        log.warn("In handleInternalServerErrorExceptions", e);
+        log.warn("In handleCommunicationExceptions", e);
 
         Map<String, Object> response = new HashMap<>();
         response.put("errorMessage", e.getMessage());
@@ -95,7 +95,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @ExceptionHandler(value = {WrongUserNameException.class, WrongUserPasswordException.class, WrongAdminPasswordException.class})
     protected ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
-        log.warn("In handleGenericHttpErrorException", (Throwable) e);
+        log.warn("In handleAuthenticationException", (Throwable) e);
 
         return new ResponseEntity<>(e.getMessage(), HttpStatus.valueOf(e.getHttpStatus()));
     }

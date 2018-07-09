@@ -192,9 +192,9 @@ public class UserServiceImpl implements UserService {
         // Construct the UserManagementRequest
         UserManagementRequest userRegistrationRequest = new UserManagementRequest(
                 new Credentials(aaMOwnerUsername, aaMOwnerPassword),
-                new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
+                new Credentials(coreUser.getValidUsername(), ""),
                 new UserDetails(
-                        new Credentials(coreUser.getValidUsername(), coreUser.getValidPassword()),
+                        new Credentials(coreUser.getValidUsername(), ""),
                         coreUser.getRecoveryMail(),
                         coreUser.getRole(),
                         AccountStatus.ACTIVE,
