@@ -22,6 +22,7 @@ import static eu.h2020.symbiote.administration.services.federation.FederationNot
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
@@ -141,6 +142,7 @@ public class HandleFederationInvitationsTests extends UserControlPanelBaseTestCl
                 FederationInvitation.InvitationStatus.PENDING,
                 new Date()));
         federationRepository.save(federation);
+        Date initialDate = federation.getLastModified();
 
         List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
@@ -194,6 +196,7 @@ public class HandleFederationInvitationsTests extends UserControlPanelBaseTestCl
         // Test what is stored in the database
         federations = federationRepository.findAll();
         assertEquals(1, federations.size());
+        assertNotEquals(initialDate, federations.get(0).getLastModified());
         assertEquals(4, federations.get(0).getMembers().size());
         assertTrue(federations.get(0).getMembers().stream()
                 .map(FederationMember::getPlatformId)

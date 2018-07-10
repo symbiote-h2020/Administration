@@ -8,10 +8,7 @@ import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.QoSConstraint;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Document(collection = "federation")
 public class FederationWithInvitations extends Federation {
@@ -19,6 +16,7 @@ public class FederationWithInvitations extends Federation {
 
     @JsonCreator
     public FederationWithInvitations(@JsonProperty("id") String id,
+                                     @JsonProperty("lastModified") Date lastModified,
                                      @JsonProperty("name") String name,
                                      @JsonProperty("public") Boolean isPublic,
                                      @JsonProperty("informationModel") InformationModel informationModel,
@@ -27,6 +25,7 @@ public class FederationWithInvitations extends Federation {
                                      @JsonProperty("openInvitations") Map<String, FederationInvitation> openInvitations) {
         setId(id);
         setName(name);
+        setLastModified(lastModified);
         setPublic(isPublic);
         setInformationModel(informationModel);
         setSlaConstraints(slaConstraints);

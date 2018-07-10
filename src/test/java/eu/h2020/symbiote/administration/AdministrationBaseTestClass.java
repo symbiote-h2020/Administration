@@ -573,6 +573,7 @@ public abstract class AdministrationBaseTestClass {
 
         return new FederationWithInvitations(
                 federation.getId(),
+                new Date(),
                 federation.getName(),
                 federation.isPublic(),
                 federation.getInformationModel(),
@@ -590,6 +591,7 @@ public abstract class AdministrationBaseTestClass {
 
         return new FederationWithInvitations(
                 federationIdSinglePlatformId,
+                new Date(),
                 federation.getName(),
                 federation.isPublic(),
                 federation.getInformationModel(),

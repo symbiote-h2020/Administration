@@ -8,12 +8,16 @@ import org.springframework.http.HttpMethod;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.match.MockRestRequestMatchers;
 
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static eu.h2020.symbiote.administration.services.federation.FederationNotificationService.FEDERATION_MANAGER_URL;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -110,6 +114,7 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
 
         FederationWithInvitations federation = sampleSavedFederation();
         federationRepository.save(federation);
+        Date initialDate = federation.getLastModified();
 
         String platformId1 = federation.getMembers().get(0).getPlatformId();
         String platformId2 = federation.getMembers().get(1).getPlatformId();
@@ -147,6 +152,11 @@ public class LeaveFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$." + federationId + ".id").value(federationId));
 
         mockServer.verify();
+
+        List<FederationWithInvitations> federations = federationRepository.findAll();
+        assertEquals(1, federations.size());
+        assertEquals(federationId, federations.get(0).getId());
+        assertNotEquals(initialDate, federations.get(0).getLastModified());
 
         // Reset the original request factory of restTemplate to unbind it from the mockServer
         restTemplate.setRequestFactory(originalRequestFactory);

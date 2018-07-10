@@ -186,6 +186,7 @@ public class FederationService {
 
         FederationWithInvitations federationWithInvitations = new FederationWithInvitations(
                 federation.getId(),
+                new Date(),
                 federation.getName(),
                 federation.isPublic(),
                 federation.getInformationModel(),
@@ -295,6 +296,9 @@ public class FederationService {
 
         // Remove platform member
         federation.get().getMembers().remove(memberIndex);
+
+        // Update the lastModified field
+        federation.get().setLastModified(new Date());
 
         // Inform the Federation Managers of the platform members
         federationNotificationService.notifyAboutFederationUpdate(federation.get(), initialMembers);
@@ -416,6 +420,9 @@ public class FederationService {
                             ((OwnedService) ownedPlatformDetailsResponse.getBody()).getPlatformInterworkingInterfaceAddress()
                     )
             );
+
+            // Update the lastModified field
+            federation.get().setLastModified(new Date());
 
             // Inform the Federation Managers of the platform members
             federationNotificationService.notifyAboutFederationUpdate(federation.get(), federation.get().getMembers());

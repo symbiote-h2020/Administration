@@ -103,6 +103,7 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
         List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
         assertEquals(federationId, federations.get(0).getId());
+        assertNotNull(federationId, federations.get(0).getLastModified());
         assertEquals(3, federations.get(0).getMembers().size());
         assertEquals(platform1Url, federations.get(0).getMembers().get(0).getInterworkingServiceURL());
         assertEquals(platform2Url, federations.get(0).getMembers().get(1).getInterworkingServiceURL());
