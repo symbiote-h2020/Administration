@@ -2,6 +2,7 @@ package eu.h2020.symbiote.administration.config;
 
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
+import eu.h2020.symbiote.administration.model.ServerInformation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.sampler.AlwaysSampler;
 import org.springframework.context.MessageSource;
@@ -22,6 +23,27 @@ public class AppConfig extends AbstractMongoConfiguration {
 
     @Value("${symbiote.core.administration.database}")
     private String databaseName;
+
+    @Value("${symbiote.core.administration.serverInformation.name}")
+    private String serverInfoName;
+
+    @Value("${symbiote.core.administration.serverInformation.dataProtectionOrganization}")
+    private String dataProtectionOrganization;
+
+    @Value("${symbiote.core.administration.serverInformation.address}")
+    private String address;
+
+    @Value("${symbiote.core.administration.serverInformation.country}")
+    private String country;
+
+    @Value("${symbiote.core.administration.serverInformation.phoneNumber}")
+    private String phoneNumber;
+
+    @Value("${symbiote.core.administration.serverInformation.email}")
+    private String email;
+
+    @Value("${symbiote.core.administration.serverInformation.website}")
+    private String website;
 
     @Override
     protected String getDatabaseName() {
@@ -63,5 +85,18 @@ public class AppConfig extends AbstractMongoConfiguration {
 
         eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
         return eventMulticaster;
+    }
+
+    @Bean
+    public ServerInformation serverInformation() {
+        return new ServerInformation(
+                serverInfoName,
+                dataProtectionOrganization,
+                address,
+                country,
+                phoneNumber,
+                email,
+                website
+        );
     }
 }

@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -33,6 +35,27 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @DirtiesContext(classMode=DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class GenericControllerTests extends AdministrationBaseTestClass {
+
+    @Value("${symbiote.core.administration.serverInformation.name}")
+    private String serverInfoName;
+
+    @Value("${symbiote.core.administration.serverInformation.dataProtectionOrganization}")
+    private String dataProtectionOrganization;
+
+    @Value("${symbiote.core.administration.serverInformation.address}")
+    private String address;
+
+    @Value("${symbiote.core.administration.serverInformation.country}")
+    private String country;
+
+    @Value("${symbiote.core.administration.serverInformation.phoneNumber}")
+    private String phoneNumber;
+
+    @Value("${symbiote.core.administration.serverInformation.email}")
+    private String email;
+
+    @Value("${symbiote.core.administration.serverInformation.website}")
+    private String website;
 
     @Autowired
     private WebApplicationContext wac;
@@ -144,6 +167,19 @@ public class GenericControllerTests extends AdministrationBaseTestClass {
 
         verify(authorizationService, times(1)).generateServiceResponse();
         verify(authorizationService, times(1)).checkJoinedFederationsRequest(eq(dummyPlatformId), any(), eq(serviceResponse));
+    }
+
+    @Test
+    public void information() throws Exception {
+        mockMvc.perform(get("/administration/generic/information"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value(serverInfoName))
+                .andExpect(jsonPath("$.dataProtectionOrganization").value(dataProtectionOrganization))
+                .andExpect(jsonPath("$.address").value(address))
+                .andExpect(jsonPath("$.country").value(country))
+                .andExpect(jsonPath("$.phoneNumber").value(phoneNumber))
+                .andExpect(jsonPath("$.email").value(email))
+                .andExpect(jsonPath("$.website").value(website));
     }
 
     private void storeFederations() {
