@@ -5,6 +5,7 @@ import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
 import eu.h2020.symbiote.administration.exceptions.authentication.*;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.Credentials;
 import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
@@ -81,7 +82,9 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             UserDetailsResponse response = rabbitManager.sendLoginRequest(new Credentials(name, password));
 
             if(response != null) {
-                if (response.getHttpStatus() == HttpStatus.OK) {
+                if (response.getHttpStatus() == HttpStatus.OK ||
+                        (response.getHttpStatus() == HttpStatus.FORBIDDEN && response.getUserDetails() != null &&
+                                response.getUserDetails().getStatus() == AccountStatus.CONSENT_BLOCKED)) {
                     log.info("Valid Username and password!");
 
                     List<GrantedAuthority> grantedAuthorities = new ArrayList<>();
@@ -103,9 +106,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 } else if (response.getHttpStatus() == HttpStatus.FORBIDDEN && response.getUserDetails() == null) {
                     log.warn("Wrong admin password");
                     throw new WrongAdminPasswordException();
-                } else if (response.getHttpStatus() == HttpStatus.FORBIDDEN && response.getUserDetails() != null) {
+                } else if (response.getHttpStatus() == HttpStatus.FORBIDDEN
+                        && response.getUserDetails().getStatus() == AccountStatus.NEW) {
                     log.warn("Inactive account");
                     throw new InactiveAccountException();
+                } else if (response.getHttpStatus() == HttpStatus.FORBIDDEN
+                        && response.getUserDetails().getStatus() == AccountStatus.ACTIVITY_BLOCKED) {
+                    log.warn("Blocked account");
+                    throw new ActivityBlockedException();
                 }
             } else
                 throw new AAMProblemException();

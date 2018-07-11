@@ -61,7 +61,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationNoSuchUserError() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
@@ -71,7 +71,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationWrongUserPassword() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
@@ -93,7 +93,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
     // Todo: Rethink about this test
     @Test
     public void getUserInformationInactiveUser() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )
@@ -102,7 +102,7 @@ public class UserActionTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getUserInformationSuccess() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(get("/administration/user/information")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER))) )

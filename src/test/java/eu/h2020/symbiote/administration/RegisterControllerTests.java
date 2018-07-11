@@ -371,7 +371,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordGetUserDetailsNoSuchUserError() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendForceReadRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
                 .with(csrf().asHeader())
@@ -398,7 +398,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordWrongCredentials() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
         ResetPasswordRequest request = new ResetPasswordRequest(username, "dummyEmail");
 
         mockMvc.perform(post("/administration/forgot_password")
@@ -411,7 +411,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordForceUpdateAAMUnreachable() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
         doReturn(null).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
@@ -425,7 +425,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordForceUpdateCommunicationException() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
         doThrow(sampleCommunicationException()).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
@@ -438,7 +438,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordForceUpdateError() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
         doReturn(ManagementStatus.ERROR).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
@@ -452,7 +452,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordGetUserDetailsInactiveUser() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendForceReadRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
                 .with(csrf().asHeader())
@@ -465,7 +465,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resetPasswordSuccess() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendForceReadRequest(any());
         doReturn(ManagementStatus.OK).when(rabbitManager).sendUserManagementRequest(any());
 
         mockMvc.perform(post("/administration/forgot_password")
@@ -506,7 +506,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resendVerificationEmailAccountNoSuchUser() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/resend_verification_email")
                 .header("Accept-Language", Locale.US.toString())
@@ -519,7 +519,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resendVerificationEmailAccountWrongUserPassword() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/resend_verification_email")
                 .header("Accept-Language", Locale.US.toString())
@@ -546,7 +546,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
 
     @Test
     public void resendVerificationEmailAccountAlreadyActive() throws Exception {
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/resend_verification_email")
                 .header("Accept-Language", Locale.US.toString())

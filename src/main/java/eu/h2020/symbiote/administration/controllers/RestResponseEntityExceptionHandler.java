@@ -1,9 +1,6 @@
 package eu.h2020.symbiote.administration.controllers;
 
-import eu.h2020.symbiote.administration.exceptions.authentication.CustomAuthenticationException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
+import eu.h2020.symbiote.administration.exceptions.authentication.*;
 import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.EntityUnreachableException;
@@ -93,7 +90,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return response;
     }
 
-    @ExceptionHandler(value = {WrongUserNameException.class, WrongUserPasswordException.class, WrongAdminPasswordException.class})
+    @ExceptionHandler(value = {WrongUserNameException.class, WrongUserPasswordException.class,
+            WrongAdminPasswordException.class, ActivityBlockedException.class, InactiveAccountException.class})
     protected ResponseEntity<String> handleAuthenticationException(CustomAuthenticationException e) {
         log.warn("In handleAuthenticationException", (Throwable) e);
 

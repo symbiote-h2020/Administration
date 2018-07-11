@@ -837,7 +837,7 @@ public class RabbitManagerTests extends AdministrationBaseTestClass {
         boolean communicationCaught = false;
 
         // Successful Message
-        doReturn(serialize(sampleUserDetailsResponse(HttpStatus.OK)))
+        doReturn(serialize(sampleActiveUserDetailsResponse(HttpStatus.OK)))
                 .when(rabbitManager)
                 .sendRpcMessage(any(), any(), any(), eq("application/json"));
 

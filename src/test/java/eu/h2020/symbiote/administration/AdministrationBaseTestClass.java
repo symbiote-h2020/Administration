@@ -438,7 +438,11 @@ public abstract class AdministrationBaseTestClass {
             );
     }
 
-    protected UserDetailsResponse sampleUserDetailsResponse (HttpStatus status) {
+    protected UserDetailsResponse sampleActiveUserDetailsResponse(HttpStatus status) {
+        return sampleUserDetailsResponse(status, AccountStatus.ACTIVE);
+    }
+
+    protected UserDetailsResponse sampleUserDetailsResponse (HttpStatus status, AccountStatus accountStatus) {
         Map<String, Certificate> clients = new HashMap<>();
         try {
             clients.put(clientId1, new Certificate("certificate1String"));
@@ -451,7 +455,7 @@ public abstract class AdministrationBaseTestClass {
                 new Credentials(username, password),
                 email,
                 UserRole.SERVICE_OWNER,
-                AccountStatus.ACTIVE,
+                accountStatus,
                 new HashMap<>(),
                 clients,
                 true,

@@ -1,10 +1,8 @@
 package eu.h2020.symbiote.administration;
 
 import eu.h2020.symbiote.administration.controllers.UserCpanelController;
-import eu.h2020.symbiote.administration.exceptions.authentication.InactiveAccountException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongAdminPasswordException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserNameException;
-import eu.h2020.symbiote.administration.exceptions.authentication.WrongUserPasswordException;
+import eu.h2020.symbiote.administration.exceptions.authentication.*;
+import eu.h2020.symbiote.security.commons.enums.AccountStatus;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import eu.h2020.symbiote.security.communication.payloads.UserDetailsResponse;
 import org.junit.Before;
@@ -75,9 +73,9 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
     }
 
     @Test
-    public void postLoginPage() throws Exception {
+    public void postLoginPageActiveUser() throws Exception {
 
-        doReturn(sampleUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.OK)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/user/login")
             .with(csrf().asHeader())
@@ -90,27 +88,27 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
     @Test
     public void postLoginWrongUsername() throws Exception {
 
-        doReturn(sampleUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.BAD_REQUEST)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/user/login")
                 .with(csrf().asHeader())
                 .param("username", username)
                 .param("password", password) )
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(new WrongUserNameException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+                .andExpect(content().string(new WrongUserNameException().getMessage()));
     }
 
     @Test
     public void postLoginWrongUserPassword() throws Exception {
 
-        doReturn(sampleUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleActiveUserDetailsResponse(HttpStatus.UNAUTHORIZED)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/user/login")
                 .with(csrf().asHeader())
                 .param("username", username)
                 .param("password", password) )
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(new WrongUserPasswordException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+                .andExpect(content().string(new WrongUserPasswordException().getMessage()));
     }
 
     @Test
@@ -124,20 +122,47 @@ public class LoginControllerTests extends AdministrationBaseTestClass {
                 .param("username", username)
                 .param("password", password) )
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(new WrongAdminPasswordException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+                .andExpect(content().string(new WrongAdminPasswordException().getMessage()));
     }
 
     @Test
-    public void postLoginInactiveUser() throws Exception {
+    public void postLoginNewUser() throws Exception {
 
-        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN)).when(rabbitManager).sendLoginRequest(any());
+        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN, AccountStatus.NEW)).when(rabbitManager).sendLoginRequest(any());
 
         mockMvc.perform(post("/administration/user/login")
                 .with(csrf().asHeader())
                 .param("username", username)
                 .param("password", password) )
                 .andExpect(status().isForbidden())
-                .andExpect(content().string(new InactiveAccountException().getMessage())); // React-router takes care of redirecting to "/administration/user/cpanel"
+                .andExpect(content().string(new InactiveAccountException().getMessage()));
+    }
+
+    @Test
+    public void postLoginBlockedUser() throws Exception {
+
+        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN, AccountStatus.ACTIVITY_BLOCKED)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/login")
+                .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+                .andExpect(status().isForbidden())
+                .andExpect(content().string(new ActivityBlockedException().getMessage()));
+
+    }
+
+    @Test
+    public void postLoginConsentBlockedUser() throws Exception {
+
+        doReturn(sampleUserDetailsResponse(HttpStatus.FORBIDDEN, AccountStatus.CONSENT_BLOCKED)).when(rabbitManager).sendLoginRequest(any());
+
+        mockMvc.perform(post("/administration/user/login")
+                .with(csrf().asHeader())
+                .param("username", username)
+                .param("password", password) )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/administration")); // React-router takes care of redirecting to "/administration/user/cpanel"
     }
 
     @Test
