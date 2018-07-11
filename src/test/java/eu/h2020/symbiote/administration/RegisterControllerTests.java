@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -216,7 +217,10 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                         .value(messages.getMessage("message.verifyEmail", null, Locale.US)));
 
         TimeUnit.MILLISECONDS.sleep(200);
-        assertEquals(1, tokenRepository.findAll().size());
+        List<VerificationToken> tokens = tokenRepository.findAll();
+        assertEquals(1, tokens.size());
+        assertEquals("", tokens.get(0).getUser().getValidPassword());
+        assertEquals("placeholder", tokens.get(0).getUser().getPassword());
     }
 
     @Test

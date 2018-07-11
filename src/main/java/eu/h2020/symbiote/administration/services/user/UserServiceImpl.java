@@ -223,6 +223,11 @@ public class UserServiceImpl implements UserService {
         String errorName = "resendVerificationEmailError";
         Map<String, String> errorsResponse = new HashMap<>();
 
+        if (!emailVerificationEnabled) {
+            errorsResponse.put(errorName, "Verification via email is not enabled");
+            throw new GenericBadRequestException("Error getting user details", errorsResponse);
+        }
+
         handleValidationErrors(bindingResult, errorsResponse, errorName);
 
         UserDetails userDetails = null;
