@@ -21,6 +21,9 @@ import java.util.Collections;
 @Configuration
 public class AppConfig extends AbstractMongoConfiguration {
 
+    @Value("${symbiote.core.administration.databaseHostname}")
+    private String databaseHostname;
+
     @Value("${symbiote.core.administration.database}")
     private String databaseName;
 
@@ -52,7 +55,7 @@ public class AppConfig extends AbstractMongoConfiguration {
 
     @Override
     public Mongo mongo() {
-        return new MongoClient();
+        return new MongoClient(this.databaseHostname);
     }
 
     @Override
