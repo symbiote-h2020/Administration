@@ -67,10 +67,14 @@ public class FederationNotificationService {
     }
 
     void notifyAboutFederationDeletion(Federation federation) {
+        notifyAboutFederationDeletion(federation, federation.getMembers());
+    }
+
+    void notifyAboutFederationDeletion(Federation federation, List<FederationMember> members) {
         HttpHeaders httpHeaders = authorizationService.getHttpHeadersWithSecurityRequest();
         HttpEntity<Federation> httpEntity = new HttpEntity<>(federation, httpHeaders);
 
-        for (FederationMember member : federation.getMembers()) {
+        for (FederationMember member : members) {
             ResponseEntity federationNotificationResponse;
 
             try {

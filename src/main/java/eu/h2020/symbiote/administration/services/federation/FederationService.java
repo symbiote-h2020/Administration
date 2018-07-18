@@ -295,13 +295,16 @@ public class FederationService {
         List<FederationMember> initialMembers = new ArrayList<>(federation.get().getMembers());
 
         // Remove platform member
-        federation.get().getMembers().remove(memberIndex);
+        FederationMember memberLeft = federation.get().getMembers().remove(memberIndex);
 
         // Update the lastModified field
         federation.get().setLastModified(new Date());
 
-        // Inform the Federation Managers of the platform members
-        federationNotificationService.notifyAboutFederationUpdate(federation.get(), initialMembers);
+        // Inform the Federation Managers of the remaining platform members
+        federationNotificationService.notifyAboutFederationUpdate(federation.get(), federation.get().getMembers());
+
+        // Inform the Federation Manager of the platform member that left
+        federationNotificationService.notifyAboutFederationDeletion(federation.get(), new ArrayList<>(Collections.singletonList(memberLeft)));
 
         // Publish to federation queue
         rabbitManager.publishFederationUpdate(federation.get());
