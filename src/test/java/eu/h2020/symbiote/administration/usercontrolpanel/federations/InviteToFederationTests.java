@@ -7,13 +7,18 @@ import eu.h2020.symbiote.administration.model.InvitationRequest;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.match.MockRestRequestMatchers;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static eu.h2020.symbiote.administration.services.federation.FederationNotificationService.FEDERATION_MANAGER_URL;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -21,6 +26,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -98,6 +106,7 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
 
         FederationWithInvitations federation = sampleSavedFederationWithSinglePlatform();
         String platformId = federation.getMembers().get(0).getPlatformId();
+        String platformUrl = federation.getMembers().get(0).getInterworkingServiceURL();
         federationRepository.save(federation);
 
         String dummyPlatform = "dummyPlatform";
@@ -105,6 +114,23 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
                 federation.getId(),
                 new HashSet<>(Arrays.asList(platform2Id, platform2Id, dummyPlatform))
                 );
+
+        MockRestServiceServer mockServer =
+                MockRestServiceServer.bindTo(restTemplate).build();
+        mockServer.expect(requestTo(platformUrl + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federation.getId()))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(2)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platform2Id)))
+                .andRespond(withSuccess());
+        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federation.getId()))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(2)))
+                .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
+                        contains(platformId, platform2Id)))
+                .andRespond(withSuccess());
 
         mockMvc.perform(post("/administration/user/cpanel/federation_invite")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
@@ -119,6 +145,8 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
                 .andExpect(jsonPath("$." + federation.getId() + ".members[*].interworkingServiceURL",
                         containsInAnyOrder(platform1Url, platform2Url)));
 
+        mockServer.verify();
+
         // Check what is store in the database
         List<FederationWithInvitations> federations = federationRepository.findAll();
         assertEquals(1, federations.size());
@@ -130,5 +158,8 @@ public class InviteToFederationTests extends UserControlPanelBaseTestClass {
         assertTrue(federations.get(0).getOpenInvitations().values().stream()
                 .map(FederationInvitation::getInvitedPlatformId).collect(Collectors.toSet())
                 .contains(dummyPlatform));
+
+        // Reset the original request factory of restTemplate to unbind it from the mockServer
+        restTemplate.setRequestFactory(originalRequestFactory);
     }
 }

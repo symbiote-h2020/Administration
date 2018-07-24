@@ -366,8 +366,10 @@ public class FederationService {
                     .collect(Collectors.toMap(OwnedService::getServiceInstanceId, ownedService -> ownedService));
             ArrayList<FederationMember> newMembers = new ArrayList<>(federation.get().getMembers());
 
+            boolean federationUpdated = false;
             for (String invitedMemberId : invitationRequest.getInvitedPlatforms()) {
                 if (ownedPlatforms.contains(invitedMemberId)) {
+                    federationUpdated = true;
                     newMembers.add(new FederationMember(
                             invitedMemberId,
                             ownedPlatformsMap.get(invitedMemberId).getPlatformInterworkingInterfaceAddress()));
@@ -377,6 +379,9 @@ public class FederationService {
             federation.get().setMembers(newMembers);
             invitationRequest = new InvitationRequest(invitationRequest.getFederationId(), newInvitedPlatforms);
 
+            // if the federation members have been updated, inform the participating platforms
+            if (federationUpdated)
+                federationNotificationService.notifyAboutFederationUpdate(federation.get());
         }
 
         // Create the new invitations

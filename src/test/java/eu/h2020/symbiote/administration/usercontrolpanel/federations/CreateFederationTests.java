@@ -72,18 +72,21 @@ public class CreateFederationTests extends UserControlPanelBaseTestClass {
 
         MockRestServiceServer mockServer =
                 MockRestServiceServer.bindTo(restTemplate).build();
-        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         contains(platform1Id, platform2Id, platform3Id)))
                 .andRespond(withSuccess());
-        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         contains(platform1Id, platform2Id, platform3Id)))                .andRespond(withSuccess());
-        mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(3)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",

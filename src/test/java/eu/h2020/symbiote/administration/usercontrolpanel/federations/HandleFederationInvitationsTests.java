@@ -155,25 +155,29 @@ public class HandleFederationInvitationsTests extends UserControlPanelBaseTestCl
 
         MockRestServiceServer mockServer =
                 MockRestServiceServer.bindTo(restTemplate).build();
-        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform1Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(4)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         containsInAnyOrder(platform1Id, platform2Id, platform3Id, platform4Id)))
                 .andRespond(withSuccess());
-        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform2Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(4)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         containsInAnyOrder(platform1Id, platform2Id, platform3Id, platform4Id)))
                 .andRespond(withSuccess());
-        mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform3Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(4)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
                         containsInAnyOrder(platform1Id, platform2Id, platform3Id, platform4Id)))
                 .andRespond(withSuccess());
-        mockServer.expect(requestTo(platform4Url + FEDERATION_MANAGER_URL)).andExpect(method(HttpMethod.POST))
+        mockServer.expect(requestTo(platform4Url + FEDERATION_MANAGER_URL))
+                .andExpect(method(HttpMethod.POST))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.id").value(federationId))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members", hasSize(4)))
                 .andExpect(MockRestRequestMatchers.jsonPath("$.members[*].platformId",
