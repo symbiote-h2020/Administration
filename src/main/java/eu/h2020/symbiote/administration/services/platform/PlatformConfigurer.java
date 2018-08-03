@@ -2,6 +2,7 @@ package eu.h2020.symbiote.administration.services.platform;
 
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
+import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.DeploymentType;
 import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -77,7 +78,7 @@ public class PlatformConfigurer {
                 configurationMessage.getTokenValidity().toString();
         Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
         PlatformConfigurationMessage.Level level = configurationMessage.getLevel();
-        PlatformConfigurationMessage.DeploymentType deploymentType = configurationMessage.getDeploymentType();
+        DeploymentType deploymentType = configurationMessage.getDeploymentType();
 
         // Create .zip output stream
         ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
@@ -90,23 +91,26 @@ public class PlatformConfigurer {
         configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin, deploymentType);
         configureNginx(zipOutputStream, platformDetails, level, deploymentType);
         configureComponentProperties(zipOutputStream, "RegistrationHandler", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
         configureComponentProperties(zipOutputStream, "ResourceAccessProxy", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
         configureComponentProperties(zipOutputStream, "Monitoring", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
 
         if (level == PlatformConfigurationMessage.Level.L2) {
             configureComponentProperties(zipOutputStream, "FederationManager", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
             configureComponentProperties(zipOutputStream, "SubscriptionManager", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
             configureComponentProperties(zipOutputStream, "PlatformRegistry", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+            configureComponentProperties(zipOutputStream, "TrustManager", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+
         }
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
-                aamKeystorePassword, aamPrivateKeyPassword, tokenValidity);
+                aamKeystorePassword, aamPrivateKeyPassword, tokenValidity, deploymentType);
         configureCertProperties(zipOutputStream, platformId, platformOwnerUsernameInCore,
                 platformOwnerPasswordInCore, aamKeystoreName, aamKeystorePassword, this.coreInterfaceAddress);
 
@@ -117,7 +121,7 @@ public class PlatformConfigurer {
     private void configureCloudConfigProperties(OwnedService platformDetails,
                                                 ZipOutputStream zipOutputStream,
                                                 Boolean useBuiltInRapPlugin,
-                                                PlatformConfigurationMessage.DeploymentType deploymentType)
+                                                DeploymentType deploymentType)
             throws Exception {
 
         // Loading application.properties
@@ -138,6 +142,8 @@ public class PlatformConfigurer {
                         "spring.rabbitmq.host=symbiote-rabbitmq");
                 applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
                         "spring.data.mongodb.host=symbiote-mongo");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
+                        "symbIoTe.localaam.url=http://symbiote-aam:8080");
                 break;
             case MANUAL:
             default:
@@ -145,6 +151,9 @@ public class PlatformConfigurer {
                         "spring.rabbitmq.host=localhost");
                 applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
                         "spring.data.mongodb.host=localhost");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
+                        "symbIoTe.localaam.url=" +
+                                Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
         }
 
         applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.username=).*$",
@@ -159,11 +168,7 @@ public class PlatformConfigurer {
                 "symbIoTe.core.cloud.interface.url=" + Matcher.quoteReplacement(this.cloudCoreInterfaceAddress));
         applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.interworking.interface.url=).*$",
                 "symbIoTe.interworking.interface.url=" +
-                        Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()) +
-                        "/cloudCoreInterface");
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
-                "symbIoTe.localaam.url=" + Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()) +
-                        "/paam");
+                        Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
 
         // RAP Configuration
         applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
@@ -179,7 +184,7 @@ public class PlatformConfigurer {
 
     private void configureNginx(ZipOutputStream zipOutputStream, OwnedService platformDetails,
                                 PlatformConfigurationMessage.Level level,
-                                PlatformConfigurationMessage.DeploymentType deploymentType)
+                                DeploymentType deploymentType)
             throws Exception {
 
         StringBuilder sb = new StringBuilder("classpath:files/nginx_l");
@@ -217,10 +222,15 @@ public class PlatformConfigurer {
         nginxConf = nginxConf.replaceFirst("(?m)^.*(https://\\{symbiote-core-hostname}/coreInterface).*$",
                 "          proxy_pass  " + Matcher.quoteReplacement(this.coreInterfaceAddress) + "/;");
 
-        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
-            nginxConf = nginxConf.replaceAll("localhost", "symbiote-cloud");
+        if (deploymentType == DeploymentType.DOCKER) {
             nginxConf = nginxConf.replaceAll("/etc/nginx/ssl/fullchain.pem", "/certificates/fullchain.pem");
             nginxConf = nginxConf.replaceAll("/etc/nginx/ssl/privkey.pem", "/certificates/privkey.pem");
+            nginxConf = nginxConf.replaceAll("localhost:8001", "symbiote-rh:8001");
+            nginxConf = nginxConf.replaceAll("localhost:8103", "symbiote-rap:8103");
+            nginxConf = nginxConf.replaceAll("localhost:8080", "symbiote-aam:8080");
+            nginxConf = nginxConf.replaceAll("localhost:8202", "symbiote-fm:8202");
+            nginxConf = nginxConf.replaceAll("localhost:8203", "symbiote-pr:8203");
+            nginxConf = nginxConf.replaceAll("localhost:8128", "symbiote-sm:8128");
         }
 
         // packing the nginx.conf and nginx-prod.conf
@@ -252,7 +262,7 @@ public class PlatformConfigurer {
     private void configureComponentProperties(ZipOutputStream zipOutputStream, String componentFolder,
                                               String platformOwnerUsername, String platformOwnerPassword,
                                               String keystorePassword, String platformId,
-                                              OwnedService platformDetails) throws Exception {
+                                              OwnedService platformDetails, DeploymentType deploymentType) throws Exception {
 
         // Loading component properties
         InputStream bootstrapPropertiesAsStream = resourceLoader
@@ -281,6 +291,10 @@ public class PlatformConfigurer {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.interworking.interface.url=).*$",
                 "symbIoTe.interworking.interface.url=" + Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
 
+        if (deploymentType == DeploymentType.DOCKER)
+            propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
+                "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-cloudconfig:8888"));
+
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry(componentFolder + "/bootstrap.properties"));
         InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
@@ -292,7 +306,7 @@ public class PlatformConfigurer {
     private void configureAAMProperties(ZipOutputStream zipOutputStream, String serviceOwnerUsername,
                                         String serviceOwnerPassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword,
-                                        String tokenValidity)
+                                        String tokenValidity, DeploymentType deploymentType)
             throws Exception {
 
         // Loading AAM bootstrap.properties
@@ -316,6 +330,10 @@ public class PlatformConfigurer {
                 "aam.security.PV_KEY_PASSWORD=" + Matcher.quoteReplacement(aamPrivateKeyPassword));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
                 "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(tokenValidity));
+
+        if (deploymentType == DeploymentType.DOCKER)
+            propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
+                    "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-cloudconfig:8888"));
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("AuthenticationAuthorizationManager/bootstrap.properties"));

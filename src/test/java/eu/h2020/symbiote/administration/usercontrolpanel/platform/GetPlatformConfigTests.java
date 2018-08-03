@@ -1,6 +1,7 @@
 package eu.h2020.symbiote.administration.usercontrolpanel.platform;
 
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
+import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.DeploymentType;
 import eu.h2020.symbiote.administration.usercontrolpanel.UserControlPanelBaseTestClass;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.DeploymentType.DOCKER;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
@@ -38,7 +40,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
         // User does not own the platform
         PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage(PlatformConfigurationMessage.Level.L1,
-                PlatformConfigurationMessage.DeploymentType.MANUAL);
+                DeploymentType.MANUAL);
         Field platformIdField = invalidPlatform.getClass().getDeclaredField("platformId");
         platformIdField.setAccessible(true);
         platformIdField.set(invalidPlatform, "dummy");
@@ -53,25 +55,25 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
     @Test
     public void getPlatformConfigL1ManualSuccess() throws Exception {
-        testL1(PlatformConfigurationMessage.DeploymentType.MANUAL);
+        testL1(DeploymentType.MANUAL);
     }
 
     @Test
     public void getPlatformConfigL1DockerSuccess() throws Exception {
-        testL1(PlatformConfigurationMessage.DeploymentType.DOCKER);
+        testL1(DOCKER);
     }
 
     @Test
     public void getPlatformConfigL2ManualSuccess() throws Exception {
-        testL2(PlatformConfigurationMessage.DeploymentType.MANUAL);
+        testL2(DeploymentType.MANUAL);
     }
 
     @Test
     public void getPlatformConfigL2DockerSuccess() throws Exception {
-        testL2(PlatformConfigurationMessage.DeploymentType.DOCKER);
+        testL2(DOCKER);
     }
 
-    private void testL1(PlatformConfigurationMessage.DeploymentType deploymentType) throws Exception {
+    private void testL1(DeploymentType deploymentType) throws Exception {
         Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress,
                 PlatformConfigurationMessage.Level.L1,
                 deploymentType);
@@ -81,7 +83,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertNull(zipFiles.get("PlatformRegistry/bootstrap.properties"));
     }
 
-    private void testL2(PlatformConfigurationMessage.DeploymentType deploymentType) throws Exception {
+    private void testL2(DeploymentType deploymentType) throws Exception {
         Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress,
                 PlatformConfigurationMessage.Level.L2, deploymentType);
 
@@ -107,7 +109,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     }
 
     private Map<String, String> testCommonFiles(String coreInterfaceAddress, PlatformConfigurationMessage.Level level,
-                                                PlatformConfigurationMessage.DeploymentType deploymentType)
+                                                DeploymentType deploymentType)
             throws Exception {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
@@ -135,24 +137,22 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("rabbit.username=guest"));
         assertTrue(fileEntry.contains("rabbit.password=guest"));
         assertTrue(fileEntry.contains("aam.database.host=${spring.data.mongodb.host}"));
-        assertTrue(fileEntry.contains("symbIoTe.core.interface.url="
-                + this.coreInterfaceAddress));
-        assertTrue(fileEntry.contains("symbIoTe.core.cloud.interface.url="
-                + cloudCoreInterfaceAddress));
-        assertTrue(fileEntry.contains("symbIoTe.interworking.interface.url="
-                + platform1Url + "/cloudCoreInterface"));
-        assertTrue(fileEntry.contains("symbIoTe.localaam.url="
-                + platform1Url + "/paam"));
+        assertTrue(fileEntry.contains("symbIoTe.core.interface.url=" + this.coreInterfaceAddress));
+        assertTrue(fileEntry.contains("symbIoTe.core.cloud.interface.url=" + cloudCoreInterfaceAddress));
+        assertTrue(fileEntry.contains("symbIoTe.interworking.interface.url=" + platform1Url));
 
         switch (deploymentType) {
             case DOCKER:
                 assertTrue(fileEntry.contains("spring.rabbitmq.host=symbiote-rabbitmq"));
                 assertTrue(fileEntry.contains("spring.data.mongodb.host=symbiote-mongo"));
+                assertTrue(fileEntry.contains("symbIoTe.localaam.url=http://symbiote-aam:8080"));
                 break;
             case MANUAL:
             default:
                 assertTrue(fileEntry.contains("spring.rabbitmq.host=localhost"));
                 assertTrue(fileEntry.contains("spring.data.mongodb.host=localhost"));
+                assertTrue(fileEntry.contains("symbIoTe.localaam.url=" + platform1Url));
+
         }
 
         // Checking nginx-prod.conf
@@ -167,7 +167,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("#listen 8102"));
         testNginxL1ComponentPorts(fileEntry, deploymentType);
 
-        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
+        if (deploymentType == DOCKER) {
             assertTrue(fileEntry.contains(" ssl_certificate     /certificates/fullchain.pem;"));
             assertTrue(fileEntry.contains(" ssl_certificate_key /certificates/privkey.pem;"));
         } else {
@@ -184,7 +184,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains(" listen 8102"));
         testNginxL1ComponentPorts(fileEntry, deploymentType);
 
-        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
+        if (deploymentType == DOCKER) {
             assertTrue(fileEntry.contains("#ssl_certificate     /certificates/fullchain.pem;"));
             assertTrue(fileEntry.contains("#ssl_certificate_key /certificates/privkey.pem;"));
         } else {
@@ -192,26 +192,16 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
             assertTrue(fileEntry.contains("#ssl_certificate_key /etc/nginx/ssl/privkey.pem;"));
         }
 
-        // Checking bootstrap.properties of Registration Handler
-        fileEntry = zipFiles.get("RegistrationHandler/bootstrap.properties");
-        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
-        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
-        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+        // Checking bootstrap.properties of components
+        testComponentBootstrapProperties(zipFiles.get("RegistrationHandler/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("ResourceAccessProxy/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("Monitoring/bootstrap.properties"), deploymentType);
 
-        // Checking bootstrap.properties of RAP
-        fileEntry = zipFiles.get("ResourceAccessProxy/bootstrap.properties");
-        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
-        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
-        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
-
-        // Checking bootstrap.properties of Monitoring
-        fileEntry = zipFiles.get("Monitoring/bootstrap.properties");
-        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
-        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
-        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
-
-        // Checking bootstrap.properties of AAM
         fileEntry = zipFiles.get("AuthenticationAuthorizationManager/bootstrap.properties");
+        if (deploymentType == DOCKER)
+            assertTrue(fileEntry.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
+        else
+            assertTrue(fileEntry.contains("spring.cloud.config.uri=http://localhost:8888"));
         assertTrue(fileEntry.contains("aam.deployment.owner.username=" + username));
         assertTrue(fileEntry.contains("aam.deployment.owner.password=" + password));
         assertTrue(fileEntry.contains("aam.security.KEY_STORE_FILE_NAME=file:///#{systemProperties['user.dir']}/"
@@ -236,59 +226,58 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         return zipFiles;
     }
 
-    public void testL2Files(Map<String, String> zipFiles, PlatformConfigurationMessage.DeploymentType deploymentType) {
+    public void testL2Files(Map<String, String> zipFiles, DeploymentType deploymentType) {
 
-        // Checking bootstrap.properties of Registration Handler
-        String fileEntry = zipFiles.get("FederationManager/bootstrap.properties");
-        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
-        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
-        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
-
-        // Checking bootstrap.properties of RAP
-        fileEntry = zipFiles.get("SubscriptionManager/bootstrap.properties");
-        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
-        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
-        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
-
-        // Checking bootstrap.properties of Monitoring
-        fileEntry = zipFiles.get("PlatformRegistry/bootstrap.properties");
-        assertTrue(fileEntry.contains("symbIoTe.component.username=" + username));
-        assertTrue(fileEntry.contains("symbIoTe.component.password=" + password));
-        assertTrue(fileEntry.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+        // Checking bootstrap.properties of L2 components
+        testComponentBootstrapProperties(zipFiles.get("FederationManager/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("SubscriptionManager/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("PlatformRegistry/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("TrustManager/bootstrap.properties"), deploymentType);
 
         // Checking nginx.conf
-        fileEntry = zipFiles.get("nginx-prod.conf");
+        String fileEntry = zipFiles.get("nginx-prod.conf");
         testNginxL2ComponentPorts(fileEntry, deploymentType);
 
         fileEntry = zipFiles.get("nginx-ngrok.conf");
         testNginxL2ComponentPorts(fileEntry, deploymentType);
     }
 
-    private void testNginxL1ComponentPorts(String file, PlatformConfigurationMessage.DeploymentType deploymentType) {
+    private void testNginxL1ComponentPorts(String file, DeploymentType deploymentType) {
 
-        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8001/;"));
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8100/notification;"));
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8103;"));
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8080/;"));
+        if (deploymentType == DOCKER) {
+            assertTrue(file.contains(" proxy_pass http://symbiote-rh:8001/;"));
+            assertTrue(file.contains(" proxy_pass http://symbiote-rap:8103/notification;"));
+            assertTrue(file.contains(" proxy_pass http://symbiote-rap:8103;"));
+            assertTrue(file.contains(" proxy_pass http://symbiote-aam:8080/;"));
         } else {
-            assertTrue(file.contains("proxy_pass http://localhost:8001/;"));
-            assertTrue(file.contains("proxy_pass http://localhost:8100/notification;"));
-            assertTrue(file.contains("proxy_pass http://localhost:8103;"));
-            assertTrue(file.contains("proxy_pass http://localhost:8080/;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8001/;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8103/notification;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8103;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8080/;"));
         }
     }
 
-    private void testNginxL2ComponentPorts(String file, PlatformConfigurationMessage.DeploymentType deploymentType) {
+    private void testNginxL2ComponentPorts(String file, DeploymentType deploymentType) {
 
-        if (deploymentType == PlatformConfigurationMessage.DeploymentType.DOCKER) {
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8202;"));
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8203;"));
-            assertTrue(file.contains("proxy_pass http://symbiote-cloud:8128;"));
+        if (deploymentType == DOCKER) {
+            assertTrue(file.contains(" proxy_pass http://symbiote-fm:8202;"));
+            assertTrue(file.contains(" proxy_pass http://symbiote-pr:8203;"));
+            assertTrue(file.contains(" proxy_pass http://symbiote-sm:8128;"));
         } else {
-            assertTrue(file.contains("proxy_pass http://localhost:8202;"));
-            assertTrue(file.contains("proxy_pass http://localhost:8203;"));
-            assertTrue(file.contains("proxy_pass http://localhost:8128;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8202;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8203;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8128;"));
         }
+    }
+
+    private void testComponentBootstrapProperties(String file, DeploymentType deploymentType) {
+        if (deploymentType == DOCKER)
+            assertTrue(file.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
+        else
+            assertTrue(file.contains("spring.cloud.config.uri=http://localhost:8888"));
+        assertTrue(file.contains("symbIoTe.component.username=" + username));
+        assertTrue(file.contains("symbIoTe.component.password=" + password));
+        assertTrue(file.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
     }
 }
