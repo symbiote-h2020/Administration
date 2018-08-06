@@ -151,7 +151,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
             default:
                 assertTrue(fileEntry.contains("spring.rabbitmq.host=localhost"));
                 assertTrue(fileEntry.contains("spring.data.mongodb.host=localhost"));
-                assertTrue(fileEntry.contains("symbIoTe.localaam.url=" + platform1Url));
+                assertTrue(fileEntry.contains("symbIoTe.localaam.url=http://localhost:8080"));
 
         }
 

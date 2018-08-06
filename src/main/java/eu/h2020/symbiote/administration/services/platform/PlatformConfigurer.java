@@ -55,9 +55,9 @@ public class PlatformConfigurer {
 
 
     void returnPlatformConfiguration(HttpServletResponse response,
-                                            CoreUser user,
-                                            OwnedService platformDetails,
-                                            PlatformConfigurationMessage configurationMessage) throws Exception {
+                                     CoreUser user,
+                                     OwnedService platformDetails,
+                                     PlatformConfigurationMessage configurationMessage) throws Exception {
 
         String platformId = configurationMessage.getPlatformId();
         String platformOwnerUsername = configurationMessage.getPlatformOwnerUsername();
@@ -152,8 +152,7 @@ public class PlatformConfigurer {
                 applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
                         "spring.data.mongodb.host=localhost");
                 applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
-                        "symbIoTe.localaam.url=" +
-                                Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
+                        "symbIoTe.localaam.url=http://localhost:8080");
         }
 
         applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.username=).*$",
