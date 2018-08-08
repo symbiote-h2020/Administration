@@ -106,7 +106,8 @@ public class PlatformConfigurer {
                     platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
             configureComponentProperties(zipOutputStream, "TrustManager", platformOwnerUsername,
                     platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
-
+            configureComponentProperties(zipOutputStream, "BarteringAndTrading", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
         }
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,

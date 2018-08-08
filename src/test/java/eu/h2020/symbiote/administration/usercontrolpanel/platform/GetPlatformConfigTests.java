@@ -81,6 +81,9 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertNull(zipFiles.get("FederationManager/bootstrap.properties"));
         assertNull(zipFiles.get("SubscriptionManager/bootstrap.properties"));
         assertNull(zipFiles.get("PlatformRegistry/bootstrap.properties"));
+        assertNull(zipFiles.get("TrustManager/bootstrap.properties"));
+        assertNull(zipFiles.get("BarteringAndTrading/bootstrap.properties"));
+        assertNull(zipFiles.get("SLAManager/bootstrap.properties"));
     }
 
     private void testL2(DeploymentType deploymentType) throws Exception {
@@ -233,6 +236,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         testComponentBootstrapProperties(zipFiles.get("SubscriptionManager/bootstrap.properties"), deploymentType);
         testComponentBootstrapProperties(zipFiles.get("PlatformRegistry/bootstrap.properties"), deploymentType);
         testComponentBootstrapProperties(zipFiles.get("TrustManager/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("BarteringAndTrading/bootstrap.properties"), deploymentType);
 
         // Checking nginx.conf
         String fileEntry = zipFiles.get("nginx-prod.conf");
