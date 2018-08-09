@@ -32,7 +32,7 @@ public class DeleteInformationModelTests extends UserControlPanelBaseTestClass {
     }
 
     @Test
-    public void doesNotModel() throws Exception {
+    public void doesOwnNotModel() throws Exception {
         // The user does not own the information model which tried to delete
         doReturn(sampleInformationModelListResponseSuccess()).when(rabbitManager).sendListInfoModelsRequest();
 

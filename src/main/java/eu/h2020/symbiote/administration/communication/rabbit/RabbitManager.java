@@ -131,8 +131,10 @@ public class RabbitManager {
     @Value("${rabbit.routingKey.platform.model.creationRequested}")
     private String informationModelCreationRequestedRoutingKey;
 
-    @Value("${rabbit.routingKey.mapping.allMappingsRequested}")
-    private String mappingRequestedRoutingKey;
+    @Value("${rabbit.routingKey.mapping.getAllMappingsRequested}")
+    private String getAllMappingsRoutingKey;
+    @Value("${rabbit.routingKey.mapping.getSingleMappingRequested}")
+    private String getSingleMappingRoutingKey;
     @Value("${rabbit.routingKey.mapping.removalRequested}")
     private String mappingRemovalRequestedRoutingKey;
     @Value("${rabbit.routingKey.mapping.creationRequested}")
@@ -681,6 +683,78 @@ public class RabbitManager {
     }
 
     /**
+     * Method used to get all the available mappings from the Registry
+     *
+     */
+    public MappingListResponse sendGetAllMappingsRequest(GetAllMappings request)
+            throws CommunicationException {
+
+        log.debug("sendGetAllMappingsRequest to Registry");
+
+        try {
+            String message = mapper.writeValueAsString(request);
+
+            // The message is false to indicate that we do not need the rdf of Information Models
+            String responseMsg = this.sendRpcMessage(this.mappingExchangeName,
+                    this.getAllMappingsRoutingKey, message, "text/plain");
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                MappingListResponse response = mapper.readValue(responseMsg,
+                        MappingListResponse.class);
+                log.trace("Received all the mapping details response from Registry.");
+                return response;
+
+            } catch (Exception e){
+                log.error("Error in mapping details response response from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc get all mappings request message.", e);
+        }
+        return null;
+    }
+
+    /**
+     * Method used to get a single mapping from the Registry
+     *
+     */
+    public MappingListResponse sendGetSingleMappingsRequest(GetSingleMapping request)
+            throws CommunicationException {
+
+        log.debug("sendGetSingleMappingsRequest to Registry");
+
+        try {
+            String message = mapper.writeValueAsString(request);
+
+            // The message is false to indicate that we do not need the rdf of Information Models
+            String responseMsg = this.sendRpcMessage(this.mappingExchangeName,
+                    this.getSingleMappingRoutingKey, message, "text/plain");
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                MappingListResponse response = mapper.readValue(responseMsg,
+                        MappingListResponse.class);
+                log.trace("Received mapping details response from Registry for mappingId = " + request.getMappingId());
+                return response;
+
+            } catch (Exception e){
+                log.error("Error in mapping details response response from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc get all mappings request message.", e);
+        }
+        return null;
+    }
+
+    /**
      * Method used to request on an action for an information model
      * @param request contains the information model
      * @return response from registry
@@ -721,7 +795,7 @@ public class RabbitManager {
 
     /**
      * Method used request the registration of an information model mapping
-     * @param request contains the information model to be registered
+     * @param request contains mapping to be registered
      * @return response from registry
      */
     public InfoModelMappingResponse sendRegisterMappingRequest(InfoModelMappingRequest request)
@@ -732,7 +806,7 @@ public class RabbitManager {
 
     /**
      * Method used request the removal of an information model mapping
-     * @param request contains the information model to be deleted
+     * @param request contains the mapping to be deleted
      * @return response from registry
      */
     public InfoModelMappingResponse sendDeleteMappingRequest(InfoModelMappingRequest request)

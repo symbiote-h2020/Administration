@@ -277,6 +277,15 @@ public class UserCpanelController {
         return informationModelService.registerInfoModelMapping(name, sourceModelId, destinationModelId, definition, principal);
     }
 
+    @PostMapping("/cpanel/delete_info_model_mapping")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteMapping(@RequestParam String mappingIdToDelete, Principal principal)
+            throws GenericHttpErrorException {
+
+        log.debug("POST request on /cpanel/delete_info_model_mapping");
+        informationModelService.deleteInfoModelMapping(mappingIdToDelete, principal);
+    }
+
     @PostMapping("/cpanel/list_federations")
     public ResponseEntity<?> listFederations() {
 

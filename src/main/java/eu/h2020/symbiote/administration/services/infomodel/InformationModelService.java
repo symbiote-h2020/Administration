@@ -10,7 +10,9 @@ import eu.h2020.symbiote.core.cci.InfoModelMappingRequest;
 import eu.h2020.symbiote.core.cci.InfoModelMappingResponse;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
+import eu.h2020.symbiote.core.internal.GetSingleMapping;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
+import eu.h2020.symbiote.core.internal.MappingListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.OntologyMapping;
@@ -273,6 +275,40 @@ public class InformationModelService {
         return registryResponse.getBody();
     }
 
+    public void deleteInfoModelMapping(String mappingIdToDelete, Principal principal)
+        throws GenericHttpErrorException {
+
+        log.trace("deleteInfoModelMapping");
+
+        // Todo: Checking if the user owns the information model mapping
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+
+        // Get mapping info from Registry
+        OntologyMapping ontologyMapping = getSingleMapping(new GetSingleMapping(false, mappingIdToDelete));
+
+        // Ask Registry
+        try {
+            InfoModelMappingRequest request = new InfoModelMappingRequest();
+            request.setBody(ontologyMapping);
+
+            InfoModelMappingResponse response = rabbitManager.sendDeleteMappingRequest(request);
+            if (response != null) {
+                if (response.getStatus() != HttpStatus.OK.value()) {
+                    throw new GenericHttpErrorException(response.getMessage(), HttpStatus.valueOf(response.getStatus()));
+                }
+            } else {
+                log.warn("Registry unreachable!");
+                throw new GenericInternalServerErrorException("Registry unreachable!");
+            }
+        } catch (CommunicationException e) {
+            log.info("", e);
+            String message = "Registry threw communication exception: " + e.getMessage();
+            log.warn(message);
+            throw new GenericInternalServerErrorException(message);
+        }
+    }
+
     public ResponseEntity<?> getInformationModels() {
         try {
             InformationModelListResponse informationModelListResponse = rabbitManager.sendListInfoModelsRequest();
@@ -296,11 +332,26 @@ public class InformationModelService {
         }
     }
 
-    /**
-     * Used for testing
-     */
-    public void setRabbitManager(RabbitManager rabbitManager){
-        this.rabbitManager = rabbitManager;
-    }
+    public OntologyMapping getSingleMapping(GetSingleMapping getSingleMapping)
+            throws GenericHttpErrorException {
+        MappingListResponse mappingListResponse;
+        try {
+            mappingListResponse = rabbitManager.sendGetSingleMappingsRequest(
+                    getSingleMapping);
+            if (mappingListResponse == null)
+                throw new GenericInternalServerErrorException("Registry unreachable!");
 
+            if (mappingListResponse.getStatus() != HttpStatus.OK.value())
+                throw new GenericHttpErrorException(mappingListResponse.getMessage(),
+                        HttpStatus.valueOf(mappingListResponse.getStatus()));
+
+            if (mappingListResponse.getBody().isEmpty())
+                throw new GenericHttpErrorException("Mapping with id " + getSingleMapping.getMappingId() + " was not found",
+                        HttpStatus.NOT_FOUND);
+        } catch (CommunicationException e) {
+            String message = "Registry threw communication exception: " + e.getMessage();
+            throw new GenericInternalServerErrorException(message);
+        }
+        return mappingListResponse.getBody().iterator().next();
+    }
 }

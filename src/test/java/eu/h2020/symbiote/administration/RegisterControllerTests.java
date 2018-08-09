@@ -234,7 +234,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage").value("An error occurred : Username exists!"));
+                .andExpect(jsonPath("$.errorMessage").value("An error occurred: Username exists!"));
     }
 
     @Test
@@ -249,7 +249,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .param("recoveryMail", email)
                 .param("role", "SERVICE_OWNER"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage").value("An error occurred : ERROR"));
+                .andExpect(jsonPath("$.errorMessage").value("An error occurred: ERROR"));
     }
 
     @Test
@@ -314,7 +314,7 @@ public class RegisterControllerTests extends AdministrationBaseTestClass {
                 .with(csrf().asHeader())
                 .param("token", verificationToken.getToken()))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage").value("An error occurred : ERROR"));
+                .andExpect(jsonPath("$.errorMessage").value("An error occurred: ERROR"));
 
         assertEquals(1, tokenRepository.findAll().size());
     }

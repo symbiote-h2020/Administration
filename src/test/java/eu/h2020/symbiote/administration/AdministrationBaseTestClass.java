@@ -8,10 +8,7 @@ import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
 import eu.h2020.symbiote.core.cci.*;
-import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
-import eu.h2020.symbiote.core.internal.InformationModelListResponse;
-import eu.h2020.symbiote.core.internal.RDFFormat;
-import eu.h2020.symbiote.core.internal.ResourceListResponse;
+import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.cim.Resource;
 import eu.h2020.symbiote.model.mim.Comparator;
 import eu.h2020.symbiote.model.mim.*;
@@ -141,7 +138,7 @@ public abstract class AdministrationBaseTestClass {
     protected String informationModelRdf = "model_rdf";
 
     protected String informationModelId2 = "model_id2";
-    private String ontologyMappingId = "ontologyMappingId";
+    protected String ontologyMappingId = "ontologyMappingId";
     protected String ontologyMappingName = "ontologyMappingName";
 
     String resourceId = "resource_id";
@@ -415,6 +412,21 @@ public abstract class AdministrationBaseTestClass {
 
     protected InfoModelMappingResponse sampleMappingResponseFail() {
         InfoModelMappingResponse response = new InfoModelMappingResponse();
+        response.setBody(null);
+        response.setMessage("Fail");
+        response.setStatus(400);
+        return response;
+    }
+
+    protected MappingListResponse sampleMappingListResponseSuccess() {
+        MappingListResponse response = new MappingListResponse();
+        response.setStatus(200);
+        response.setBody(new HashSet<>(Collections.singletonList(sampleOntologyMapping())));
+        return response;
+    }
+
+    protected MappingListResponse sampleMappingListResponseFail() {
+        MappingListResponse response = new MappingListResponse();
         response.setBody(null);
         response.setMessage("Fail");
         response.setStatus(400);

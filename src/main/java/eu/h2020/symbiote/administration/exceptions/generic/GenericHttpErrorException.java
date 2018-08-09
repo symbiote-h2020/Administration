@@ -9,7 +9,7 @@ public class GenericHttpErrorException extends Exception {
 
     public GenericHttpErrorException(String s, HttpStatus httpStatus) {
 
-        super("An error occurred : " + s);
+        super("An error occurred: " + s);
         this.httpStatus = httpStatus;
     }
 
