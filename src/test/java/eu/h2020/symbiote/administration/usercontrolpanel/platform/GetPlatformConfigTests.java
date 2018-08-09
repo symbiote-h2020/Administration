@@ -195,6 +195,9 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
             assertTrue(fileEntry.contains("#ssl_certificate_key /etc/nginx/ssl/privkey.pem;"));
         }
 
+        // For Eureka test only the CloudConfigService uri
+        testCloudConfigUri(zipFiles.get("Eureka/bootstrap.properties"), deploymentType);
+
         // Checking bootstrap.properties of components
         testComponentBootstrapProperties(zipFiles.get("RegistrationHandler/bootstrap.properties"), deploymentType);
         testComponentBootstrapProperties(zipFiles.get("ResourceAccessProxy/bootstrap.properties"), deploymentType);
@@ -275,13 +278,17 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     }
 
     private void testComponentBootstrapProperties(String file, DeploymentType deploymentType) {
-        if (deploymentType == DOCKER)
-            assertTrue(file.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
-        else
-            assertTrue(file.contains("spring.cloud.config.uri=http://localhost:8888"));
+        testCloudConfigUri(file, deploymentType);
         assertTrue(file.contains("symbIoTe.component.username=" + username));
         assertTrue(file.contains("symbIoTe.component.password=" + password));
         assertTrue(file.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
 
+    }
+
+    private void testCloudConfigUri(String file, DeploymentType deploymentType) {
+        if (deploymentType == DOCKER)
+            assertTrue(file.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
+        else
+            assertTrue(file.contains("spring.cloud.config.uri=http://localhost:8888"));
     }
 }

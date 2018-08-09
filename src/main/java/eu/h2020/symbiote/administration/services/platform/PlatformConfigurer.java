@@ -90,6 +90,8 @@ public class PlatformConfigurer {
 
         configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin, deploymentType);
         configureNginx(zipOutputStream, platformDetails, level, deploymentType);
+        configureComponentProperties(zipOutputStream, "Eureka", platformOwnerUsername,
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
         configureComponentProperties(zipOutputStream, "RegistrationHandler", platformOwnerUsername,
                 platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
         configureComponentProperties(zipOutputStream, "ResourceAccessProxy", platformOwnerUsername,
