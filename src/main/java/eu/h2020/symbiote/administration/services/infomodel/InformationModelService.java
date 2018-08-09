@@ -1,13 +1,21 @@
 package eu.h2020.symbiote.administration.services.infomodel;
 
 import eu.h2020.symbiote.administration.communication.rabbit.RabbitManager;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericBadRequestException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericHttpErrorException;
+import eu.h2020.symbiote.administration.exceptions.generic.GenericInternalServerErrorException;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
 import eu.h2020.symbiote.administration.model.CoreUser;
+import eu.h2020.symbiote.core.cci.InfoModelMappingRequest;
+import eu.h2020.symbiote.core.cci.InfoModelMappingResponse;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
 import eu.h2020.symbiote.model.mim.InformationModel;
+import eu.h2020.symbiote.model.mim.OntologyMapping;
+import eu.h2020.symbiote.semantics.mapping.model.Mapping;
+import eu.h2020.symbiote.semantics.mapping.parser.ParseException;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -191,6 +199,78 @@ public class InformationModelService {
             return new ResponseEntity<>("You do not own the Information Model that you tried to delete",
                     new HttpHeaders(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    public OntologyMapping registerInfoModelMapping(String name, String sourceModelId, String destinationModelId,
+                                                    MultipartFile definition, Principal principal)
+            throws GenericHttpErrorException {
+
+        log.trace("registerInfoModelMapping");
+
+
+        UsernamePasswordAuthenticationToken token = (UsernamePasswordAuthenticationToken) principal;
+        CoreUser user = (CoreUser) token.getPrincipal();
+        Map<String, String> response = new HashMap<>();
+
+        if (name.length() < 2 || name.length() > 30)
+            response.put("info_model_mapping_reg_error_name", "The name should have from 2 to 30 characters");
+
+        if (sourceModelId.equals(destinationModelId))
+            response.put("info_model_mapping_reg_error_destination", "The source id is the same with the destination id");
+
+        String definitionString = null;
+        try {
+            definitionString = new String(definition.getBytes(), "UTF-8");
+            Mapping.parse(definitionString);
+            log.debug("The size of the file is " + definition.getBytes().length + "bytes");
+        } catch (IOException e) {
+            log.warn("The definition could not be parsed as string", e);
+            response.put("info_model_mapping_reg_error_definition", e.getMessage());
+        } catch (ParseException e) {
+            log.warn("The definition of the mapping is not valid", e);
+            response.put("info_model_mapping_reg_error_definition", e.getMessage());
+        }
+
+        // If there are any errors throw exception
+        if (response.size() > 0) {
+            response.put("error", "Invalid Arguments");
+            throw new GenericBadRequestException("Invalid Arguments", response);
+        }
+
+        InfoModelMappingResponse registryResponse;
+        try {
+            OntologyMapping ontologyMapping = new OntologyMapping();
+            ontologyMapping.setName(name);
+            ontologyMapping.setSourceModelId(sourceModelId);
+            ontologyMapping.setDestinationModelId(destinationModelId);
+            ontologyMapping.setDefinition(definitionString);
+
+            InfoModelMappingRequest request = new InfoModelMappingRequest();
+            request.setBody(ontologyMapping);
+
+            registryResponse = rabbitManager.sendRegisterMappingRequest(request);
+            if (registryResponse != null) {
+                if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                    String message = "Registry responded with: " + registryResponse.getStatus();
+                    log.info(message);
+                    response.put("error", registryResponse.getMessage());
+                    throw new GenericHttpErrorException(message, response,
+                            HttpStatus.valueOf(registryResponse.getStatus()));
+                }
+            } else {
+                String message = "Registry unreachable!";
+                log.warn(message);
+                response.put("error", message);
+                throw new GenericInternalServerErrorException(message, response);
+            }
+        } catch (CommunicationException e) {
+            String message = "Registry threw communication exception: " + e.getMessage();
+            log.warn(message);
+            response.put("error", message);
+            throw new GenericInternalServerErrorException(message, response);
+        }
+
+        return registryResponse.getBody();
     }
 
     public ResponseEntity<?> getInformationModels() {

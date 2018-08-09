@@ -4,10 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.*;
 import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException;
-import eu.h2020.symbiote.core.cci.InformationModelRequest;
-import eu.h2020.symbiote.core.cci.InformationModelResponse;
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
-import eu.h2020.symbiote.core.cci.SspRegistryResponse;
+import eu.h2020.symbiote.core.cci.*;
 import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.Platform;
@@ -83,6 +80,17 @@ public class RabbitManager {
     @Value("${rabbit.exchange.platform.internal}")
     private boolean informationModelExchangeInternal;
 
+    @Value("${rabbit.exchange.mapping.name}")
+    private String mappingExchangeName;
+    @Value("${rabbit.exchange.mapping.type}")
+    private String mappingExchangeType;
+    @Value("${rabbit.exchange.mapping.durable}")
+    private boolean mappingExchangeDurable;
+    @Value("${rabbit.exchange.mapping.autodelete}")
+    private boolean mappingExchangeAutodelete;
+    @Value("${rabbit.exchange.mapping.internal}")
+    private boolean mappingExchangeInternal;
+
     @Value("${rabbit.exchange.ssp.name}")
     private String sspExchangeName;
     @Value("${rabbit.exchange.ssp.type}")
@@ -122,6 +130,13 @@ public class RabbitManager {
     private String informationModelRemovalRequestedRoutingKey;
     @Value("${rabbit.routingKey.platform.model.creationRequested}")
     private String informationModelCreationRequestedRoutingKey;
+
+    @Value("${rabbit.routingKey.mapping.allMappingsRequested}")
+    private String mappingRequestedRoutingKey;
+    @Value("${rabbit.routingKey.mapping.removalRequested}")
+    private String mappingRemovalRequestedRoutingKey;
+    @Value("${rabbit.routingKey.mapping.creationRequested}")
+    private String mappingCreationRequestedRoutingKey;
 
     @Value("${rabbit.routingKey.resource.clearDataRequested}")
     private String clearPlatformResourcesRoutingKey;
@@ -229,6 +244,13 @@ public class RabbitManager {
                     this.informationModelExchangeDurable,
                     this.informationModelExchangeAutodelete,
                     this.informationModelExchangeInternal,
+                    null);
+
+            this.channel.exchangeDeclare(this.mappingExchangeName,
+                    this.mappingExchangeType,
+                    this.mappingExchangeDurable,
+                    this.mappingExchangeAutodelete,
+                    this.mappingExchangeInternal,
                     null);
 
             this.channel.exchangeDeclare(this.sspExchangeName,
@@ -598,7 +620,7 @@ public class RabbitManager {
     }
 
     /**
-     * Method used request the removal of an information model
+     * Method used to request on an action for an information model
      * @param request contains the information model
      * @return response from registry
      */
@@ -626,7 +648,7 @@ public class RabbitManager {
 
             } catch (Exception e){
 
-                log.error("Error in information model details response response from Registry.", e);
+                log.error("Error in information model details response from Registry.", e);
                 ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
                 throw new CommunicationException(error.getErrorMessage());
             }
@@ -637,7 +659,7 @@ public class RabbitManager {
     }
 
     /**
-     * Method used request the removal of an information model
+     * Method used request the registration of an information model
      * @param request contains the information model to be registered
      * @return response from registry
      */
@@ -656,6 +678,67 @@ public class RabbitManager {
             throws CommunicationException {
         log.debug("sendDeleteInfoModelRequest to Registry for info model: " + ReflectionToStringBuilder.toString(request));
         return sendInfoModelRequest(this.informationModelRemovalRequestedRoutingKey, request);
+    }
+
+    /**
+     * Method used to request on an action for an information model
+     * @param request contains the information model
+     * @return response from registry
+     */
+    public InfoModelMappingResponse sendInfoModelMappingRequest(String routingKey, InfoModelMappingRequest request)
+            throws CommunicationException {
+
+        log.trace("sendInfoModelMappingRequest to Registry");
+
+        try {
+
+            String message = mapper.writeValueAsString(request);
+
+            // The message is false to indicate that we do not need the rdf of Information Models
+            String responseMsg = this.sendRpcMessage(this.mappingExchangeName,
+                    routingKey, message, "application/json");
+
+            if (responseMsg == null)
+                return null;
+
+            try {
+                InfoModelMappingResponse response = mapper.readValue(responseMsg,
+                        InfoModelMappingResponse.class);
+                log.trace("Received info model mapping response from Registry.");
+                return response;
+
+            } catch (Exception e){
+
+                log.error("Error in info model mapping response from Registry.", e);
+                ErrorResponseContainer error = mapper.readValue(responseMsg, ErrorResponseContainer.class);
+                throw new CommunicationException(error.getErrorMessage());
+            }
+        } catch (IOException e) {
+            log.error("Failed (un)marshalling of rpc information model request message.", e);
+        }
+        return null;
+    }
+
+    /**
+     * Method used request the registration of an information model mapping
+     * @param request contains the information model to be registered
+     * @return response from registry
+     */
+    public InfoModelMappingResponse sendRegisterMappingRequest(InfoModelMappingRequest request)
+            throws CommunicationException {
+        log.debug("sendRegisterMappingRequest to Registry for mapping: " + ReflectionToStringBuilder.toString(request));
+        return sendInfoModelMappingRequest(this.mappingCreationRequestedRoutingKey, request);
+    }
+
+    /**
+     * Method used request the removal of an information model mapping
+     * @param request contains the information model to be deleted
+     * @return response from registry
+     */
+    public InfoModelMappingResponse sendDeleteMappingRequest(InfoModelMappingRequest request)
+            throws CommunicationException {
+        log.debug("sendDeleteInfoModelRequest to Registry for info model: " + ReflectionToStringBuilder.toString(request));
+        return sendInfoModelMappingRequest(this.mappingRemovalRequestedRoutingKey, request);
     }
 
     /**

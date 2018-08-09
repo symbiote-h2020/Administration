@@ -7,10 +7,7 @@ import eu.h2020.symbiote.administration.exceptions.rabbit.CommunicationException
 import eu.h2020.symbiote.administration.model.*;
 import eu.h2020.symbiote.administration.repository.FederationRepository;
 import eu.h2020.symbiote.administration.services.authorization.AuthorizationService;
-import eu.h2020.symbiote.core.cci.InformationModelRequest;
-import eu.h2020.symbiote.core.cci.InformationModelResponse;
-import eu.h2020.symbiote.core.cci.PlatformRegistryResponse;
-import eu.h2020.symbiote.core.cci.SspRegistryResponse;
+import eu.h2020.symbiote.core.cci.*;
 import eu.h2020.symbiote.core.internal.CoreResourceRegistryRequest;
 import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.core.internal.RDFFormat;
@@ -106,7 +103,7 @@ public abstract class AdministrationBaseTestClass {
 
     protected String username = "Test1";
     protected String password = "Test1$";
-    protected String email = "test@email.com";
+    String email = "test@email.com";
     protected String clientId1 = "clientId1";
 
     protected String platform1Id = "test1Plat";
@@ -143,16 +140,20 @@ public abstract class AdministrationBaseTestClass {
     private RDFFormat informationModelFormat = RDFFormat.JSONLD;
     protected String informationModelRdf = "model_rdf";
 
+    protected String informationModelId2 = "model_id2";
+    private String ontologyMappingId = "ontologyMappingId";
+    protected String ontologyMappingName = "ontologyMappingName";
+
     String resourceId = "resource_id";
 
     protected String federationId = "federationId";
-    protected String federationIdSinglePlatformId = "federationIdSinglePlatformId";
+    String federationIdSinglePlatformId = "federationIdSinglePlatformId";
 
     protected String componentsKeystorePassword = "comp_pass";
     protected String aamKeystoreName = "keystore";
     protected String aamKeystorePassword = "aampass";
     protected Long tokenValidity = 100L;
-    protected String serviceResponse = "serviceResponse";
+    String serviceResponse = "serviceResponse";
 
     protected String serialize(Object o) throws Exception {
 
@@ -251,7 +252,7 @@ public abstract class AdministrationBaseTestClass {
         return platformDetails;
     }
 
-    protected SmartSpace sampleSmartSpace() {
+    SmartSpace sampleSmartSpace() {
         return sampleSmartSpace(ssp1Id);
     }
 
@@ -296,6 +297,16 @@ public abstract class AdministrationBaseTestClass {
         model.setRdf(informationModelRdf);
 
         return model;
+    }
+
+    private OntologyMapping sampleOntologyMapping() {
+        OntologyMapping mapping = new OntologyMapping();
+        mapping.setId(ontologyMappingId);
+        mapping.setName(ontologyMappingName);
+        mapping.setSourceModelId(informationModelId);
+        mapping.setDestinationModelId(informationModelId);
+        mapping.setDefinition("");
+        return mapping;
     }
 
     protected PlatformRegistryResponse samplePlatformRegistryResponseSuccess() {
@@ -395,6 +406,21 @@ public abstract class AdministrationBaseTestClass {
         return response;
     }
 
+    protected InfoModelMappingResponse sampleMappingResponseSuccess() {
+        InfoModelMappingResponse response = new InfoModelMappingResponse();
+        response.setStatus(200);
+        response.setBody(sampleOntologyMapping());
+        return response;
+    }
+
+    protected InfoModelMappingResponse sampleMappingResponseFail() {
+        InfoModelMappingResponse response = new InfoModelMappingResponse();
+        response.setBody(null);
+        response.setMessage("Fail");
+        response.setStatus(400);
+        return response;
+    }
+
     CoreResourceRegistryRequest sampleCoreResourceRegistryRequest() {
         return new CoreResourceRegistryRequest();
 
@@ -482,7 +508,7 @@ public abstract class AdministrationBaseTestClass {
             );
     }
 
-    protected SmartSpaceManagementRequest sampleSmartSpaceManagementRequest(OperationType operationType) {
+    SmartSpaceManagementRequest sampleSmartSpaceManagementRequest(OperationType operationType) {
 
         try {
             return new SmartSpaceManagementRequest(

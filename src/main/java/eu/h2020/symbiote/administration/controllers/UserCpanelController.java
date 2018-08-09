@@ -10,6 +10,7 @@ import eu.h2020.symbiote.administration.services.platform.PlatformService;
 import eu.h2020.symbiote.administration.services.ssp.SSPService;
 import eu.h2020.symbiote.administration.services.user.UserService;
 import eu.h2020.symbiote.model.mim.Federation;
+import eu.h2020.symbiote.model.mim.OntologyMapping;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -260,6 +261,20 @@ public class UserCpanelController {
 
         log.debug("POST request on /cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
         return informationModelService.deleteInformationModel(infoModelIdToDelete, principal);
+    }
+
+    @PostMapping("/cpanel/register_info_model_mapping")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseBody
+    public OntologyMapping registerMapping(@RequestParam("name") String name,
+                                           @RequestParam("sourceModelId") String sourceModelId,
+                                           @RequestParam("destinationModelId") String destinationModelId,
+                                           @RequestParam("definition") MultipartFile definition,
+                                           Principal principal)
+            throws GenericHttpErrorException {
+
+        log.debug("POST request on /cpanel/register_info_model_mapping");
+        return informationModelService.registerInfoModelMapping(name, sourceModelId, destinationModelId, definition, principal);
     }
 
     @PostMapping("/cpanel/list_federations")
