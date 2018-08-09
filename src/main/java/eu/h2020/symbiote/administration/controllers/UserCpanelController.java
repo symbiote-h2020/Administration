@@ -9,6 +9,7 @@ import eu.h2020.symbiote.administration.services.ownedservices.OwnedServicesServ
 import eu.h2020.symbiote.administration.services.platform.PlatformService;
 import eu.h2020.symbiote.administration.services.ssp.SSPService;
 import eu.h2020.symbiote.administration.services.user.UserService;
+import eu.h2020.symbiote.core.internal.GetAllMappings;
 import eu.h2020.symbiote.model.mim.Federation;
 import eu.h2020.symbiote.model.mim.OntologyMapping;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
@@ -26,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Set;
 
 /**
  * Spring controller for the User control panel, handles management views and form validation.
@@ -233,7 +235,6 @@ public class UserCpanelController {
 
         // Get InformationModelList from Registry
         return informationModelService.getInformationModels();
-
     }
 
     @PostMapping("/cpanel/list_user_info_models")
@@ -261,6 +262,17 @@ public class UserCpanelController {
 
         log.debug("POST request on /cpanel/delete_information_model for info model with id = " + infoModelIdToDelete);
         return informationModelService.deleteInformationModel(infoModelIdToDelete, principal);
+    }
+
+    @PostMapping("/cpanel/list_all_mappings")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public Set<OntologyMapping> listAllMappings() throws GenericHttpErrorException {
+
+        log.debug("POST request on /cpanel/list_all_mappings");
+
+        // Get InformationModelList from Registry
+        return informationModelService.getAllMappings(new GetAllMappings(false));
     }
 
     @PostMapping("/cpanel/register_info_model_mapping")

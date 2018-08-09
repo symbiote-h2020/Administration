@@ -696,7 +696,7 @@ public class RabbitManager {
 
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.mappingExchangeName,
-                    this.getAllMappingsRoutingKey, message, "text/plain");
+                    this.getAllMappingsRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;
@@ -732,7 +732,7 @@ public class RabbitManager {
 
             // The message is false to indicate that we do not need the rdf of Information Models
             String responseMsg = this.sendRpcMessage(this.mappingExchangeName,
-                    this.getSingleMappingRoutingKey, message, "text/plain");
+                    this.getSingleMappingRoutingKey, message, "application/json");
 
             if (responseMsg == null)
                 return null;

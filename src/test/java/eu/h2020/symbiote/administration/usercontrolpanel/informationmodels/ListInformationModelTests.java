@@ -6,7 +6,6 @@ import eu.h2020.symbiote.core.internal.InformationModelListResponse;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.security.commons.enums.UserRole;
 import org.junit.Test;
-import org.springframework.http.MediaType;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -57,10 +56,9 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
         // Failed response
         doReturn(sampleInformationModelListResponseFail()).when(rabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/list_user_info_models")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
-                .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .with(csrf().asHeader()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(sampleInformationModelListResponseFail().getMessage()));
     }
@@ -70,10 +68,9 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
         // Registry returns null
         doReturn(null).when(rabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/list_user_info_models")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
-                .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .with(csrf().asHeader()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Could not retrieve the information models from registry"));
     }
@@ -83,10 +80,9 @@ public class ListInformationModelTests extends UserControlPanelBaseTestClass {
         // Registry throws CommunicationException
         doThrow(new CommunicationException("error")).when(rabbitManager).sendListInfoModelsRequest();
 
-        mockMvc.perform(post("/administration/user/cpanel/register_platform")
+        mockMvc.perform(post("/administration/user/cpanel/list_user_info_models")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
-                .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformDetails())))
+                .with(csrf().asHeader()))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Communication exception while retrieving the information models: error"));
     }

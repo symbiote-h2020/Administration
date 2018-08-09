@@ -296,7 +296,7 @@ public abstract class AdministrationBaseTestClass {
         return model;
     }
 
-    private OntologyMapping sampleOntologyMapping() {
+    protected OntologyMapping sampleOntologyMapping() {
         OntologyMapping mapping = new OntologyMapping();
         mapping.setId(ontologyMappingId);
         mapping.setName(ontologyMappingName);

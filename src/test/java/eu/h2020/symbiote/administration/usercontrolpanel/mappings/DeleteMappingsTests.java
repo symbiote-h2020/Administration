@@ -12,9 +12,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
 /**
@@ -51,7 +49,7 @@ public class DeleteMappingsTests extends UserControlPanelBaseTestClass {
     
     @Ignore
     @Test
-    public void doesNotMapping() throws Exception {
+    public void doesNotOwnMapping() throws Exception {
         // The user does not own the information mapping which tried to delete
         doReturn(sampleMappingListResponseSuccess()).when(rabbitManager).sendGetSingleMappingsRequest(any());
 

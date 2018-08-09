@@ -10,10 +10,7 @@ import eu.h2020.symbiote.core.cci.InfoModelMappingRequest;
 import eu.h2020.symbiote.core.cci.InfoModelMappingResponse;
 import eu.h2020.symbiote.core.cci.InformationModelRequest;
 import eu.h2020.symbiote.core.cci.InformationModelResponse;
-import eu.h2020.symbiote.core.internal.GetSingleMapping;
-import eu.h2020.symbiote.core.internal.InformationModelListResponse;
-import eu.h2020.symbiote.core.internal.MappingListResponse;
-import eu.h2020.symbiote.core.internal.RDFFormat;
+import eu.h2020.symbiote.core.internal.*;
 import eu.h2020.symbiote.model.mim.InformationModel;
 import eu.h2020.symbiote.model.mim.OntologyMapping;
 import eu.h2020.symbiote.semantics.mapping.model.Mapping;
@@ -33,10 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class InformationModelService {
@@ -330,6 +324,25 @@ public class InformationModelService {
             return new ResponseEntity<>("Communication exception while retrieving the information models: " +
                     e.getMessage(), new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public Set<OntologyMapping> getAllMappings(GetAllMappings getAllMappings)
+            throws GenericHttpErrorException {
+        MappingListResponse mappingListResponse;
+        try {
+            mappingListResponse = rabbitManager.sendGetAllMappingsRequest(
+                    getAllMappings);
+            if (mappingListResponse == null)
+                throw new GenericInternalServerErrorException("Registry unreachable!");
+
+            if (mappingListResponse.getStatus() != HttpStatus.OK.value())
+                throw new GenericHttpErrorException(mappingListResponse.getMessage(),
+                        HttpStatus.valueOf(mappingListResponse.getStatus()));
+        } catch (CommunicationException e) {
+            String message = "Registry threw communication exception: " + e.getMessage();
+            throw new GenericInternalServerErrorException(message);
+        }
+        return mappingListResponse.getBody();
     }
 
     public OntologyMapping getSingleMapping(GetSingleMapping getSingleMapping)
