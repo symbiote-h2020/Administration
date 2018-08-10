@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
 
@@ -58,7 +59,10 @@ public class InformationModelService {
         else {
             ArrayList<InformationModel> userInfoModels = new ArrayList<>();
 
-            for (InformationModel informationModel : (List<InformationModel>)responseEntity.getBody()) {
+            @SuppressWarnings("unchecked")
+            List<InformationModel> informationModels = (List<InformationModel>) responseEntity.getBody();
+
+            for (InformationModel informationModel : informationModels) {
                 if (informationModel.getOwner().equals(user.getUsername()))
                     userInfoModels.add(informationModel);
             }
@@ -103,7 +107,7 @@ public class InformationModelService {
             informationModel.setName(name);
             informationModel.setOwner(user.getUsername());
             informationModel.setUri(uri);
-            informationModel.setRdf(new String(rdfFile.getBytes(), "UTF-8"));
+            informationModel.setRdf(new String(rdfFile.getBytes(), StandardCharsets.UTF_8));
 
             String[] parts = rdfFile.getOriginalFilename().split("\\.");
             informationModel.setRdfFormat(RDFFormat.fromFilenameExtension(parts[parts.length-1]));
@@ -158,8 +162,10 @@ public class InformationModelService {
         if (responseEntity.getStatusCode() != HttpStatus.OK)
             return responseEntity;
         else {
+            @SuppressWarnings("unchecked")
+            List<InformationModel> informationModels = (List<InformationModel>) responseEntity.getBody();
 
-            for (InformationModel informationModel : (List<InformationModel>) responseEntity.getBody()) {
+            for (InformationModel informationModel : informationModels) {
                 log.debug(informationModel.getId() + " " + informationModel.getOwner());
                 if (informationModel.getId().equals(infoModelIdToDelete) &&
                         informationModel.getOwner().equals(user.getUsername())) {
@@ -216,7 +222,7 @@ public class InformationModelService {
 
         String definitionString = null;
         try {
-            definitionString = new String(definition.getBytes(), "UTF-8");
+            definitionString = new String(definition.getBytes(), StandardCharsets.UTF_8);
             Mapping.parse(definitionString);
             log.debug("The size of the file is " + definition.getBytes().length + "bytes");
         } catch (IOException e) {
@@ -237,6 +243,7 @@ public class InformationModelService {
         try {
             OntologyMapping ontologyMapping = new OntologyMapping();
             ontologyMapping.setName(name);
+            ontologyMapping.setOwner(user.getUsername());
             ontologyMapping.setSourceModelId(sourceModelId);
             ontologyMapping.setDestinationModelId(destinationModelId);
             ontologyMapping.setDefinition(definitionString);
@@ -280,6 +287,11 @@ public class InformationModelService {
 
         // Get mapping info from Registry
         OntologyMapping ontologyMapping = getSingleMapping(new GetSingleMapping(false, mappingIdToDelete));
+
+        if (!ontologyMapping.getOwner().equals(user.getUsername())) {
+            log.warn("The user " + user.getUsername() + " does not own the mapping with id " + mappingIdToDelete);
+            throw new GenericHttpErrorException("You do not own the mapping with id " + mappingIdToDelete, HttpStatus.UNAUTHORIZED);
+        }
 
         // Ask Registry
         try {
@@ -345,7 +357,7 @@ public class InformationModelService {
         return mappingListResponse.getBody();
     }
 
-    public OntologyMapping getSingleMapping(GetSingleMapping getSingleMapping)
+    private OntologyMapping getSingleMapping(GetSingleMapping getSingleMapping)
             throws GenericHttpErrorException {
         MappingListResponse mappingListResponse;
         try {

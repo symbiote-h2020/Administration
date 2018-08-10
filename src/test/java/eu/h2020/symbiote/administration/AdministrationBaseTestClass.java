@@ -300,6 +300,7 @@ public abstract class AdministrationBaseTestClass {
         OntologyMapping mapping = new OntologyMapping();
         mapping.setId(ontologyMappingId);
         mapping.setName(ontologyMappingName);
+        mapping.setOwner(username);
         mapping.setSourceModelId(informationModelId);
         mapping.setDestinationModelId(informationModelId);
         mapping.setDefinition("");
