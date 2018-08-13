@@ -275,6 +275,17 @@ public class UserCpanelController {
         return informationModelService.getAllMappings(new GetAllMappings(false));
     }
 
+    @PostMapping("/cpanel/get_mapping_definition")
+    public void getMappingDefinition(@RequestParam("mappingId") String mappingId,
+                                     HttpServletResponse response)
+            throws GenericHttpErrorException {
+
+        log.debug("POST request on /cpanel/get_mapping_definition");
+
+        // Get Mapping Definition from Registry
+        informationModelService.getMappingDefinition(mappingId, response);
+    }
+
     @PostMapping("/cpanel/register_info_model_mapping")
     @ResponseStatus(HttpStatus.CREATED)
     @ResponseBody

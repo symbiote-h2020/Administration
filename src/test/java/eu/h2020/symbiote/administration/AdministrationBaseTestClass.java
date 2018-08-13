@@ -140,6 +140,7 @@ public abstract class AdministrationBaseTestClass {
     protected String informationModelId2 = "model_id2";
     protected String ontologyMappingId = "ontologyMappingId";
     protected String ontologyMappingName = "ontologyMappingName";
+    protected String ontologyMappingDefinition = "ontologyMappingDefinition";
 
     String resourceId = "resource_id";
 
@@ -303,7 +304,7 @@ public abstract class AdministrationBaseTestClass {
         mapping.setOwner(username);
         mapping.setSourceModelId(informationModelId);
         mapping.setDestinationModelId(informationModelId);
-        mapping.setDefinition("");
+        mapping.setDefinition(ontologyMappingDefinition);
         return mapping;
     }
 

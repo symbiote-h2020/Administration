@@ -19,6 +19,7 @@ import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -28,10 +29,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Service
 public class InformationModelService {
@@ -253,7 +259,8 @@ public class InformationModelService {
 
             registryResponse = rabbitManager.sendRegisterMappingRequest(request);
             if (registryResponse != null) {
-                if (registryResponse.getStatus() != HttpStatus.OK.value()) {
+                if (registryResponse.getStatus() < 200
+                        || registryResponse.getStatus() >= 300) {
                     String message = "Registry responded with: " + registryResponse.getStatus();
                     log.info(message);
                     response.put("error", registryResponse.getMessage());
@@ -312,6 +319,32 @@ public class InformationModelService {
             String message = "Registry threw communication exception: " + e.getMessage();
             log.warn(message);
             throw new GenericInternalServerErrorException(message);
+        }
+    }
+
+    public void getMappingDefinition(String mappingId, HttpServletResponse response)
+            throws GenericHttpErrorException {
+        // Get mapping info from Registry
+        OntologyMapping ontologyMapping = getSingleMapping(new GetSingleMapping(true, mappingId));
+
+        // Create .zip output stream
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(response.getOutputStream());
+             InputStream stream = new ByteArrayInputStream(ontologyMapping.getDefinition().getBytes(StandardCharsets.UTF_8.name()))) {
+
+            // setting headers
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.addHeader("Content-Disposition", "attachment; filename=\"" + mappingId + ".zip\"");
+            response.addHeader("Content-Type", "application/zip");
+
+            //packing files
+            zipOutputStream.putNextEntry(new ZipEntry(mappingId + ".map"));
+            IOUtils.copy(stream, zipOutputStream);
+            stream.close();
+
+            zipOutputStream.close();
+            response.getOutputStream().close();
+        } catch (IOException e) {
+            throw new GenericInternalServerErrorException(e.getMessage());
         }
     }
 
