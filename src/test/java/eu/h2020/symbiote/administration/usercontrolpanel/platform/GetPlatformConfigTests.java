@@ -269,10 +269,12 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         if (deploymentType == DOCKER) {
             assertTrue(file.contains(" proxy_pass http://symbiote-fm:8202;"));
             assertTrue(file.contains(" proxy_pass http://symbiote-pr:8203;"));
+            assertTrue(file.contains(" proxy_pass http://symbiote-bt:8205/;"));
             assertTrue(file.contains(" proxy_pass http://symbiote-sm:8128;"));
         } else {
             assertTrue(file.contains(" proxy_pass http://localhost:8202;"));
             assertTrue(file.contains(" proxy_pass http://localhost:8203;"));
+            assertTrue(file.contains(" proxy_pass http://localhost:8205/;"));
             assertTrue(file.contains(" proxy_pass http://localhost:8128;"));
         }
     }

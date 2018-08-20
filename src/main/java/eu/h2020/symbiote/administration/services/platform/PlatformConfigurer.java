@@ -232,6 +232,7 @@ public class PlatformConfigurer {
             nginxConf = nginxConf.replaceAll("localhost:8080", "symbiote-aam:8080");
             nginxConf = nginxConf.replaceAll("localhost:8202", "symbiote-fm:8202");
             nginxConf = nginxConf.replaceAll("localhost:8203", "symbiote-pr:8203");
+            nginxConf = nginxConf.replaceAll("localhost:8205", "symbiote-bt:8205");
             nginxConf = nginxConf.replaceAll("localhost:8128", "symbiote-sm:8128");
         }
 
