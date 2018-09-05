@@ -174,7 +174,7 @@ public class PlatformConfigurer {
 
         // RAP Configuration
         applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
-                "ResourceAccessProxy.enableSpecificPlugin=" + useBuiltInRapPlugin);
+                "rap.enableSpecificPlugin=" + useBuiltInRapPlugin);
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("CloudConfigProperties/application.properties"));

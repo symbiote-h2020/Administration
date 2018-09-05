@@ -117,11 +117,13 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
+        PlatformConfigurationMessage platformConfigurationMessage = samplePlatformConfigurationMessage(level, deploymentType);
+
         // Successful Request
         MvcResult mvcResult = mockMvc.perform(post("/administration/user/cpanel/get_platform_config")
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
-                .contentType(MediaType.APPLICATION_JSON).content(serialize(samplePlatformConfigurationMessage(level, deploymentType))))
+                .contentType(MediaType.APPLICATION_JSON).content(serialize(platformConfigurationMessage)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Disposition", "attachment; filename=\"configuration.zip\""))
                 .andExpect(header().string("Content-Type", "application/zip"))
@@ -143,6 +145,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("symbIoTe.core.interface.url=" + this.coreInterfaceAddress));
         assertTrue(fileEntry.contains("symbIoTe.core.cloud.interface.url=" + cloudCoreInterfaceAddress));
         assertTrue(fileEntry.contains("symbIoTe.interworking.interface.url=" + platform1Url));
+        assertTrue(fileEntry.contains("rap.enableSpecificPlugin=" + platformConfigurationMessage.getUseBuiltInRapPlugin()));
 
         switch (deploymentType) {
             case DOCKER:
