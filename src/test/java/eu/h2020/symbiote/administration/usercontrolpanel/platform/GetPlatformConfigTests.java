@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import static eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.*;
 import static eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.DeploymentType.DOCKER;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.any;
@@ -39,7 +40,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
                 .sendOwnedServiceDetailsRequest(any());
 
         // User does not own the platform
-        PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage(PlatformConfigurationMessage.Level.L1,
+        PlatformConfigurationMessage invalidPlatform = samplePlatformConfigurationMessage(Level.L1,
                 DeploymentType.MANUAL);
         Field platformIdField = invalidPlatform.getClass().getDeclaredField("platformId");
         platformIdField.setAccessible(true);
@@ -64,6 +65,16 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     }
 
     @Test
+    public void getPlatformConfigEnablerManualSuccess() throws Exception {
+        testEnabler(DeploymentType.MANUAL);
+    }
+
+    @Test
+    public void getPlatformConfigEnablerDockerSuccess() throws Exception {
+        testEnabler(DOCKER);
+    }
+
+    @Test
     public void getPlatformConfigL2ManualSuccess() throws Exception {
         testL2(DeploymentType.MANUAL);
     }
@@ -75,9 +86,28 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
     private void testL1(DeploymentType deploymentType) throws Exception {
         Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress,
-                PlatformConfigurationMessage.Level.L1,
+                Level.L1,
                 deploymentType);
 
+        assertNull(zipFiles.get("EnablerConfigProperties/application.properties"));
+        assertNull(zipFiles.get("FederationManager/bootstrap.properties"));
+        assertNull(zipFiles.get("SubscriptionManager/bootstrap.properties"));
+        assertNull(zipFiles.get("PlatformRegistry/bootstrap.properties"));
+        assertNull(zipFiles.get("TrustManager/bootstrap.properties"));
+        assertNull(zipFiles.get("BarteringAndTrading/bootstrap.properties"));
+        assertNull(zipFiles.get("SLAManager/bootstrap.properties"));
+        assertNull(zipFiles.get("EnablerResourceManager/bootstrap.properties"));
+        assertNull(zipFiles.get("EnablerPlatformProxy/bootstrap.properties"));
+    }
+
+    private void testEnabler(DeploymentType deploymentType) throws Exception {
+        Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress,
+                Level.ENABLER,
+                deploymentType);
+
+        testEnablerFiles(zipFiles, deploymentType);
+
+        assertNull(zipFiles.get("CloudConfigProperties/application.properties"));
         assertNull(zipFiles.get("FederationManager/bootstrap.properties"));
         assertNull(zipFiles.get("SubscriptionManager/bootstrap.properties"));
         assertNull(zipFiles.get("PlatformRegistry/bootstrap.properties"));
@@ -88,9 +118,12 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
 
     private void testL2(DeploymentType deploymentType) throws Exception {
         Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress,
-                PlatformConfigurationMessage.Level.L2, deploymentType);
+                Level.L2, deploymentType);
 
         testL2Files(zipFiles, deploymentType);
+        assertNull(zipFiles.get("EnablerConfigProperties/application.properties"));
+        assertNull(zipFiles.get("EnablerResourceManager/bootstrap.properties"));
+        assertNull(zipFiles.get("EnablerPlatformProxy/bootstrap.properties"));
     }
 
     private Map<String, String> getZipFiles(MvcResult mvcResult) throws Exception {
@@ -111,13 +144,13 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         return zipFiles;
     }
 
-    private Map<String, String> testCommonFiles(String coreInterfaceAddress, PlatformConfigurationMessage.Level level,
-                                                DeploymentType deploymentType)
+    private Map<String, String> testCommonFiles(String coreInterfaceAddress, Level level, DeploymentType deploymentType)
             throws Exception {
         doReturn(sampleOwnedServiceDetails()).when(rabbitManager)
                 .sendOwnedServiceDetailsRequest(any());
 
         PlatformConfigurationMessage platformConfigurationMessage = samplePlatformConfigurationMessage(level, deploymentType);
+        String configFolder = level == Level.ENABLER ? "EnablerConfigProperties" : "CloudConfigProperties";
 
         // Successful Request
         MvcResult mvcResult = mockMvc.perform(post("/administration/user/cpanel/get_platform_config")
@@ -136,7 +169,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
                 .replace("coreInterface", "cloudCoreInterface");
 
         // Checking application.properties of CloudConfigProperties
-        String fileEntry = zipFiles.get("CloudConfigProperties/application.properties");
+        String fileEntry = zipFiles.get(configFolder + "/application.properties");
         assertTrue(fileEntry.contains("platform.id=" + platform1Id));
         assertTrue(fileEntry.contains("rabbit.host=${spring.rabbitmq.host}"));
         assertTrue(fileEntry.contains("rabbit.username=guest"));
@@ -199,12 +232,12 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         }
 
         // For Eureka test only the CloudConfigService uri
-        testCloudConfigUri(zipFiles.get("Eureka/bootstrap.properties"), deploymentType);
+        testCloudConfigUri(zipFiles.get("Eureka/bootstrap.properties"), deploymentType, level);
 
         // Checking bootstrap.properties of components
-        testComponentBootstrapProperties(zipFiles.get("RegistrationHandler/bootstrap.properties"), deploymentType);
-        testComponentBootstrapProperties(zipFiles.get("ResourceAccessProxy/bootstrap.properties"), deploymentType);
-        testComponentBootstrapProperties(zipFiles.get("Monitoring/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("RegistrationHandler/bootstrap.properties"), deploymentType, level);
+        testComponentBootstrapProperties(zipFiles.get("ResourceAccessProxy/bootstrap.properties"), deploymentType, level);
+        testComponentBootstrapProperties(zipFiles.get("Monitoring/bootstrap.properties"), deploymentType, level);
 
         fileEntry = zipFiles.get("AuthenticationAuthorizationManager/bootstrap.properties");
         if (deploymentType == DOCKER)
@@ -235,14 +268,21 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         return zipFiles;
     }
 
+    public void testEnablerFiles(Map<String, String> zipFiles, DeploymentType deploymentType) {
+
+        // Checking bootstrap.properties of Enabler components
+        testComponentBootstrapProperties(zipFiles.get("EnablerResourceManager/bootstrap.properties"), deploymentType, Level.ENABLER);
+        testComponentBootstrapProperties(zipFiles.get("EnablerPlatformProxy/bootstrap.properties"), deploymentType, Level.ENABLER);
+    }
+
     public void testL2Files(Map<String, String> zipFiles, DeploymentType deploymentType) {
 
         // Checking bootstrap.properties of L2 components
-        testComponentBootstrapProperties(zipFiles.get("FederationManager/bootstrap.properties"), deploymentType);
-        testComponentBootstrapProperties(zipFiles.get("SubscriptionManager/bootstrap.properties"), deploymentType);
-        testComponentBootstrapProperties(zipFiles.get("PlatformRegistry/bootstrap.properties"), deploymentType);
-        testComponentBootstrapProperties(zipFiles.get("TrustManager/bootstrap.properties"), deploymentType);
-        testComponentBootstrapProperties(zipFiles.get("BarteringAndTrading/bootstrap.properties"), deploymentType);
+        testComponentBootstrapProperties(zipFiles.get("FederationManager/bootstrap.properties"), deploymentType, Level.L2);
+        testComponentBootstrapProperties(zipFiles.get("SubscriptionManager/bootstrap.properties"), deploymentType, Level.L2);
+        testComponentBootstrapProperties(zipFiles.get("PlatformRegistry/bootstrap.properties"), deploymentType, Level.L2);
+        testComponentBootstrapProperties(zipFiles.get("TrustManager/bootstrap.properties"), deploymentType, Level.L2);
+        testComponentBootstrapProperties(zipFiles.get("BarteringAndTrading/bootstrap.properties"), deploymentType, Level.L2);
 
         // Checking nginx.conf
         String fileEntry = zipFiles.get("nginx-prod.conf");
@@ -282,17 +322,22 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         }
     }
 
-    private void testComponentBootstrapProperties(String file, DeploymentType deploymentType) {
-        testCloudConfigUri(file, deploymentType);
+    private void testComponentBootstrapProperties(String file, DeploymentType deploymentType, Level level) {
+        testCloudConfigUri(file, deploymentType, level);
         assertTrue(file.contains("symbIoTe.component.username=" + username));
         assertTrue(file.contains("symbIoTe.component.password=" + password));
         assertTrue(file.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
 
     }
 
-    private void testCloudConfigUri(String file, DeploymentType deploymentType) {
-        if (deploymentType == DOCKER)
-            assertTrue(file.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
+    private void testCloudConfigUri(String file, DeploymentType deploymentType, Level level) {
+        if (deploymentType == DOCKER) {
+            if (level == Level.ENABLER) {
+                assertTrue(file.contains("spring.cloud.config.uri=http://symbiote-enablerconfig:8888"));
+            } else {
+                assertTrue(file.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
+            }
+        }
         else
             assertTrue(file.contains("spring.cloud.config.uri=http://localhost:8888"));
     }

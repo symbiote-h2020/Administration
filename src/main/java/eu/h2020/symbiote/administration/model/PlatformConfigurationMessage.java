@@ -115,11 +115,12 @@ public class PlatformConfigurationMessage {
     public enum Level {
         L1,
         L2,
-        L3_4;
+        L3_4,
+        ENABLER
     }
 
     public enum DeploymentType {
         DOCKER,
-        MANUAL;
+        MANUAL
     }
 }

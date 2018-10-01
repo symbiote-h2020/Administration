@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.*;
+
 @Service
 public class PlatformConfigurer {
 
@@ -77,7 +79,7 @@ public class PlatformConfigurer {
         String tokenValidity = configurationMessage.getTokenValidity() == 0 ? paamValidityMillis :
                 configurationMessage.getTokenValidity().toString();
         Boolean useBuiltInRapPlugin = configurationMessage.getUseBuiltInRapPlugin();
-        PlatformConfigurationMessage.Level level = configurationMessage.getLevel();
+        Level level = configurationMessage.getLevel();
         DeploymentType deploymentType = configurationMessage.getDeploymentType();
 
         // Create .zip output stream
@@ -88,28 +90,33 @@ public class PlatformConfigurer {
         response.addHeader("Content-Disposition", "attachment; filename=\"configuration.zip\"");
         response.addHeader("Content-Type", "application/zip");
 
-        configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin, deploymentType);
+        configureCloudConfigProperties(platformDetails, zipOutputStream, useBuiltInRapPlugin, deploymentType, level);
         configureNginx(zipOutputStream, platformDetails, level, deploymentType);
         configureComponentProperties(zipOutputStream, "Eureka", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
         configureComponentProperties(zipOutputStream, "RegistrationHandler", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
         configureComponentProperties(zipOutputStream, "ResourceAccessProxy", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
         configureComponentProperties(zipOutputStream, "Monitoring", platformOwnerUsername,
-                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
 
-        if (level == PlatformConfigurationMessage.Level.L2) {
+        if (level == Level.L2) {
             configureComponentProperties(zipOutputStream, "FederationManager", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
             configureComponentProperties(zipOutputStream, "SubscriptionManager", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
             configureComponentProperties(zipOutputStream, "PlatformRegistry", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
             configureComponentProperties(zipOutputStream, "TrustManager", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
             configureComponentProperties(zipOutputStream, "BarteringAndTrading", platformOwnerUsername,
-                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType);
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
+        } else if (level == Level.ENABLER) {
+            configureComponentProperties(zipOutputStream, "EnablerResourceManager", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
+            configureComponentProperties(zipOutputStream, "EnablerPlatformProxy", platformOwnerUsername,
+                    platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
         }
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
@@ -124,12 +131,15 @@ public class PlatformConfigurer {
     private void configureCloudConfigProperties(OwnedService platformDetails,
                                                 ZipOutputStream zipOutputStream,
                                                 Boolean useBuiltInRapPlugin,
-                                                DeploymentType deploymentType)
+                                                DeploymentType deploymentType,
+                                                Level level)
             throws Exception {
+
+        String propertiesFolder = level == Level.ENABLER ? "EnablerConfigProperties" : "CloudConfigProperties";
 
         // Loading application.properties
         InputStream propertiesResourceAsStream = resourceLoader
-                .getResource("classpath:files/CloudConfigProperties/application.properties").getInputStream();
+                .getResource("classpath:files/" + propertiesFolder + "/application.properties").getInputStream();
         String applicationProperties = new BufferedReader(new InputStreamReader(propertiesResourceAsStream))
                 .lines().collect(Collectors.joining("\n"));
 
@@ -177,7 +187,7 @@ public class PlatformConfigurer {
                 "rap.enableSpecificPlugin=" + useBuiltInRapPlugin);
 
         //packing files
-        zipOutputStream.putNextEntry(new ZipEntry("CloudConfigProperties/application.properties"));
+        zipOutputStream.putNextEntry(new ZipEntry(propertiesFolder + "/application.properties"));
         InputStream stream = new ByteArrayInputStream(applicationProperties.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
@@ -185,15 +195,15 @@ public class PlatformConfigurer {
 
 
     private void configureNginx(ZipOutputStream zipOutputStream, OwnedService platformDetails,
-                                PlatformConfigurationMessage.Level level,
+                                Level level,
                                 DeploymentType deploymentType)
             throws Exception {
 
         StringBuilder sb = new StringBuilder("classpath:files/nginx_l");
 
-        if (level == PlatformConfigurationMessage.Level.L1)
+        if (level == Level.L1 || level == Level.ENABLER)
             sb.append("1.conf");
-        else if (level == PlatformConfigurationMessage.Level.L2)
+        else if (level == Level.L2)
             sb.append("2.conf");
 
         String nginxFile = sb.toString();
@@ -265,7 +275,8 @@ public class PlatformConfigurer {
     private void configureComponentProperties(ZipOutputStream zipOutputStream, String componentFolder,
                                               String platformOwnerUsername, String platformOwnerPassword,
                                               String keystorePassword, String platformId,
-                                              OwnedService platformDetails, DeploymentType deploymentType) throws Exception {
+                                              OwnedService platformDetails, DeploymentType deploymentType,
+                                              Level level) throws Exception {
 
         // Loading component properties
         InputStream bootstrapPropertiesAsStream = resourceLoader
@@ -294,9 +305,15 @@ public class PlatformConfigurer {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.interworking.interface.url=).*$",
                 "symbIoTe.interworking.interface.url=" + Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
 
-        if (deploymentType == DeploymentType.DOCKER)
-            propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
-                "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-cloudconfig:8888"));
+        if (deploymentType == DeploymentType.DOCKER) {
+            if (level == Level.ENABLER) {
+                propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
+                        "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-enablerconfig:8888"));
+            } else {
+                propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
+                        "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-cloudconfig:8888"));
+            }
+        }
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry(componentFolder + "/bootstrap.properties"));
