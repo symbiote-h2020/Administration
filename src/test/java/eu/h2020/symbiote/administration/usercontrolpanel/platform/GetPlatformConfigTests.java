@@ -240,8 +240,10 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         testComponentBootstrapProperties(zipFiles.get("Monitoring/bootstrap.properties"), deploymentType, level);
 
         fileEntry = zipFiles.get("AuthenticationAuthorizationManager/bootstrap.properties");
-        if (deploymentType == DOCKER)
-            assertTrue(fileEntry.contains("spring.cloud.config.uri=http://symbiote-cloudconfig:8888"));
+        if (deploymentType == DOCKER) {
+            String configServer = level == Level.ENABLER ? "http://symbiote-enablerconfig:8888" : "http://symbiote-cloudconfig:8888";
+            assertTrue(fileEntry.contains("spring.cloud.config.uri=" + configServer));
+        }
         else
             assertTrue(fileEntry.contains("spring.cloud.config.uri=http://localhost:8888"));
         assertTrue(fileEntry.contains("aam.deployment.owner.username=" + username));

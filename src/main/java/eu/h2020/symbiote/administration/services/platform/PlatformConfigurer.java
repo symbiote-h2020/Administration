@@ -120,7 +120,7 @@ public class PlatformConfigurer {
         }
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
-                aamKeystorePassword, aamPrivateKeyPassword, tokenValidity, deploymentType);
+                aamKeystorePassword, aamPrivateKeyPassword, tokenValidity, level, deploymentType);
         configureCertProperties(zipOutputStream, platformId, platformOwnerUsernameInCore,
                 platformOwnerPasswordInCore, aamKeystoreName, aamKeystorePassword, this.coreInterfaceAddress);
 
@@ -326,7 +326,8 @@ public class PlatformConfigurer {
     private void configureAAMProperties(ZipOutputStream zipOutputStream, String serviceOwnerUsername,
                                         String serviceOwnerPassword, String aamKeystoreName,
                                         String aamKeystorePassword, String aamPrivateKeyPassword,
-                                        String tokenValidity, DeploymentType deploymentType)
+                                        String tokenValidity, Level level,
+                                        DeploymentType deploymentType)
             throws Exception {
 
         // Loading AAM bootstrap.properties
@@ -351,9 +352,11 @@ public class PlatformConfigurer {
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis=).*$",
                 "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(tokenValidity));
 
-        if (deploymentType == DeploymentType.DOCKER)
+        if (deploymentType == DeploymentType.DOCKER) {
+            String configServer = level == Level.ENABLER ? "http://symbiote-enablerconfig:8888" : "http://symbiote-cloudconfig:8888";
             propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
-                    "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-cloudconfig:8888"));
+                    "spring.cloud.config.uri=" + Matcher.quoteReplacement(configServer));
+        }
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("AuthenticationAuthorizationManager/bootstrap.properties"));
