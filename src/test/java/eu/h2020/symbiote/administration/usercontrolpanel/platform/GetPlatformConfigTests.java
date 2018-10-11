@@ -85,10 +85,9 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
     }
 
     private void testL1(DeploymentType deploymentType) throws Exception {
-        Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress,
-                Level.L1,
-                deploymentType);
+        Map<String, String> zipFiles = testCommonFiles(coreInterfaceAddress, Level.L1, deploymentType);
 
+        testL1Files(zipFiles, deploymentType);
         assertNull(zipFiles.get("EnablerConfigProperties/application.properties"));
         assertNull(zipFiles.get("FederationManager/bootstrap.properties"));
         assertNull(zipFiles.get("SubscriptionManager/bootstrap.properties"));
@@ -98,6 +97,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertNull(zipFiles.get("SLAManager/bootstrap.properties"));
         assertNull(zipFiles.get("EnablerResourceManager/bootstrap.properties"));
         assertNull(zipFiles.get("EnablerPlatformProxy/bootstrap.properties"));
+        assertNull(zipFiles.get("EnablerLogicExample/bootstrap.properties"));
     }
 
     private void testEnabler(DeploymentType deploymentType) throws Exception {
@@ -114,6 +114,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertNull(zipFiles.get("TrustManager/bootstrap.properties"));
         assertNull(zipFiles.get("BarteringAndTrading/bootstrap.properties"));
         assertNull(zipFiles.get("SLAManager/bootstrap.properties"));
+        assertNull(zipFiles.get("RAPPluginStarter/application.properties"));
     }
 
     private void testL2(DeploymentType deploymentType) throws Exception {
@@ -124,6 +125,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertNull(zipFiles.get("EnablerConfigProperties/application.properties"));
         assertNull(zipFiles.get("EnablerResourceManager/bootstrap.properties"));
         assertNull(zipFiles.get("EnablerPlatformProxy/bootstrap.properties"));
+        assertNull(zipFiles.get("EnablerLogicExample/bootstrap.properties"));
     }
 
     private Map<String, String> getZipFiles(MvcResult mvcResult) throws Exception {
@@ -275,6 +277,11 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         // Checking bootstrap.properties of Enabler components
         testComponentBootstrapProperties(zipFiles.get("EnablerResourceManager/bootstrap.properties"), deploymentType, Level.ENABLER);
         testComponentBootstrapProperties(zipFiles.get("EnablerPlatformProxy/bootstrap.properties"), deploymentType, Level.ENABLER);
+        testEnablerLogicExampleProperties(zipFiles.get("EnablerLogicExample/bootstrap.properties"), deploymentType, Level.ENABLER);
+    }
+
+    public void testL1Files(Map<String, String> zipFiles, DeploymentType deploymentType) {
+        testRAPPluginExampleProperties(zipFiles.get("RAPPluginStarter/application.properties"), deploymentType);
     }
 
     public void testL2Files(Map<String, String> zipFiles, DeploymentType deploymentType) {
@@ -285,6 +292,7 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         testComponentBootstrapProperties(zipFiles.get("PlatformRegistry/bootstrap.properties"), deploymentType, Level.L2);
         testComponentBootstrapProperties(zipFiles.get("TrustManager/bootstrap.properties"), deploymentType, Level.L2);
         testComponentBootstrapProperties(zipFiles.get("BarteringAndTrading/bootstrap.properties"), deploymentType, Level.L2);
+        testRAPPluginExampleProperties(zipFiles.get("RAPPluginStarter/application.properties"), deploymentType);
 
         // Checking nginx.conf
         String fileEntry = zipFiles.get("nginx-prod.conf");
@@ -342,5 +350,20 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         }
         else
             assertTrue(file.contains("spring.cloud.config.uri=http://localhost:8888"));
+    }
+
+    private void testEnablerLogicExampleProperties(String file, DeploymentType deploymentType, Level level) {
+        testCloudConfigUri(file, deploymentType, level);
+        assertTrue(file.contains("symbIoTe.component.username=" + username));
+        assertTrue(file.contains("symbIoTe.component.password=" + password));
+        assertTrue(file.contains("symbIoTe.component.keystore.password=" + componentsKeystorePassword));
+
+        String rh = deploymentType == DeploymentType.DOCKER ? "symbiote-rh" : "localhost";
+        assertTrue(file.contains("enablerLogic.registrationHandlerUrl=http://" + rh + ":8001"));
+    }
+
+    private void testRAPPluginExampleProperties(String file, DeploymentType deploymentType) {
+        String rabbitHost = deploymentType == DeploymentType.DOCKER ? "symbiote-rabbitmq" : "localhost";
+        assertTrue(file.contains("rabbit.host=" + rabbitHost));
     }
 }

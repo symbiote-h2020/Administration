@@ -117,6 +117,11 @@ public class PlatformConfigurer {
                     platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
             configureComponentProperties(zipOutputStream, "EnablerPlatformProxy", platformOwnerUsername,
                     platformOwnerPassword, componentKeystorePassword, platformId, platformDetails, deploymentType, level);
+            configureEnablerLogicExample(zipOutputStream, platformOwnerUsername, platformOwnerPassword, componentKeystorePassword, deploymentType);
+        }
+
+        if (level != Level.ENABLER) {
+            configureRAPPluginStarter(zipOutputStream, deploymentType);
         }
 
         configureAAMProperties(zipOutputStream, platformOwnerUsername, platformOwnerPassword, aamKeystoreName,
@@ -284,8 +289,6 @@ public class PlatformConfigurer {
         String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
                 .lines().collect(Collectors.joining("\n"));
 
-        // Modify the nginx.conf file accordingly
-        // AMQP Configuration
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.username=).*$",
                 "symbIoTe.component.username=" + Matcher.quoteReplacement(platformOwnerUsername));
         propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.password=).*$",
@@ -397,6 +400,58 @@ public class PlatformConfigurer {
 
         //packing files
         zipOutputStream.putNextEntry(new ZipEntry("AuthenticationAuthorizationManager/cert.properties"));
+        InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
+    private void configureEnablerLogicExample(ZipOutputStream zipOutputStream, String platformOwnerUsername,
+                                              String platformOwnerPassword, String keystorePassword,
+                                              DeploymentType deploymentType) throws Exception {
+
+        // Loading component properties
+        InputStream bootstrapPropertiesAsStream = resourceLoader
+                .getResource("classpath:files/EnablerLogicExample/bootstrap.properties").getInputStream();
+        String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.username=).*$",
+                "symbIoTe.component.username=" + Matcher.quoteReplacement(platformOwnerUsername));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.password=).*$",
+                "symbIoTe.component.password=" + Matcher.quoteReplacement(platformOwnerPassword));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(symbIoTe.component.keystore.password=).*$",
+                "symbIoTe.component.keystore.password=" + Matcher.quoteReplacement(keystorePassword));
+
+
+        if (deploymentType == DeploymentType.DOCKER) {
+                propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(spring.cloud.config.uri=).*$",
+                        "spring.cloud.config.uri=" + Matcher.quoteReplacement("http://symbiote-enablerconfig:8888"));
+            propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(enablerLogic.registrationHandlerUrl=).*$",
+                    "enablerLogic.registrationHandlerUrl=" + Matcher.quoteReplacement("http://symbiote-rh:8001"));
+        }
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("EnablerLogicExample/bootstrap.properties"));
+        InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+    }
+
+    private void configureRAPPluginStarter(ZipOutputStream zipOutputStream, DeploymentType deploymentType) throws Exception {
+
+        // Loading component properties
+        InputStream bootstrapPropertiesAsStream = resourceLoader
+                .getResource("classpath:files/RAPPluginStarter/application.properties").getInputStream();
+        String propertiesAsStream = new BufferedReader(new InputStreamReader(bootstrapPropertiesAsStream))
+                .lines().collect(Collectors.joining("\n"));
+
+        if (deploymentType == DeploymentType.DOCKER) {
+            propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(rabbit.host=).*$",
+                    "rabbit.host=symbiote-rabbitmq");
+        }
+
+        //packing files
+        zipOutputStream.putNextEntry(new ZipEntry("RAPPluginStarter/application.properties"));
         InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
