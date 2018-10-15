@@ -31,8 +31,11 @@ apply plugin: 'idea'
 // publishing
 apply plugin: 'com.cinnober.gradle.semver-git'
 
+// Needed for docker
+apply plugin: 'maven-publish'
+
 // XXX please change with your commits according to http://semver.org/
-project.version = '1.2.0'
+project.group = 'eu.h2020.symbiote'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -87,6 +90,10 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-data-rest')
     compile('org.springframework.boot:spring-boot-starter-data-mongodb')
     compile('org.springframework.boot:spring-boot-starter-mail')
+    
+    // Needed for docker
+    compile('org.springframework.retry:spring-retry')
+    compile('org.springframework.boot:spring-boot-starter-aop')
 
     // gui page
     compile('org.springframework.boot:spring-boot-starter-thymeleaf')
@@ -103,11 +110,57 @@ dependencies {
     testCompile('org.springframework.security:spring-security-test')
 }
 
+// Needed for docker >>>>
+
+// publication
+jar {
+    baseName = 'Administration'
+    version = project.version
+}
+
+bootRepackage {
+    classifier = 'run'
+}
+
 // code quality below
 task generateJavaDocs(type: Javadoc) {
     source = sourceSets.main.allJava
     destinationDir = reporting.file("javadocs")
 }
+
+task javadocJar(type: Jar, dependsOn: generateJavaDocs) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allJava
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.group
+            version = project.version
+            from components.java
+
+            artifact sourceJar {
+                classifier "sources"
+            }
+
+            // artifact javadocJar
+
+            artifact(file("$libsDir/$project.name-$project.version-${bootRepackage.classifier}.jar")) {
+                classifier "run"
+            }
+        }
+    }
+}
+
+publishToMavenLocal.dependsOn(bootRepackage)
+
+// <<<< Needed for docker
+
 
 // jacoco configuration section
 jacoco {
