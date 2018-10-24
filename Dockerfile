@@ -3,7 +3,7 @@ FROM openjdk:8-jre-alpine
 WORKDIR /home
 
 ENV componentName "Administration"
-ENV componentVersion 3.1.1
+ENV componentVersion 3.1.2
 
 RUN apk --no-cache add \
 	git \
@@ -11,7 +11,7 @@ RUN apk --no-cache add \
 	wget \
 	bash \
     && echo "Downloading $componentName $componentVersion" \
-	&& wget "https://jitpack.io/com/github/symbiote-h2020/Administration/409d431/Administration-409d431-run.jar"
+	&& wget "https://jitpack.io/com/github/symbiote-h2020/$componentName/$componentVersion/$componentName-$componentVersion-run.jar"
 
 EXPOSE 8250
 
