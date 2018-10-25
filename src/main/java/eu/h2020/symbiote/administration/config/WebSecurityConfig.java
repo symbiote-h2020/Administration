@@ -90,6 +90,9 @@ public class WebSecurityConfig {
     @Order(2)
     public static class AdminWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
+        @Autowired
+        private SimpleUrlAuthenticationFailureHandler failureHandler;
+
         @Override
         protected void configure(HttpSecurity http) throws Exception {
 
@@ -103,8 +106,8 @@ public class WebSecurityConfig {
                 .formLogin()
                     .loginPage("/administration/admin/login")
                     .defaultSuccessUrl("/administration")
-                    .permitAll()
-                    .and()
+                    .failureHandler(failureHandler)
+                    .permitAll()                    .and()
                 .logout()
                     .logoutUrl("/administration/admin/logout")
                     .logoutSuccessUrl("/administration")
