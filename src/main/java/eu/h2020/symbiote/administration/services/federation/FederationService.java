@@ -154,19 +154,21 @@ public class FederationService {
         }
 
         // Checking if the information model exist
-        ResponseEntity informationModelsResponse = informationModelService.getInformationModels();
-        if (informationModelsResponse.getStatusCode() != HttpStatus.OK) {
-            responseBody.put("error", informationModelsResponse.getBody());
-            return new ResponseEntity<>(responseBody, new HttpHeaders(), informationModelsResponse.getStatusCode());
-        }
+        if (federation.getInformationModel() != null) {
+            ResponseEntity informationModelsResponse = informationModelService.getInformationModels();
+            if (informationModelsResponse.getStatusCode() != HttpStatus.OK) {
+                responseBody.put("error", informationModelsResponse.getBody());
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), informationModelsResponse.getStatusCode());
+            }
 
-        List<String> informationModels = ((List<InformationModel>) informationModelsResponse.getBody()).stream()
-                .map(InformationModel::getId).collect(Collectors.toList());
+            List<String> informationModels = ((List<InformationModel>) informationModelsResponse.getBody()).stream()
+                    .map(InformationModel::getId).collect(Collectors.toList());
 
-        if (!informationModels.contains(federation.getInformationModel().getId())) {
-            responseBody.put("error", "The information model with id " + federation.getInformationModel().getId()
-                    + " was not found");
-            return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            if (!informationModels.contains(federation.getInformationModel().getId())) {
+                responseBody.put("error", "The information model with id " + federation.getInformationModel().getId()
+                        + " was not found");
+                return new ResponseEntity<>(responseBody, new HttpHeaders(), HttpStatus.BAD_REQUEST);
+            }
         }
 
         // Creating the FederationWithInvitation

@@ -78,7 +78,7 @@ dependencies {
             4) never commit build.gradle which has project dependencies active as it will break CI builds
     */
 
-    compile('com.github.symbiote-h2020:SymbIoTeLibraries:5.33+') { changing = true }
+    compile('com.github.symbiote-h2020:SymbIoTeLibraries:5.34+') { changing = true }
     compile('com.github.symbiote-h2020:SemanticMapping:1+') { changing = true }
 
     // Spring
