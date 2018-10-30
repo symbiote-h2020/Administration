@@ -93,7 +93,7 @@ public class InformationModelService {
             response.put("info_model_reg_error_name", "The name should have from 2 to 30 characters");
         if (!urlValidator.isValid(uri))
             response.put("info_model_reg_error_uri", "The uri is invalid");
-        if (!rdfFile.getOriginalFilename().matches("^[\\w]+\\.(ttl|nt|rdf|xml|n3|jsonld)$"))
+        if (!rdfFile.getOriginalFilename().matches("^[\\w.]+\\.(ttl|nt|rdf|xml|n3|jsonld)$"))
             response.put("info_model_reg_error_rdf", "This format is not supported");
 
         try {

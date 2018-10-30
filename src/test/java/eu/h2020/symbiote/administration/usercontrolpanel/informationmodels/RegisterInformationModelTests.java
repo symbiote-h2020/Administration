@@ -24,6 +24,10 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
     private MockMultipartFile validFile = new MockMultipartFile("info-model-rdf", "mock.ttl",
             "text/plain", informationModelRdf.getBytes());
+
+    private MockMultipartFile validFile2 = new MockMultipartFile("info-model-rdf", "mock.ttl.ttl",
+            "text/plain", informationModelRdf.getBytes());
+
     @Test
     public void validationErrors() throws Exception {
         // Validate information model details
@@ -48,6 +52,20 @@ public class RegisterInformationModelTests extends UserControlPanelBaseTestClass
 
         mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
                 .file(validFile)
+                .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
+                .with(csrf().asHeader())
+                .param("info-model-name", informationModelName)
+                .param("info-model-uri", informationModelUri))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    public void success2() throws Exception {
+        // Successful information model registration
+        doReturn(sampleInformationModelResponseSuccess()).when(rabbitManager).sendRegisterInfoModelRequest(any());
+
+        mockMvc.perform(fileUpload("/administration/user/cpanel/register_information_model")
+                .file(validFile2)
                 .with(authentication(sampleUserAuth(UserRole.SERVICE_OWNER)))
                 .with(csrf().asHeader())
                 .param("info-model-name", informationModelName)
