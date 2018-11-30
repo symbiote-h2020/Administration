@@ -284,7 +284,7 @@ public class RabbitManager {
                     null);
 
         } catch (IOException | TimeoutException e) {
-            log.info("", e);
+            log.error("", e);
         }
     }
 
@@ -299,7 +299,7 @@ public class RabbitManager {
             if (this.connection != null && this.connection.isOpen())
                 this.connection.close();
         } catch (IOException | TimeoutException e) {
-            log.info("", e);
+            log.error("", e);
         }
     }
 

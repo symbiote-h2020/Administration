@@ -3,22 +3,24 @@ package eu.h2020.symbiote.administration.services.platform;
 import eu.h2020.symbiote.administration.model.CoreUser;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage;
 import eu.h2020.symbiote.administration.model.PlatformConfigurationMessage.DeploymentType;
+import eu.h2020.symbiote.administration.services.git.IGitService;
 import eu.h2020.symbiote.security.communication.payloads.OwnedService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.support.ResourcePatternUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,18 +33,27 @@ import static eu.h2020.symbiote.administration.model.PlatformConfigurationMessag
 public class PlatformConfigurer {
 
     private static Log log = LogFactory.getLog(PlatformConfigurer.class);
+    private static final String FILE_PATH_PREFIX = "file://";
 
     private ResourceLoader resourceLoader;
+    private IGitService gitService;
     private String coreInterfaceAddress;
     private String paamValidityMillis;
     private String cloudCoreInterfaceAddress;
+    private String cloudConfigGitPath;
+    private String enablerConfigGitPath;
 
     @Autowired
     public PlatformConfigurer(ResourceLoader resourceLoader,
+                              IGitService gitService,
                               @Value("${aam.environment.coreInterfaceAddress}") String coreInterfaceAddress,
-                              @Value("${paam.deployment.token.validityMillis}") String paamValidityMillis) {
+                              @Value("${paam.deployment.token.validityMillis}") String paamValidityMillis,
+                              @Value("${symbiote.core.cloudconfig.git.path}") String cloudConfigGitPath,
+                              @Value("${symbiote.core.enablerconfig.git.path}") String enablerConfigGitPath) {
 
         this.resourceLoader = resourceLoader;
+
+        this.gitService = gitService;
 
         Assert.notNull(coreInterfaceAddress,"coreInterfaceAddress can not be null!");
         this.coreInterfaceAddress = coreInterfaceAddress;
@@ -53,6 +64,12 @@ public class PlatformConfigurer {
         this.cloudCoreInterfaceAddress = this.coreInterfaceAddress
                 .replace("8100", "8101")
                 .replace("coreInterface", "cloudCoreInterface");
+
+        Assert.notNull(cloudConfigGitPath,"cloudConfigGitPath can not be null!");
+        this.cloudConfigGitPath = cloudConfigGitPath;
+
+        Assert.notNull(enablerConfigGitPath,"enablerConfigGitPath can not be null!");
+        this.enablerConfigGitPath = enablerConfigGitPath;
     }
 
 
@@ -139,63 +156,91 @@ public class PlatformConfigurer {
                                                 DeploymentType deploymentType,
                                                 Level level)
             throws Exception {
+        String propertiesFolderName = "";
+        String propertiesGitPath = "";
 
-        String propertiesFolder = level == Level.ENABLER ? "EnablerConfigProperties" : "CloudConfigProperties";
-
-        // Loading application.properties
-        InputStream propertiesResourceAsStream = resourceLoader
-                .getResource("classpath:files/" + propertiesFolder + "/application.properties").getInputStream();
-        String applicationProperties = new BufferedReader(new InputStreamReader(propertiesResourceAsStream))
-                .lines().collect(Collectors.joining("\n"));
-
-        // Modify the application.properties file accordingly
-        // Platform Details Configuration
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(platform.id=).*$",
-                "platform.id=" + Matcher.quoteReplacement(platformDetails.getServiceInstanceId()));
-
-        // AMQP Configuration
-        switch (deploymentType) {
-            case DOCKER:
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.rabbitmq.host=).*$",
-                        "spring.rabbitmq.host=symbiote-rabbitmq");
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
-                        "spring.data.mongodb.host=symbiote-mongo");
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
-                        "symbIoTe.localaam.url=http://symbiote-aam:8080");
-                break;
-            case MANUAL:
-            default:
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.rabbitmq.host=).*$",
-                        "spring.rabbitmq.host=localhost");
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
-                        "spring.data.mongodb.host=localhost");
-                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
-                        "symbIoTe.localaam.url=http://localhost:8080");
+        try {
+            if (level == Level.ENABLER) {
+                propertiesFolderName = "EnablerConfigProperties";
+                propertiesGitPath = this.enablerConfigGitPath;
+                gitService.pullRepo(this.enablerConfigGitPath);
+            } else {
+                propertiesFolderName = "CloudConfigProperties";
+                propertiesGitPath = this.cloudConfigGitPath;
+                gitService.pullRepo(this.cloudConfigGitPath);
+            }
+        } catch (Exception e) {
+            log.warn("Thrown exception during pulling propertiesFolderName. The config might not be up to date", e);
         }
 
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.username=).*$",
-                "rabbit.username=guest");
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.password=).*$",
-                "rabbit.password=guest");
+        Resource[] resources = ResourcePatternUtils.getResourcePatternResolver(resourceLoader).getResources(FILE_PATH_PREFIX + propertiesGitPath + "/*");
 
-        // Necessary Urls Configuration
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.core.interface.url=).*$",
-                "symbIoTe.core.interface.url=" + Matcher.quoteReplacement(this.coreInterfaceAddress));
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.core.cloud.interface.url=).*$",
-                "symbIoTe.core.cloud.interface.url=" + Matcher.quoteReplacement(this.cloudCoreInterfaceAddress));
-        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.interworking.interface.url=).*$",
-                "symbIoTe.interworking.interface.url=" +
-                        Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
+        for (Resource resource : resources) {
+            String resourceName = resource.getFilename();
+            String filePath = propertiesGitPath + "/" + resourceName;
 
-        // RAP Configuration
-        applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
-                "rap.enableSpecificPlugin=" + useBuiltInRapPlugin);
+            if (!resourceName.endsWith("application.properties")) {
+                zipFile(zipOutputStream, new File(filePath), propertiesFolderName);
+            } else {
 
-        //packing files
-        zipOutputStream.putNextEntry(new ZipEntry(propertiesFolder + "/application.properties"));
-        InputStream stream = new ByteArrayInputStream(applicationProperties.getBytes(StandardCharsets.UTF_8.name()));
-        IOUtils.copy(stream, zipOutputStream);
-        stream.close();
+                // Loading application.properties
+                InputStream propertiesResourceAsStream = resource.getInputStream();
+                String applicationProperties = new BufferedReader(new InputStreamReader(propertiesResourceAsStream))
+                        .lines().collect(Collectors.joining("\n"));
+
+                // Modify the application.properties file accordingly
+                // Platform Details Configuration
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(platform.id=).*$",
+                        "platform.id=" + Matcher.quoteReplacement(platformDetails.getServiceInstanceId()));
+
+                // AMQP Configuration
+                switch (deploymentType) {
+                    case DOCKER:
+                        applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.rabbitmq.host=).*$",
+                                "spring.rabbitmq.host=symbiote-rabbitmq");
+                        applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
+                                "spring.data.mongodb.host=symbiote-mongo");
+                        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
+                                "symbIoTe.localaam.url=http://symbiote-aam:8080");
+                        break;
+                    case MANUAL:
+                    default:
+                        applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.rabbitmq.host=).*$",
+                                "spring.rabbitmq.host=localhost");
+                        applicationProperties = applicationProperties.replaceFirst("(?m)^(spring.data.mongodb.host=).*$",
+                                "spring.data.mongodb.host=localhost");
+                        applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.localaam.url=).*$",
+                                "symbIoTe.localaam.url=http://localhost:8080");
+                }
+
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.username=).*$",
+                        "rabbit.username=guest");
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(rabbit.password=).*$",
+                        "rabbit.password=guest");
+
+                // Necessary Urls Configuration
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.core.interface.url=).*$",
+                        "symbIoTe.core.interface.url=" + Matcher.quoteReplacement(this.coreInterfaceAddress));
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.core.cloud.interface.url=).*$",
+                        "symbIoTe.core.cloud.interface.url=" + Matcher.quoteReplacement(this.cloudCoreInterfaceAddress));
+                applicationProperties = applicationProperties.replaceFirst("(?m)^(symbIoTe.interworking.interface.url=).*$",
+                        "symbIoTe.interworking.interface.url=" +
+                                Matcher.quoteReplacement(platformDetails.getPlatformInterworkingInterfaceAddress()));
+
+                // RAP Configuration
+                applicationProperties = applicationProperties.replaceFirst("(?m)^.*(rap.enableSpecificPlugin=).*$",
+                        "rap.enableSpecificPlugin=" + useBuiltInRapPlugin);
+
+                // Packing files
+                zipOutputStream.putNextEntry(new ZipEntry(propertiesFolderName + "/" + resourceName));
+                InputStream inputStream = new ByteArrayInputStream(applicationProperties.getBytes(StandardCharsets.UTF_8.name()));
+                IOUtils.copy(inputStream, zipOutputStream);
+                inputStream.close();
+            }
+
+
+
+        }
     }
 
 
@@ -361,9 +406,35 @@ public class PlatformConfigurer {
                     "spring.cloud.config.uri=" + Matcher.quoteReplacement(configServer));
         }
 
-        //packing files
+        // Packing files
         zipOutputStream.putNextEntry(new ZipEntry("AuthenticationAuthorizationManager/bootstrap.properties"));
         InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
+        IOUtils.copy(stream, zipOutputStream);
+        stream.close();
+
+
+        // Loading CloudConfigProperties/AuthenticationAuthorizationManager.properties
+        String propertiesName;
+        String propertiesGitPath;
+
+        if (level == Level.ENABLER) {
+            propertiesName = "EnablerConfigProperties";
+            propertiesGitPath =  this.enablerConfigGitPath;
+        } else {
+            propertiesName = "CloudConfigProperties";
+            propertiesGitPath =  this.cloudConfigGitPath;
+        }
+
+        InputStream aamPropertiesAsStream = resourceLoader
+                .getResource("file://" + propertiesGitPath + "/AuthenticationAuthorizationManager.properties").getInputStream();
+        propertiesAsStream = new BufferedReader(new InputStreamReader(aamPropertiesAsStream))
+                .lines().collect(Collectors.joining("\n"));
+        propertiesAsStream = propertiesAsStream.replaceFirst("(?m)^.*(aam.deployment.token.validityMillis).*$",
+                "aam.deployment.token.validityMillis=" + Matcher.quoteReplacement(tokenValidity));
+
+        // Packing files
+        zipOutputStream.putNextEntry(new ZipEntry(propertiesName + "/AuthenticationAuthorizationManager.properties"));
+        stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
     }
@@ -455,5 +526,41 @@ public class PlatformConfigurer {
         InputStream stream = new ByteArrayInputStream(propertiesAsStream.getBytes(StandardCharsets.UTF_8.name()));
         IOUtils.copy(stream, zipOutputStream);
         stream.close();
+    }
+
+    private void zipFile(ZipOutputStream zipOutputStream, File file, String parentFolder)
+            throws Exception {
+        String resourceName = file.getName();
+
+        // Skip the AuthenticationAuthorizationManager entry because it will be set in the configureAAMProperties()
+        if (resourceName.equals("AuthenticationAuthorizationManager.properties"))
+            return;
+
+        String filePath = file.getAbsolutePath();
+        String fileNameInZip = parentFolder + "/" + resourceName;
+
+        if (file.isDirectory()) {
+            if (fileNameInZip.endsWith("/")) {
+                zipOutputStream.putNextEntry(new ZipEntry(fileNameInZip));
+                zipOutputStream.closeEntry();
+            } else {
+                zipOutputStream.putNextEntry(new ZipEntry(fileNameInZip + "/"));
+                zipOutputStream.closeEntry();
+            }
+
+            File folder = new File(filePath);
+            File[] children = folder.listFiles();
+            for (File childFile : children) {
+                zipFile(zipOutputStream, childFile, fileNameInZip);
+            }
+
+            return;
+        }
+
+        zipOutputStream.putNextEntry(new ZipEntry(fileNameInZip));
+        InputStream inputStream = resourceLoader.getResource(FILE_PATH_PREFIX + filePath).getInputStream();
+        IOUtils.copy(inputStream, zipOutputStream);
+        inputStream.close();
+
     }
 }

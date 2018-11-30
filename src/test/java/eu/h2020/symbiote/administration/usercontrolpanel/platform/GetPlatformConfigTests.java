@@ -241,13 +241,15 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         testComponentBootstrapProperties(zipFiles.get("ResourceAccessProxy/bootstrap.properties"), deploymentType, level);
         testComponentBootstrapProperties(zipFiles.get("Monitoring/bootstrap.properties"), deploymentType, level);
 
+        // Checking AuthenticationAuthorizationManager/bootstrap.properties
         fileEntry = zipFiles.get("AuthenticationAuthorizationManager/bootstrap.properties");
         if (deploymentType == DOCKER) {
             String configServer = level == Level.ENABLER ? "http://symbiote-enablerconfig:8888" : "http://symbiote-cloudconfig:8888";
             assertTrue(fileEntry.contains("spring.cloud.config.uri=" + configServer));
-        }
-        else
+        }  else {
             assertTrue(fileEntry.contains("spring.cloud.config.uri=http://localhost:8888"));
+        }
+
         assertTrue(fileEntry.contains("aam.deployment.owner.username=" + username));
         assertTrue(fileEntry.contains("aam.deployment.owner.password=" + password));
         assertTrue(fileEntry.contains("aam.security.KEY_STORE_FILE_NAME=file:///#{systemProperties['user.dir']}/"
@@ -256,6 +258,11 @@ public class GetPlatformConfigTests extends UserControlPanelBaseTestClass {
         assertTrue(fileEntry.contains("aam.security.CERTIFICATE_ALIAS=paam"));
         assertTrue(fileEntry.contains("aam.security.KEY_STORE_PASSWORD=" + aamKeystorePassword));
         assertTrue(fileEntry.contains("aam.security.PV_KEY_PASSWORD=" + aamKeystorePassword));
+        assertTrue(fileEntry.contains("aam.deployment.token.validityMillis=" + tokenValidity));
+
+        // Checking CloudConfigProperties/AuthenticationAuthorizationManager.properties
+        String propertiesFile = level == Level.ENABLER ? "EnablerConfigProperties" : "CloudConfigProperties";
+        fileEntry = zipFiles.get(propertiesFile + "/AuthenticationAuthorizationManager.properties");
         assertTrue(fileEntry.contains("aam.deployment.token.validityMillis=" + tokenValidity));
 
         // Checking cert.properties

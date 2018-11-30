@@ -145,3 +145,7 @@ logs
 
 # local property files
 /*.properties
+
+# ConfigProperties
+CloudConfigProperties/
+EnablerConfigProperties/
