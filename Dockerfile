@@ -3,7 +3,7 @@ FROM openjdk:8-jre-alpine
 WORKDIR /home
 
 ENV componentName "Administration"
-ENV componentVersion 3.1.5
+ENV componentVersion 3.1.6
 
 RUN apk --no-cache add \
 	git \
